@@ -8,7 +8,7 @@ describe("responsive dashboard shell", () => {
     expect(source).toContain('<Sidebar className="hidden lg:flex" />');
     expect(source).toContain('role="dialog"');
     expect(source).toContain('aria-modal="true"');
-    expect(source).toContain('aria-label="Main navigation"');
+    expect(source).toContain('aria-label={t("navigation.main")}');
     expect(source).toContain('width="full"');
     expect(source).toContain('onNavigate={() => setMobileNavOpen(false)}');
   });
@@ -16,9 +16,9 @@ describe("responsive dashboard shell", () => {
   it("keeps the mobile nav button accessible and phone-sized top bar controls compact", () => {
     const source = readFileSync("components/layout/top-bar.tsx", "utf8");
 
-    expect(source).toContain('aria-label="Open navigation"');
+    expect(source).toContain('aria-label={t("common.openNavigation")}');
     expect(source).toContain("lg:hidden");
-    expect(source).toContain('aria-label="Open search"');
+    expect(source).toContain('aria-label={t("common.search")}');
     // The search label and the shortcut hint stay hidden on phones; the
     // trigger only takes its comfortable search-bar width from sm up.
     expect(source).toContain('className="hidden sm:inline"');
@@ -29,8 +29,10 @@ describe("responsive dashboard shell", () => {
   it("keeps top bar labels and quick-create actions aligned with app roles", () => {
     const source = readFileSync("components/layout/top-bar.tsx", "utf8");
 
-    expect(source).toContain('"/agent": "Agent"');
-    expect(source).toContain('"/controlled-substances": "Controlled Substances"');
+    expect(source).toContain('"/agent": "navigation.agent"');
+    expect(source).toContain(
+      '"/controlled-substances": "navigation.controlledSubstances"',
+    );
     expect(source).toContain(
       "regulatoryAccess?.supportsDeaFeatures !== true",
     );
@@ -92,6 +94,6 @@ describe("responsive dashboard shell", () => {
     expect(source).toContain('item.href === "/inbox"');
     expect(source).toContain("unreadInboxCount > 0");
     expect(source).toContain("unreadInboxLabel");
-    expect(source).toContain("unread inbox conversations");
+    expect(source).toContain('t("common.unreadInboxConversations")');
   });
 });

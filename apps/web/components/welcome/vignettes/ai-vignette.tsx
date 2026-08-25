@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Bot } from "lucide-react";
-import { AI_VIGNETTE } from "../welcome-copy";
+import { getAiVignette } from "../welcome-copy";
+import { useTranslations } from "@/lib/i18n/client";
 
 /**
  * The animated Polaroid image for the AI card: the question bubble POPS in
@@ -30,6 +31,7 @@ function useInViewport(ref: React.RefObject<Element | null>): boolean {
 }
 
 export function AiVignette() {
+  const aiVignette = getAiVignette(useTranslations());
   const rootRef = useRef<HTMLDivElement>(null);
   const inView = useInViewport(rootRef);
 
@@ -38,11 +40,11 @@ export function AiVignette() {
       ref={rootRef}
       data-paused={inView ? undefined : ""}
       className="ai-vignette flex h-full w-full flex-col justify-center gap-2 bg-gradient-to-br from-violet-50 to-emerald-50 p-3"
-      aria-label={`Example: you ask "${AI_VIGNETTE.question}" and the AI answers "${AI_VIGNETTE.answer}"`}
+      aria-label={`Example: you ask "${aiVignette.question}" and the AI answers "${aiVignette.answer}"`}
     >
       <div className="flex justify-end">
         <span className="ai-vignette-question max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-1.5 text-left text-xs leading-5 text-primary-foreground">
-          <span className="ai-vignette-qtext block">{AI_VIGNETTE.question}</span>
+          <span className="ai-vignette-qtext block">{aiVignette.question}</span>
         </span>
       </div>
       <div className="ai-vignette-answer flex items-start gap-1.5">
@@ -50,7 +52,7 @@ export function AiVignette() {
           <Bot className="h-3 w-3" aria-hidden="true" />
         </span>
         <span className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white px-3 py-1.5 text-xs leading-5 text-foreground shadow-sm">
-          {AI_VIGNETTE.answer}
+          {aiVignette.answer}
         </span>
       </div>
 

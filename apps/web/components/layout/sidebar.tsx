@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import { PlatformLogo } from "@/components/brand/platform-logo";
 import { resolveTenantBrand } from "@/lib/brand/tenant-brand";
+import { useTranslations } from "@/lib/i18n/client";
+import type { TranslationKey } from "@/lib/i18n";
 
 type UserRole =
   | "admin"
@@ -52,69 +54,69 @@ function isUserRole(role?: string | null): role is UserRole {
 
 const navItems: {
   href: string;
-  label: string;
+  labelKey: TranslationKey;
   icon: React.ElementType;
   roles: UserRole[];
   regulatoryCapability?: "US_DEA";
 }[] = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, roles: allRoles },
-  { href: "/patients", label: "Patients", icon: PawPrint, roles: allRoles },
-  { href: "/clients", label: "Clients", icon: Users, roles: allRoles },
-  { href: "/schedule", label: "Schedule", icon: Calendar, roles: allRoles },
-  { href: "/records", label: "Records", icon: FileText, roles: allRoles },
+  { href: "/", labelKey: "navigation.dashboard", icon: LayoutDashboard, roles: allRoles },
+  { href: "/patients", labelKey: "navigation.patients", icon: PawPrint, roles: allRoles },
+  { href: "/clients", labelKey: "navigation.clients", icon: Users, roles: allRoles },
+  { href: "/schedule", labelKey: "navigation.schedule", icon: Calendar, roles: allRoles },
+  { href: "/records", labelKey: "navigation.records", icon: FileText, roles: allRoles },
   {
     href: "/lab-results",
-    label: "Lab Inbox",
+    labelKey: "navigation.labInbox",
     icon: FlaskConical,
     roles: ["admin", "veterinarian", "technician", "front_desk", "viewer"],
   },
-  { href: "/billing", label: "Billing", icon: Receipt, roles: allRoles },
-  { href: "/inventory", label: "Inventory", icon: Package, roles: allRoles },
-  { href: "/inbox", label: "Inbox", icon: MessageSquare, roles: allRoles },
+  { href: "/billing", labelKey: "navigation.billing", icon: Receipt, roles: allRoles },
+  { href: "/inventory", labelKey: "navigation.inventory", icon: Package, roles: allRoles },
+  { href: "/inbox", labelKey: "navigation.inbox", icon: MessageSquare, roles: allRoles },
   {
     href: "/recalls",
-    label: "Recalls",
+    labelKey: "navigation.recalls",
     icon: Syringe,
     roles: ["admin", "veterinarian", "front_desk"],
   },
   {
     href: "/care-reminders",
-    label: "Care Reminders",
+    labelKey: "navigation.careReminders",
     icon: BellRing,
     roles: allRoles,
   },
   {
     href: "/migration-archive",
-    label: "Imported History",
+    labelKey: "navigation.importedHistory",
     icon: Archive,
     roles: allRoles,
   },
   {
     href: "/whiteboard",
-    label: "Whiteboard",
+    labelKey: "navigation.whiteboard",
     icon: ClipboardList,
     roles: allRoles,
   },
   {
     href: "/agent",
-    label: "Agent",
+    labelKey: "navigation.agent",
     icon: Bot,
     roles: ["admin", "veterinarian"],
   },
   {
     href: "/controlled-substances",
-    label: "Controlled Substances",
+    labelKey: "navigation.controlledSubstances",
     icon: ShieldAlert,
     roles: ["admin", "veterinarian"],
     regulatoryCapability: "US_DEA",
   },
   {
     href: "/reports",
-    label: "Reports",
+    labelKey: "navigation.reports",
     icon: BarChart3,
     roles: ["admin", "veterinarian"],
   },
-  { href: "/settings", label: "Settings", icon: Settings, roles: ["admin"] },
+  { href: "/settings", labelKey: "navigation.settings", icon: Settings, roles: ["admin"] },
 ];
 
 type SidebarProps = {
@@ -130,6 +132,7 @@ export function Sidebar({
   onNavigate,
   width = "fixed",
 }: SidebarProps = {}) {
+  const t = useTranslations();
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -203,7 +206,7 @@ export function Sidebar({
       <nav
         className="flex-1 overflow-y-auto px-2 py-2"
         role="navigation"
-        aria-label="Main navigation"
+        aria-label={t("navigation.main")}
       >
         <ul className="space-y-0.5">
           {visibleNavItems.map((item) => {
@@ -232,19 +235,19 @@ export function Sidebar({
                     item.href === "/inbox" &&
                     unreadInboxCount > 0 ? (
                       <span
-                        aria-label={`${unreadInboxCount} unread inbox conversations`}
+                        aria-label={`${unreadInboxCount} ${t("common.unreadInboxConversations")}`}
                         className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-surface"
                       />
                     ) : null}
                   </span>
                   {!isCollapsed && (
-                    <span className="truncate">{item.label}</span>
+                    <span className="truncate">{t(item.labelKey)}</span>
                   )}
                   {!isCollapsed &&
                   item.href === "/inbox" &&
                   unreadInboxCount > 0 ? (
                     <span
-                      aria-label={`${unreadInboxCount} unread inbox conversations`}
+                      aria-label={`${unreadInboxCount} ${t("common.unreadInboxConversations")}`}
                       className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground"
                     >
                       {unreadInboxLabel}
@@ -278,7 +281,7 @@ export function Sidebar({
             </div>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              aria-label="Sign out"
+              aria-label={t("common.signOut")}
               className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
@@ -288,7 +291,11 @@ export function Sidebar({
         {collapsible && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={
+              collapsed
+                ? t("common.expandSidebar")
+                : t("common.collapseSidebar")
+            }
             className="flex w-full items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             {collapsed ? (

@@ -16,6 +16,7 @@ import {
   Line,
 } from "recharts";
 import { formatCurrency, localeForCountry } from "@/lib/locale/format";
+import { useTranslations } from "@/lib/i18n/client";
 
 const SPECIES_COLORS: Record<string, string> = {
   Canine: "#3b82f6",
@@ -100,6 +101,7 @@ export function DashboardCharts({
   currency: string;
   country: string;
 }) {
+  const t = useTranslations();
   const fmtMoney = (value: number) => formatCurrency(value, currency, country);
   const fmtAxisMoney = (value: number) =>
     new Intl.NumberFormat(localeForCountry(country), {
@@ -114,7 +116,7 @@ export function DashboardCharts({
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 font-heading text-lg font-semibold">
-            Appointments This Week
+            {t("dashboard.charts.appointmentsThisWeek")}
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={appointmentsByDay}>
@@ -140,21 +142,21 @@ export function DashboardCharts({
               <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
               <Bar
                 dataKey="completed"
-                name="Completed"
+                name={t("dashboard.charts.completed")}
                 stackId="a"
                 fill="#22c55e"
                 radius={[0, 0, 0, 0]}
               />
               <Bar
                 dataKey="scheduled"
-                name="Scheduled"
+                name={t("dashboard.charts.scheduled")}
                 stackId="a"
                 fill="#3b82f6"
                 radius={[0, 0, 0, 0]}
               />
               <Bar
                 dataKey="cancelled"
-                name="Cancelled"
+                name={t("dashboard.charts.cancelled")}
                 stackId="a"
                 fill="#ef4444"
                 radius={[4, 4, 0, 0]}
@@ -165,7 +167,7 @@ export function DashboardCharts({
 
         <div className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 font-heading text-lg font-semibold">
-            Species Distribution
+            {t("dashboard.charts.speciesDistribution")}
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -200,7 +202,7 @@ export function DashboardCharts({
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 font-heading text-lg font-semibold">
-            Revenue (Last 30 Days)
+            {t("dashboard.charts.revenueLast30Days")}
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueByDay}>
@@ -222,12 +224,12 @@ export function DashboardCharts({
                   borderRadius: "0.5rem",
                   fontSize: "0.875rem",
                 }}
-                formatter={(value: number) => [fmtMoney(value), "Revenue"]}
+                formatter={(value: number) => [fmtMoney(value), t("dashboard.charts.revenue")]}
               />
               <Line
                 type="monotone"
                 dataKey="revenue"
-                name="Revenue"
+                name={t("dashboard.charts.revenue")}
                 stroke="#0d9488"
                 strokeWidth={2}
                 dot={false}
@@ -239,7 +241,7 @@ export function DashboardCharts({
 
         <div className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 font-heading text-lg font-semibold">
-            Production by Doctor (MTD)
+            {t("dashboard.charts.productionByDoctor")}
           </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
@@ -268,11 +270,11 @@ export function DashboardCharts({
                   borderRadius: "0.5rem",
                   fontSize: "0.875rem",
                 }}
-                formatter={(value: number) => [fmtMoney(value), "Production"]}
+                formatter={(value: number) => [fmtMoney(value), t("dashboard.charts.production")]}
               />
               <Bar
                 dataKey="production"
-                name="Production"
+                name={t("dashboard.charts.production")}
                 fill="#14b8a6"
                 radius={[0, 4, 4, 0]}
               />

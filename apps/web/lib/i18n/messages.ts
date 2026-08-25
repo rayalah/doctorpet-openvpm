@@ -1,10 +1,16 @@
 import type { SupportedLanguage } from "./language";
 import { enAuthMessages, esAuthMessages } from "./messages/auth";
 import { enCommonMessages, esCommonMessages } from "./messages/common";
+import { enDashboardMessages, esDashboardMessages } from "./messages/dashboard";
+import { enNavigationMessages, esNavigationMessages } from "./messages/navigation";
+import { enWelcomeMessages, esWelcomeMessages } from "./messages/welcome";
 
 export const enMessages = {
   ...enCommonMessages,
   ...enAuthMessages,
+  ...enNavigationMessages,
+  ...enDashboardMessages,
+  ...enWelcomeMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -16,6 +22,9 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
   es: {
     ...esCommonMessages,
     ...esAuthMessages,
+    ...esNavigationMessages,
+    ...esDashboardMessages,
+    ...esWelcomeMessages,
   },
 };
 

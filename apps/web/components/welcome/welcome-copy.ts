@@ -6,25 +6,28 @@
 
 import type { WelcomeCardId } from "@/lib/welcome/cards";
 import { platformBrand } from "@/lib/brand/platform-brand";
+import type { Translator } from "@/lib/i18n";
 
-export const WELCOME_COPY = {
-  headlineAdmin: (practiceName: string) =>
-    `Welcome to ${platformBrand.productName}, ${practiceName}!`,
-  headlineStaff: (firstName: string) => `Welcome, ${firstName}!`,
-  headlineFallback: `Welcome to ${platformBrand.productName}!`,
-  subline:
-    `Here is what ${platformBrand.productName} can do for your clinic today. Pick a card and we will show you in about a minute.`,
-  skip: "Skip for now",
-  reopenHint: "You can come back any time from Guides in the sidebar.",
-  setupInstead: "Set up my clinic instead",
-  doneBadge: "Done",
-  allDone: {
-    title: "You tried them all!",
-    body: `That was every guide. Ready to make ${platformBrand.productName} yours? Add your logo, your team, and your real clients.`,
-    accept: "Make it mine",
-    later: "Later",
-  },
-} as const;
+export function getWelcomeCopy(t: Translator) {
+  return {
+    headlineAdmin: (practiceName: string) =>
+      `${t("welcome.headline.admin")} ${platformBrand.productName}, ${practiceName}!`,
+    headlineStaff: (firstName: string) =>
+      `${t("welcome.headline.staff")} ${firstName}!`,
+    headlineFallback: `${t("welcome.headline.admin")} ${platformBrand.productName}!`,
+    subline: `${t("welcome.subline.before")} ${platformBrand.productName} ${t("welcome.subline.after")}`,
+    skip: t("welcome.skip"),
+    reopenHint: t("welcome.reopenHint"),
+    setupInstead: t("welcome.setupInstead"),
+    doneBadge: t("welcome.done"),
+    allDone: {
+      title: t("welcome.allDone.title"),
+      body: `${t("welcome.allDone.bodyBefore")} ${platformBrand.productName} ${t("welcome.allDone.bodyAfter")}`,
+      accept: t("welcome.allDone.accept"),
+      later: t("welcome.allDone.later"),
+    },
+  };
+}
 
 export interface WelcomeCardCopy {
   caption: string;
@@ -32,31 +35,37 @@ export interface WelcomeCardCopy {
   chip: string;
 }
 
-export const WELCOME_CARD_COPY: Record<WelcomeCardId, WelcomeCardCopy> = {
-  "ask-ai": {
-    caption: "Ask the AI about a pet",
-    sub: "Stop digging through charts. Just ask.",
-    chip: "About 1 minute",
-  },
-  "your-day": {
-    caption: "See your day at a glance",
-    sub: "Every visit and every pet on one screen.",
-    chip: "About 2 minutes",
-  },
-  "client-portal": {
-    caption: "Give clients their own portal",
-    sub: "Pet parents see visits and bills without calling you.",
-    chip: "About 1 minute",
-  },
-  "calendar-feed": {
-    caption: "See your schedule in your own calendar",
-    sub: "Your clinic's day, right inside Google, Apple, or Outlook.",
-    chip: "About 1 minute",
-  },
-};
+export function getWelcomeCardCopy(
+  t: Translator,
+): Record<WelcomeCardId, WelcomeCardCopy> {
+  return {
+    "ask-ai": {
+      caption: t("welcome.card.askAi.caption"),
+      sub: t("welcome.card.askAi.sub"),
+      chip: t("welcome.card.askAi.chip"),
+    },
+    "your-day": {
+      caption: t("welcome.card.yourDay.caption"),
+      sub: t("welcome.card.yourDay.sub"),
+      chip: t("welcome.card.yourDay.chip"),
+    },
+    "client-portal": {
+      caption: t("welcome.card.portal.caption"),
+      sub: t("welcome.card.portal.sub"),
+      chip: t("welcome.card.portal.chip"),
+    },
+    "calendar-feed": {
+      caption: t("welcome.card.calendar.caption"),
+      sub: t("welcome.card.calendar.sub"),
+      chip: t("welcome.card.calendar.chip"),
+    },
+  };
+}
 
 /** The animated AI vignette's scripted exchange. */
-export const AI_VIGNETTE = {
-  question: "Which pets are overdue for vaccines?",
-  answer: "Biscuit is 5 days past due for the DHPP shot.",
-} as const;
+export function getAiVignette(t: Translator) {
+  return {
+    question: t("welcome.ai.question"),
+    answer: t("welcome.ai.answer"),
+  };
+}

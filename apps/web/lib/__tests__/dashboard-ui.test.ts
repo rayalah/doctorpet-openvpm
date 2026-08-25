@@ -44,10 +44,10 @@ describe("dashboard analytics UI", () => {
       ),
     );
     expect(source.indexOf("upcomingError || isUpcomingMissing")).toBeLessThan(
-      source.indexOf("No visits booked yet"),
+      source.indexOf('t("dashboard.upcoming.emptyTitle")'),
     );
     expect(source.indexOf("chartsError || chartsDisplayMissing")).toBeLessThan(
-      source.indexOf("Your charts show up once you start"),
+      source.indexOf('t("dashboard.charts.emptyTitle")'),
     );
     expect(source).toContain("const value = dashboardStats[kpi.key] ?? 0");
     expect(source).not.toContain("charts.data?.appointmentsByDay ?? []");
@@ -69,11 +69,11 @@ describe("dashboard analytics UI", () => {
     );
 
     expect(source).toContain("type ProductionByDoctorPoint");
-    expect(source).toContain("Production by Doctor (MTD)");
+    expect(source).toContain('t("dashboard.charts.productionByDoctor")');
     expect(source).toContain('dataKey="doctorName"');
     expect(source).toContain('dataKey="production"');
     expect(source).toContain(
-      'formatter={(value: number) => [fmtMoney(value), "Production"]}',
+      'formatter={(value: number) => [fmtMoney(value), t("dashboard.charts.production")]}',
     );
   });
 
@@ -81,11 +81,11 @@ describe("dashboard analytics UI", () => {
     const source = readFileSync("app/(dashboard)/page.tsx", "utf8");
 
     expect(source).toContain("trpc.encounters.listPendingFollowUps.useQuery");
-    expect(source).toContain("Follow-up work queue");
-    expect(source).toContain("No pending follow-up obligations.");
+    expect(source).toContain('t("dashboard.followUps.title")');
+    expect(source).toContain('t("dashboard.followUps.empty")');
     expect(source).toContain(
       "`/encounters/${followUp.appointmentId}#visit-closeout`",
     );
-    expect(source).toContain("Resolve follow-up");
+    expect(source).toContain('t("dashboard.followUps.resolve")');
   });
 });

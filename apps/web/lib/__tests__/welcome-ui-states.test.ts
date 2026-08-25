@@ -99,7 +99,7 @@ describe("welcome surface UI states", () => {
     );
     expect(providerSource).toContain("!state.setupOfferedAt");
     expect(providerSource).toContain("markSetupOffered(userId)");
-    expect(copySource).toContain("Make it mine");
+    expect(copySource).toContain('t("welcome.allDone.accept")');
   });
 
   it("keeps the copy deck in voice: no em or en dashes", () => {

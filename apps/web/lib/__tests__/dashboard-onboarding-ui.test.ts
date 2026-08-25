@@ -13,7 +13,7 @@ describe("dashboard onboarding UI states", () => {
   const journeyProviderSource = readFileSync(
     "components/onboarding/journey-overlay.tsx",
     "utf8",
-  );
+  ).replace(/\r\n/g, "\n");
   const journeyPlanSource = readFileSync(
     "lib/onboarding/journey-plan.ts",
     "utf8",

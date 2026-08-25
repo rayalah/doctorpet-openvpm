@@ -5,7 +5,7 @@ import { PlatformLogo } from "@/components/brand/platform-logo";
 import { platformBrand } from "@/lib/brand/platform-brand";
 import type { GuideContext } from "@/components/tour/guide-recipes";
 import type { WelcomeCardId } from "@/lib/welcome/cards";
-import { WELCOME_COPY } from "./welcome-copy";
+import { getWelcomeCopy } from "./welcome-copy";
 import { PolaroidCard, type WelcomeVariant } from "./polaroid-card";
 import { AiVignette } from "./vignettes/ai-vignette";
 import {
@@ -13,6 +13,7 @@ import {
   DayVignette,
   PortalVignette,
 } from "./vignettes/static-vignettes";
+import { useTranslations } from "@/lib/i18n/client";
 
 const TILTS = [-3, 2, -2, 3];
 
@@ -50,6 +51,7 @@ export function WelcomeSurface({
   onSkip: () => void;
   onSetupInstead: () => void;
 }) {
+  const welcomeCopy = getWelcomeCopy(useTranslations());
   return (
     <div
       role="dialog"
@@ -81,7 +83,7 @@ export function WelcomeSurface({
           {headline}
         </h1>
         <p className="mt-3 max-w-xl text-base leading-7 text-slate-600">
-          {WELCOME_COPY.subline}
+          {welcomeCopy.subline}
         </p>
 
         <div className="mt-10 flex flex-wrap items-start justify-center gap-6">
@@ -138,16 +140,16 @@ export function WelcomeSurface({
             onClick={onSkip}
             className="text-sm font-medium text-slate-600 underline-offset-4 hover:underline"
           >
-            {WELCOME_COPY.skip}
+            {welcomeCopy.skip}
           </button>
-          <p className="text-xs text-slate-500">{WELCOME_COPY.reopenHint}</p>
+          <p className="text-xs text-slate-500">{welcomeCopy.reopenHint}</p>
           {showSetupLink ? (
             <button
               type="button"
               onClick={onSetupInstead}
               className="mt-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
             >
-              {WELCOME_COPY.setupInstead}
+              {welcomeCopy.setupInstead}
             </button>
           ) : null}
         </div>

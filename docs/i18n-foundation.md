@@ -61,10 +61,14 @@ persistence change.
 
 ## Surfaces not yet migrated
 
-Only login is the vertical pilot. Dashboard, registration, portal, booking,
-emails, PDFs, SMS, API documentation, validation messages, toasts, and the
-clinical and billing workflows remain unchanged and require separate,
-reviewable migrations.
+Login, the authenticated sidebar, top bar, dashboard page/charts, and welcome
+surface are migrated pilots. The authenticated shell receives language from
+the existing protected `settings.getPractice` query, so it uses the active
+practice's persisted language and never trusts a browser-supplied tenant value.
+
+Registration, portal, booking, emails, PDFs, SMS, API documentation,
+validation messages, toasts, the activation checklist, and the clinical and
+billing workflows remain unchanged and require separate, reviewable migrations.
 
 PDF invoice and discharge-instruction structural copy remains in English. The
 separate CRC glyph/encoding issue (rendering `₡` as `¡` in some PDFs) is also
