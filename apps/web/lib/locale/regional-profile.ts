@@ -13,11 +13,8 @@ import {
  * unchanged until a later, explicit adoption task.
  */
 
-/** Costa Rica is representable here before it is selectable by the product. */
-export const REGIONAL_PROFILE_COUNTRY_CODES = [
-  ...CLINIC_REGION_CODES,
-  "CR",
-] as const;
+/** Every profile country is selectable by the practice product. */
+export const REGIONAL_PROFILE_COUNTRY_CODES = [...CLINIC_REGION_CODES] as const;
 
 export type RegionalProfileCountryCode =
   (typeof REGIONAL_PROFILE_COUNTRY_CODES)[number];

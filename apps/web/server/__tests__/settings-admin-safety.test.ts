@@ -427,6 +427,86 @@ describe("settings admin stale target safety", () => {
     );
   });
 
+  it("activates Costa Rica with explicit tax and regional defaults in the caller tenant", async () => {
+    const { db, updateSet } = createDb({
+      selectResults: [[]],
+      updatedRows: [{ id: PRACTICE_ID, country: "CR" }],
+    });
+
+    await expect(
+      callerWithDb(db).updatePractice({
+        country: "CR",
+        taxRatePercent: "0.00",
+      }),
+    ).resolves.toMatchObject({ id: PRACTICE_ID, country: "CR" });
+
+    expect(updateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        country: "CR",
+        currency: "crc",
+        taxRatePercent: "0.00",
+        language: "es",
+        formatLocale: "es-CR",
+        regulatoryProfile: "CR_NEUTRAL",
+        fiscalProvider: "none",
+      }),
+    );
+  });
+
+  it("returns a persisted Costa Rica regional profile from Settings", async () => {
+    const { db } = createDb({
+      selectRows: [
+        {
+          id: PRACTICE_ID,
+          country: "CR",
+          currency: "crc",
+          timezone: "America/Costa_Rica",
+          language: "es",
+          formatLocale: "es-CR",
+          regulatoryProfile: "CR_NEUTRAL",
+          fiscalProvider: "none",
+          settings: {
+            onboardingState: {
+              jurisdictionCountry: "CR",
+              jurisdictionSelectedAt: "2026-08-24T00:00:00.000Z",
+              jurisdictionSource: "settings",
+            },
+          },
+        },
+      ],
+    });
+
+    await expect(callerWithDb(db).getPractice()).resolves.toMatchObject({
+      country: "CR",
+      currency: "crc",
+      timezone: "America/Costa_Rica",
+      language: "es",
+      formatLocale: "es-CR",
+      regulatoryProfile: "CR_NEUTRAL",
+      fiscalProvider: "none",
+      jurisdictionConfirmed: true,
+    });
+  });
+
+  it("rejects a Costa Rica transition without tax or when invoices exist", async () => {
+    const missingTax = createDb();
+    await expect(
+      callerWithDb(missingTax.db).updatePractice({ country: "CR" }),
+    ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
+    expect(missingTax.updateSet).not.toHaveBeenCalled();
+
+    const withInvoice = createDb({
+      selectResults: [[{ id: "invoice-1" }]],
+    });
+    await expect(
+      callerWithDb(withInvoice.db).updatePractice({
+        country: "CR",
+        taxRatePercent: "0.00",
+      }),
+    ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
+    expect(withInvoice.updateSet).not.toHaveBeenCalled();
+  });
+
   it("rejects missing or deleted practice metadata reads", async () => {
     const { db } = createDb({ selectResults: [[], [], []] });
 

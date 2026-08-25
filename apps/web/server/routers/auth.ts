@@ -36,6 +36,7 @@ import {
   AUTH_ONBOARDING_TEAM_MEMBER_NAME_MAX_LENGTH,
   AUTH_PRACTICE_NAME_MAX_LENGTH,
 } from "@/lib/auth-input-policy";
+import { isValidSettingsTaxRate } from "@/lib/settings-policy";
 import { ACQUISITION_VALUE_MAX_LENGTH } from "@/lib/acquisition";
 import { recordRegistration } from "@/lib/funnel-events-server";
 import { regionDefaults } from "@/lib/locale/format";
@@ -103,6 +104,15 @@ const authTextInput = (label: string, min: number, max: number) =>
     .trim()
     .min(min, `${label} must be at least ${min} characters.`)
     .max(max, `${label} must be at most ${max} characters.`);
+
+const optionalTaxRateInput = z
+  .string()
+  .trim()
+  .refine(
+    isValidSettingsTaxRate,
+    "Tax rate must be between 0 and 100 with at most two decimals.",
+  )
+  .optional();
 
 const onboardingTeamMemberSchema = z.object({
   name: authTextInput(
@@ -203,6 +213,7 @@ export const authRouter = createRouter({
           AUTH_PRACTICE_NAME_MAX_LENGTH,
         ),
         country: z.enum(CLINIC_REGION_CODES),
+        taxRatePercent: optionalTaxRateInput,
         locationName: authTextInput(
           "Location name",
           2,
@@ -284,6 +295,13 @@ export const authRouter = createRouter({
       }
 
       const passwordHash = await hash(input.password, PASSWORD_HASH_COST);
+      if (input.country === "CR" && input.taxRatePercent === undefined) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Set an explicit tax rate before registering a Costa Rica practice. No Costa Rica tax default is configured.",
+        });
+      }
       const registeredAt = new Date().toISOString();
       const defaults = regionDefaults(input.country);
       const regionalProfile = legacyRegionalProfileDefaults(input.country);
@@ -332,7 +350,7 @@ export const authRouter = createRouter({
               email,
               country: input.country,
               currency: defaults.currency,
-              taxRatePercent: defaults.taxRatePercent,
+              taxRatePercent: input.taxRatePercent ?? defaults.taxRatePercent!,
               timezone: defaults.timezone,
               language: regionalProfile.language,
               formatLocale: regionalProfile.formatLocale,

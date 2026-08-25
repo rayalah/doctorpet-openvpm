@@ -500,6 +500,48 @@ describe("auth router input validation", () => {
     });
   });
 
+  it("accepts Costa Rica only with an explicit tax rate and persists its profile", async () => {
+    const { db, insertValues } = createRegistrationDb();
+
+    await expect(
+      callerWithDb(db).register({
+        email: "costa-rica@example.com",
+        password: "password123",
+        practiceName: "Clínica Sintética CR",
+        country: "CR",
+        taxRatePercent: "0.00",
+      }),
+    ).resolves.toMatchObject({ id: "user-1" });
+
+    expect(insertValues).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        country: "CR",
+        currency: "crc",
+        timezone: "America/Costa_Rica",
+        taxRatePercent: "0.00",
+        language: "es",
+        formatLocale: "es-CR",
+        regulatoryProfile: "CR_NEUTRAL",
+        fiscalProvider: "none",
+      }),
+    );
+  });
+
+  it("rejects Costa Rica registration without an assumed tax rate", async () => {
+    const { db, insertValues } = createRegistrationDb();
+
+    await expect(
+      callerWithDb(db).register({
+        email: "costa-rica@example.com",
+        password: "password123",
+        practiceName: "Clínica Sintética CR",
+        country: "CR",
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(insertValues).not.toHaveBeenCalled();
+  });
+
   it("fails signup before setup side effects when core account bootstrap returns no user", async () => {
     const { db, insertValues, transaction, updateSet } = createRegistrationDb({
       insertRows: [{ id: "practice-1" }, { id: "location-1" }, undefined],

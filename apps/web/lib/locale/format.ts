@@ -47,8 +47,11 @@ export function regulatoryFramework(country?: string | null): "uk_vmd" | "us_dea
 
 export interface RegionDefaults {
   currency: string;
-  /** Standard sales-tax / VAT rate as a percent string (e.g. "20.00"). */
-  taxRatePercent: string;
+  /**
+   * Standard sales-tax / VAT rate where the product already has an explicit
+   * legacy default. Null means the administrator must provide it deliberately.
+   */
+  taxRatePercent: string | null;
   timezone: string;
 }
 
@@ -63,6 +66,10 @@ export function regionDefaults(country?: string | null): RegionDefaults {
       return { currency: "cad", taxRatePercent: "5.00", timezone: "America/Toronto" };
     case "AU":
       return { currency: "aud", taxRatePercent: "10.00", timezone: "Australia/Sydney" };
+    case "CR":
+      // Costa Rica is selectable, but this project makes no tax-rate or
+      // fiscal-compliance assertion. The UI/API require an explicit value.
+      return { currency: "crc", taxRatePercent: null, timezone: "America/Costa_Rica" };
     default:
       return { currency: "usd", taxRatePercent: "8.00", timezone: "America/New_York" };
   }

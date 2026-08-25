@@ -55,6 +55,11 @@ import { useWelcome } from "@/components/welcome/welcome-provider";
 import { cn, isValidEmail } from "@/lib/utils";
 import { toast } from "sonner";
 import { regionDefaults } from "@/lib/locale/format";
+import { regionalProfileDefaultsForCountry } from "@/lib/locale/regional-profile";
+import {
+  PRACTICE_CURRENCY_OPTIONS,
+  PRACTICE_TIMEZONES,
+} from "@/lib/locale/practice-region-options";
 import {
   CLINIC_REGION_OPTIONS,
   isClinicRegionCode,
@@ -168,22 +173,6 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "booking", label: "Online Booking", icon: Globe },
   { id: "billing", label: "Plan & Billing", icon: CreditCard },
 ];
-
-const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Phoenix",
-  "America/Anchorage",
-  "Pacific/Honolulu",
-  "America/Toronto",
-  "Europe/London",
-  "Europe/Dublin",
-  "Australia/Sydney",
-];
-
-const CURRENCIES = ["usd", "gbp", "eur", "cad", "aud"];
 
 const PRESET_COLORS = [
   "#0d9488",
@@ -607,17 +596,18 @@ function PracticeInfoTab() {
     setForm({ ...current, [field]: value });
   };
 
-  // Changing country prefills sensible currency/tax/timezone defaults for that
-  // region; the admin can still override any of them before saving.
+  // Country selection proposes profile defaults. Costa Rica intentionally has
+  // no tax default, so the rate must be set explicitly before saving.
   const handleCountryChange = (country: string) => {
     if (!isClinicRegionCode(country)) return;
     const d = regionDefaults(country);
+    const profile = regionalProfileDefaultsForCountry(country)!;
     setForm({
       ...current,
       country,
-      currency: d.currency,
-      taxRatePercent: d.taxRatePercent,
-      timezone: d.timezone,
+      currency: profile.currencyCode,
+      taxRatePercent: d.taxRatePercent ?? "",
+      timezone: profile.timezone,
     });
   };
 
@@ -683,7 +673,7 @@ function PracticeInfoTab() {
                 value={current.timezone}
                 onChange={(e) => handleChange("timezone", e.target.value)}
               >
-                {TIMEZONES.map((tz) => (
+                {PRACTICE_TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>
                     {tz.replace(/_/g, " ")}
                   </option>
@@ -698,8 +688,8 @@ function PracticeInfoTab() {
           <div className="space-y-1">
             <h3 className="text-sm font-semibold">Region &amp; Tax</h3>
             <p className="text-xs text-muted-foreground">
-              Controls invoice currency, tax rate, and date formatting. Choosing
-              a country prefills the usual defaults — adjust as needed.
+              Controls invoice currency, tax rate, and date formatting. Costa
+              Rica requires an explicit tax rate; no local rate is assumed.
             </p>
           </div>
           <div className="grid gap-4">
@@ -727,9 +717,9 @@ function PracticeInfoTab() {
                   value={current.currency}
                   onChange={(e) => handleChange("currency", e.target.value)}
                 >
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c.toUpperCase()}
+                  {PRACTICE_CURRENCY_OPTIONS.map((currency) => (
+                    <option key={currency.code} value={currency.code}>
+                      {currency.label}
                     </option>
                   ))}
                 </select>

@@ -7,6 +7,7 @@ import {
   withRegionalProfileOverrides,
 } from "../regional-profile";
 import { isSupportedPracticeTimezone } from "../../settings-policy";
+import { CLINIC_REGION_CODES } from "../clinic-regions";
 
 describe("regional profile foundation", () => {
   it("represents every legacy selectable country without changing its defaults", () => {
@@ -31,7 +32,8 @@ describe("regional profile foundation", () => {
     expect(legacyRegionalProfileDefaults("AU").regulatoryProfile).toBe("US_DEA");
   });
 
-  it("represents the conceptual Costa Rica profile without making it active", () => {
+  it("represents Costa Rica as an active practice country", () => {
+    expect(CLINIC_REGION_CODES).toContain("CR");
     expect(regionalProfileDefaultsForCountry("CR")).toEqual({
       countryCode: "CR",
       language: "es",
@@ -43,7 +45,7 @@ describe("regional profile foundation", () => {
     });
   });
 
-  it("provides Costa Rica catalog metadata without adding it to active UI options", () => {
+  it("provides Costa Rica catalog metadata for active UI options", () => {
     const entry = regionalCatalogEntryForCountry("CR");
 
     expect(entry).toMatchObject({
@@ -114,7 +116,7 @@ describe("regional profile foundation", () => {
     ).toEqual(legacyRegionalProfileDefaults("IE"));
   });
 
-  it("reconstructs a conceptual Costa Rica profile from storage only", () => {
+  it("reconstructs a Costa Rica profile from storage only", () => {
     expect(
       practiceRegionalProfileFromPersisted({
         country: "CR",

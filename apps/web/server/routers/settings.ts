@@ -41,6 +41,7 @@ import {
   REGIONAL_FORMAT_LOCALES,
   REGIONAL_LANGUAGES,
   REGULATORY_PROFILES,
+  regionalProfileDefaultsForCountry,
 } from "@/lib/locale/regional-profile";
 import {
   CLINIC_REGION_CODES,
@@ -856,8 +857,45 @@ export const settingsRouter = createRouter({
           const defaults = regionDefaults(input.country);
           patch.country = input.country.toUpperCase();
           if (input.currency === undefined) patch.currency = defaults.currency;
-          if (input.taxRatePercent === undefined)
+          if (
+            input.taxRatePercent === undefined &&
+            defaults.taxRatePercent !== null
+          )
             patch.taxRatePercent = defaults.taxRatePercent;
+          if (input.country === "CR") {
+            if (input.taxRatePercent === undefined) {
+              throw new TRPCError({
+                code: "PRECONDITION_FAILED",
+                message:
+                  "Set an explicit tax rate before selecting Costa Rica. No Costa Rica tax default is configured.",
+              });
+            }
+            const [existingInvoice] = await tx
+              .select({ id: invoices.id })
+              .from(invoices)
+              .where(
+                and(
+                  eq(invoices.practiceId, ctx.practiceId),
+                  isNull(invoices.deletedAt),
+                ),
+              )
+              .limit(1);
+            if (existingInvoice) {
+              throw new TRPCError({
+                code: "PRECONDITION_FAILED",
+                message:
+                  "Cannot change a practice with invoices to Costa Rica. Review financial history before changing its jurisdiction.",
+              });
+            }
+            const profile = regionalProfileDefaultsForCountry("CR")!;
+            if (input.language === undefined) patch.language = profile.language;
+            if (input.formatLocale === undefined)
+              patch.formatLocale = profile.formatLocale;
+            if (input.regulatoryProfile === undefined)
+              patch.regulatoryProfile = profile.regulatoryProfile;
+            if (input.fiscalProvider === undefined)
+              patch.fiscalProvider = profile.fiscalProvider;
+          }
           jurisdictionPatch = explicitJurisdictionState(
             input.country,
             jurisdictionSource ?? "settings",

@@ -9,6 +9,7 @@ import { FormField } from "@/components/ui/form-field";
 import {
   PRACTICE_NAME_MAX_LENGTH,
   STAFF_LICENSE_NUMBER_MAX_LENGTH,
+  isValidSettingsTaxRate,
 } from "@/lib/settings-policy";
 import type { StepHandle } from "../journey-types";
 import { regionDefaults } from "@/lib/locale/format";
@@ -17,21 +18,7 @@ import {
   isClinicRegionCode,
   type ClinicRegionCode,
 } from "@/lib/locale/clinic-regions";
-
-// Mirrors the TIMEZONES list on the settings page.
-const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Phoenix",
-  "America/Anchorage",
-  "Pacific/Honolulu",
-  "America/Toronto",
-  "Europe/London",
-  "Europe/Dublin",
-  "Australia/Sydney",
-];
+import { PRACTICE_TIMEZONES } from "@/lib/locale/practice-region-options";
 
 const selectClass =
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
@@ -64,11 +51,13 @@ export function PracticeBasicsStep({
   const [name, setName] = useState("");
   const [country, setCountry] = useState<ClinicRegionCode | "">("");
   const [timezone, setTimezone] = useState("America/New_York");
+  const [taxRatePercent, setTaxRatePercent] = useState("");
   const [ownerRole, setOwnerRole] = useState<
     "veterinarian" | "non_clinical" | ""
   >("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [ownerRoleMissing, setOwnerRoleMissing] = useState(false);
+  const [taxRateMissing, setTaxRateMissing] = useState(false);
   const [filled, setFilled] = useState(false);
   const trimmedName = name.trim();
   const practiceNameInvalid =
@@ -85,6 +74,7 @@ export function PracticeBasicsStep({
         : "",
     );
     setTimezone(practice.timezone ?? "America/New_York");
+    setTaxRatePercent(practice.taxRatePercent ?? "");
     setOwnerRole(clinicalProfile.isVeterinarian ? "veterinarian" : "");
     setLicenseNumber(clinicalProfile.licenseNumber ?? "");
     setFilled(true);
@@ -102,6 +92,11 @@ export function PracticeBasicsStep({
           return false;
         if (practiceNameInvalid) return false;
         if (!country) return false;
+        if (country === "CR" && !isValidSettingsTaxRate(taxRatePercent)) {
+          setTaxRateMissing(true);
+          return false;
+        }
+        setTaxRateMissing(false);
         if (!ownerRole) {
           setOwnerRoleMissing(true);
           return false;
@@ -112,6 +107,8 @@ export function PracticeBasicsStep({
             name: trimmedName,
             country,
             timezone,
+            taxRatePercent:
+              country === "CR" ? taxRatePercent.trim() : undefined,
             jurisdictionSource: "onboarding",
           });
         }
@@ -135,6 +132,7 @@ export function PracticeBasicsStep({
     practiceNameInvalid,
     country,
     timezone,
+    taxRatePercent,
     ownerRole,
     licenseNumber,
     updatePractice,
@@ -202,7 +200,10 @@ export function PracticeBasicsStep({
                 return;
               }
               setCountry(nextCountry);
-              setTimezone(regionDefaults(nextCountry).timezone);
+              const defaults = regionDefaults(nextCountry);
+              setTimezone(defaults.timezone);
+              setTaxRatePercent(defaults.taxRatePercent ?? "");
+              setTaxRateMissing(false);
             }}
             required
           >
@@ -222,7 +223,7 @@ export function PracticeBasicsStep({
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
           >
-            {TIMEZONES.map((tz) => (
+            {PRACTICE_TIMEZONES.map((tz) => (
               <option key={tz} value={tz}>
                 {tz.replace(/_/g, " ")}
               </option>
@@ -230,6 +231,33 @@ export function PracticeBasicsStep({
           </select>
         </FormField>
       </div>
+
+      {country === "CR" ? (
+        <FormField
+          label="Tax / VAT rate (%)"
+          htmlFor="ob-tax-rate-percent"
+          description="Enter a rate confirmed for your clinic. No Costa Rica tax rate is assumed."
+        >
+          <Input
+            id="ob-tax-rate-percent"
+            type="number"
+            min="0"
+            max="100"
+            step="0.01"
+            value={taxRatePercent}
+            onChange={(event) => {
+              setTaxRatePercent(event.target.value);
+              setTaxRateMissing(false);
+            }}
+            aria-invalid={taxRateMissing || undefined}
+          />
+          {taxRateMissing ? (
+            <p className="text-xs text-destructive">
+              Set an explicit tax rate before continuing.
+            </p>
+          ) : null}
+        </FormField>
+      ) : null}
 
       {country && country !== "US" ? (
         <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">

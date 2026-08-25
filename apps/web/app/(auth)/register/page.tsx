@@ -47,6 +47,7 @@ import {
   CLINIC_REGION_OPTIONS,
   type ClinicRegionCode,
 } from "@/lib/locale/clinic-regions";
+import { isValidSettingsTaxRate } from "@/lib/settings-policy";
 import { safeAuthNextPath } from "@/lib/auth-redirect";
 import { ClinicIntentBuilder } from "@/components/onboarding/clinic-intent-builder";
 import { FirstDayRecommendations } from "@/components/onboarding/first-day-recommendations";
@@ -104,6 +105,7 @@ function RegisterPageInner() {
   const [firstGoal, setFirstGoal] = useState<FirstGoal>(DEFAULT_FIRST_GOAL);
   const [practiceName, setPracticeName] = useState("");
   const [country, setCountry] = useState<RegistrationCountry>("");
+  const [taxRatePercent, setTaxRatePercent] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -246,6 +248,8 @@ function RegisterPageInner() {
     if (!country) return "Choose your clinic country.";
     if (country === "OTHER")
       return "Hosted workspaces are not available in your country yet.";
+    if (country === "CR" && !isValidSettingsTaxRate(taxRatePercent))
+      return "Set an explicit tax rate for Costa Rica. No rate is assumed.";
     if (password.length < AUTH_PASSWORD_MIN_LENGTH)
       return `Use at least ${AUTH_PASSWORD_MIN_LENGTH} characters for the password.`;
     if (password.length > AUTH_PASSWORD_MAX_LENGTH)
@@ -259,6 +263,7 @@ function RegisterPageInner() {
     isValidEmail(email) &&
     country !== "" &&
     country !== "OTHER" &&
+    (country !== "CR" || isValidSettingsTaxRate(taxRatePercent)) &&
     password.length >= AUTH_PASSWORD_MIN_LENGTH &&
     password.length <= AUTH_PASSWORD_MAX_LENGTH;
 
@@ -290,6 +295,7 @@ function RegisterPageInner() {
       password,
       practiceName: practiceName.trim(),
       country: country as ClinicRegionCode,
+      taxRatePercent: country === "CR" ? taxRatePercent.trim() : undefined,
       onboardingDraft: { clinicModel, firstGoal },
       acquisition: registrationAcquisition,
     });
@@ -690,6 +696,25 @@ function RegisterPageInner() {
                 <option value="OTHER">Another country</option>
               </select>
             </FormField>
+
+            {country === "CR" ? (
+              <FormField
+                label="Tax / VAT rate (%)"
+                htmlFor="tax-rate-percent"
+                description="Enter a rate confirmed for your clinic. Doctor Pet does not assume a Costa Rica tax rate."
+              >
+                <Input
+                  id="tax-rate-percent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={taxRatePercent}
+                  onChange={(event) => setTaxRatePercent(event.target.value)}
+                  required
+                />
+              </FormField>
+            ) : null}
 
             {country && country !== "US" && country !== "OTHER" ? (
               <div className="flex gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">

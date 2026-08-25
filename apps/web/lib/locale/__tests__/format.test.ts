@@ -59,13 +59,18 @@ describe("regulatoryFramework", () => {
 });
 
 describe("regionDefaults", () => {
-  it("returns USD/8% for US (and unknown), GBP/20% for GB", () => {
+  it("keeps legacy tax defaults and requires an explicit Costa Rica rate", () => {
     expect(regionDefaults("US")).toMatchObject({ currency: "usd", taxRatePercent: "8.00" });
     expect(regionDefaults("ZZ")).toMatchObject({ currency: "usd" });
     expect(regionDefaults("GB")).toMatchObject({
       currency: "gbp",
       taxRatePercent: "20.00",
       timezone: "Europe/London",
+    });
+    expect(regionDefaults("CR")).toEqual({
+      currency: "crc",
+      taxRatePercent: null,
+      timezone: "America/Costa_Rica",
     });
   });
 });

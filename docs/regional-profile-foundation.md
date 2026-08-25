@@ -27,9 +27,9 @@ through a separately reviewed migration after verifying no deployment still
 depends on them.
 
 Country defaults are only starting profiles. Unknown countries return no
-profile and never receive an implicit US DEA fallback. Costa Rica is present
-only as a conceptual profile (`CR`, `es`, `es-CR`, `crc`,
-`America/Costa_Rica`, `CR_NEUTRAL`, `none`); it is not selectable yet.
+profile and never receive an implicit US DEA fallback. Costa Rica is active in
+practice registration, onboarding, and Practice Info (`CR`, `es`, `es-CR`,
+`crc`, `America/Costa_Rica`, `CR_NEUTRAL`, `none`).
 
 The regional catalog now also exposes structural metadata for Costa Rica:
 
@@ -38,10 +38,15 @@ The regional catalog now also exposes structural metadata for Costa Rica:
 - timezone: `America/Costa_Rica`;
 - phone country code: `+506`.
 
-This is structural support only. It does not activate CR in registration or
-settings forms, change regulation, enable Spanish UI, modify billing or
-invoices, implement fiscal integration, or change phone normalization for
-national numbers without an explicit prefix.
+Selecting CR proposes the regional profile and uses the central catalog for
+CRC and `America/Costa_Rica`. No Costa Rica tax rate is assumed: registration,
+onboarding, and a country transition require an administrator to provide an
+explicit rate. Existing clinics are not silently reinterpreted, prices and
+historical invoices are not converted, and no fiscal compliance claim is made.
+
+Still pending: Spanish runtime UI, functional `CR_NEUTRAL` regulation,
+historical invoice currency, complete Costa Rica phone/SMS support, fiscal
+connectors, and Doctor Pet branding.
 
 `formatCurrency` now maps country `CR` to `es-CR`, so CRC formatting uses the
 existing native `Intl.NumberFormat` strategy without hardcoding the symbol in
