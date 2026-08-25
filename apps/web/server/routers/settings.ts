@@ -37,6 +37,12 @@ import {
 import type { Database } from "@openpims/db/client";
 import { regionDefaults } from "@/lib/locale/format";
 import {
+  FISCAL_PROVIDERS,
+  REGIONAL_FORMAT_LOCALES,
+  REGIONAL_LANGUAGES,
+  REGULATORY_PROFILES,
+} from "@/lib/locale/regional-profile";
+import {
   CLINIC_REGION_CODES,
   explicitJurisdictionState,
   hasExplicitPracticeJurisdiction,
@@ -125,6 +131,10 @@ const currencyInput = z
   .trim()
   .regex(/^[A-Za-z]{3}$/, "Currency must be a three-letter ISO currency code")
   .transform((value) => value.toLowerCase());
+const languageInput = z.enum(REGIONAL_LANGUAGES);
+const formatLocaleInput = z.enum(REGIONAL_FORMAT_LOCALES);
+const regulatoryProfileInput = z.enum(REGULATORY_PROFILES);
+const fiscalProviderInput = z.enum(FISCAL_PROVIDERS);
 const phoneInput = optionalTrimmedString("Phone", SETTINGS_PHONE_MAX_LENGTH);
 const addressInput = optionalTrimmedString(
   "Address",
@@ -774,6 +784,12 @@ export const settingsRouter = createRouter({
           country: countryInput.optional(),
           jurisdictionSource: z.enum(["onboarding", "settings"]).optional(),
           currency: currencyInput.optional(),
+          // Persisted configuration dimensions. They remain independent from
+          // country and do not activate billing or regulatory behavior.
+          language: languageInput.optional(),
+          formatLocale: formatLocaleInput.optional(),
+          regulatoryProfile: regulatoryProfileInput.optional(),
+          fiscalProvider: fiscalProviderInput.optional(),
           taxRatePercent: z
             .string()
             .trim()

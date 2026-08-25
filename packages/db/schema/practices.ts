@@ -45,6 +45,20 @@ export const practices = pgTable(
     // behavior. Defaults keep existing US practices working unchanged.
     country: varchar("country", { length: 2 }).notNull().default("US"), // ISO 3166-1 alpha-2
     currency: varchar("currency", { length: 3 }).notNull().default("usd"), // ISO 4217, Stripe-style lowercase
+    // Persisted regional dimensions remain independent from country. They are
+    // configuration only; no billing or regulatory behavior consumes them yet.
+    language: varchar("language", { length: 16 }).notNull().default("en"),
+    formatLocale: varchar("format_locale", { length: 35 })
+      .notNull()
+      .default("en-US"),
+    // UNSPECIFIED is the safe database default for any out-of-band practice
+    // creation. The application sets legacy-compatible profiles explicitly.
+    regulatoryProfile: varchar("regulatory_profile", { length: 32 })
+      .notNull()
+      .default("UNSPECIFIED"),
+    fiscalProvider: varchar("fiscal_provider", { length: 64 })
+      .notNull()
+      .default("none"),
     taxRatePercent: numeric("tax_rate_percent", { precision: 5, scale: 2 })
       .notNull()
       .default("8.00"),
@@ -96,6 +110,22 @@ export const practices = pgTable(
     appointmentReminderLeadHoursCheck: check(
       "practices_appointment_reminder_lead_hours_check",
       sql`${table.appointmentReminderLeadHours} in (24, 48, 72)`,
+    ),
+    languageCheck: check(
+      "practices_language_check",
+      sql`${table.language} in ('en', 'es')`,
+    ),
+    formatLocaleCheck: check(
+      "practices_format_locale_check",
+      sql`${table.formatLocale} in ('en-US', 'en-CA', 'en-GB', 'en-IE', 'en-AU', 'es-CR')`,
+    ),
+    regulatoryProfileCheck: check(
+      "practices_regulatory_profile_check",
+      sql`${table.regulatoryProfile} in ('US_DEA', 'UK_VMD', 'CR_NEUTRAL', 'UNSPECIFIED')`,
+    ),
+    fiscalProviderCheck: check(
+      "practices_fiscal_provider_check",
+      sql`${table.fiscalProvider} = 'none'`,
     ),
     recoveryHoldEvidenceCheck: check(
       "practices_recovery_hold_evidence_check",

@@ -22,25 +22,38 @@ export const REGIONAL_PROFILE_COUNTRY_CODES = [
 export type RegionalProfileCountryCode =
   (typeof REGIONAL_PROFILE_COUNTRY_CODES)[number];
 
-export type RegionalLanguage = "en" | "es";
+export const REGIONAL_LANGUAGES = ["en", "es"] as const;
+export type RegionalLanguage = (typeof REGIONAL_LANGUAGES)[number];
 
 /**
- * Kept extensible because format locales are BCP 47 values rather than a
- * closed list of countries. The defaults below document the currently known
- * values without making them UI validation rules.
+ * The persisted values are explicitly enumerated. Adding a presentation
+ * locale requires a deliberate schema and contract change rather than an
+ * unvalidated runtime fallback.
  */
-export type FormatLocale = string;
+export const REGIONAL_FORMAT_LOCALES = [
+  "en-US",
+  "en-CA",
+  "en-GB",
+  "en-IE",
+  "en-AU",
+  "es-CR",
+] as const;
+export type FormatLocale = (typeof REGIONAL_FORMAT_LOCALES)[number];
 export type CurrencyCode = string;
 export type IanaTimeZone = string;
 
 /** Explicit profiles replace country-derived regulatory fallbacks. */
-export type RegulatoryProfile =
-  | "US_DEA"
-  | "UK_VMD"
-  | "CR_NEUTRAL";
+export const REGULATORY_PROFILES = [
+  "US_DEA",
+  "UK_VMD",
+  "CR_NEUTRAL",
+  "UNSPECIFIED",
+] as const;
+export type RegulatoryProfile = (typeof REGULATORY_PROFILES)[number];
 
 /** `none` is the only configured provider today. Extend this union explicitly. */
-export type FiscalProvider = "none";
+export const FISCAL_PROVIDERS = ["none"] as const;
+export type FiscalProvider = (typeof FISCAL_PROVIDERS)[number];
 
 export interface PracticeRegionalProfile {
   countryCode: RegionalProfileCountryCode;
@@ -60,6 +73,21 @@ export interface RegionalCatalogEntry extends PracticeRegionalProfile {
     symbol: string;
   };
   phoneCountryCode: string;
+}
+
+/**
+ * The persisted shape intentionally mirrors the practice columns. It keeps
+ * storage reconstruction separate from country defaults, so a tenant can use
+ * an independent language, currency, or regulatory profile.
+ */
+export interface PersistedPracticeRegionalFields {
+  country: string | null | undefined;
+  currency: string | null | undefined;
+  timezone: string | null | undefined;
+  language: string | null | undefined;
+  formatLocale: string | null | undefined;
+  regulatoryProfile: string | null | undefined;
+  fiscalProvider: string | null | undefined;
 }
 
 const REGIONAL_PROFILE_DEFAULTS: Readonly<
@@ -173,6 +201,31 @@ export function isRegionalProfileCountryCode(
   );
 }
 
+export function isRegionalLanguage(value: string): value is RegionalLanguage {
+  return REGIONAL_LANGUAGES.includes(value as RegionalLanguage);
+}
+
+export function isRegionalFormatLocale(value: string): value is FormatLocale {
+  return REGIONAL_FORMAT_LOCALES.includes(value as FormatLocale);
+}
+
+export function isRegulatoryProfile(value: string): value is RegulatoryProfile {
+  return REGULATORY_PROFILES.includes(value as RegulatoryProfile);
+}
+
+export function isFiscalProvider(value: string): value is FiscalProvider {
+  return FISCAL_PROVIDERS.includes(value as FiscalProvider);
+}
+
+function isSupportedIanaTimeZone(value: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Returns a copy so callers can independently override one dimension without
  * mutating the shared defaults. Unknown countries deliberately have no
@@ -202,6 +255,52 @@ export function legacyRegionalProfileDefaults(
   countryCode: ClinicRegionCode,
 ): PracticeRegionalProfile {
   return { ...REGIONAL_PROFILE_DEFAULTS[countryCode] };
+}
+
+/**
+ * Reconstructs a practice profile only from persisted dimensions. Country is
+ * validated solely as the profile identity; it never derives regulation or
+ * any other stored value. Unknown countries deliberately return null.
+ */
+export function practiceRegionalProfileFromPersisted(
+  fields: PersistedPracticeRegionalFields,
+): PracticeRegionalProfile | null {
+  const countryCode = fields.country?.trim().toUpperCase();
+  const currencyCode = fields.currency?.trim().toLowerCase();
+  const timezone = fields.timezone?.trim();
+  const language = fields.language?.trim();
+  const formatLocale = fields.formatLocale?.trim();
+  const regulatoryProfile = fields.regulatoryProfile?.trim();
+  const fiscalProvider = fields.fiscalProvider?.trim();
+
+  if (
+    !countryCode ||
+    !isRegionalProfileCountryCode(countryCode) ||
+    !currencyCode ||
+    !/^[a-z]{3}$/.test(currencyCode) ||
+    !timezone ||
+    !isSupportedIanaTimeZone(timezone) ||
+    !language ||
+    !isRegionalLanguage(language) ||
+    !formatLocale ||
+    !isRegionalFormatLocale(formatLocale) ||
+    !regulatoryProfile ||
+    !isRegulatoryProfile(regulatoryProfile) ||
+    !fiscalProvider ||
+    !isFiscalProvider(fiscalProvider)
+  ) {
+    return null;
+  }
+
+  return {
+    countryCode,
+    currencyCode,
+    timezone,
+    language,
+    formatLocale,
+    regulatoryProfile,
+    fiscalProvider,
+  };
 }
 
 /** Build an independent profile value without persisting or validating it. */

@@ -438,6 +438,10 @@ describe("auth router input validation", () => {
         currency: "eur",
         taxRatePercent: "23.00",
         timezone: "Europe/Dublin",
+        language: "en",
+        formatLocale: "en-IE",
+        regulatoryProfile: "US_DEA",
+        fiscalProvider: "none",
       }),
     );
     expect(insertValues).toHaveBeenNthCalledWith(

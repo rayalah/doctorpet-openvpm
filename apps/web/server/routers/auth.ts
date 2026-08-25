@@ -39,6 +39,7 @@ import {
 import { ACQUISITION_VALUE_MAX_LENGTH } from "@/lib/acquisition";
 import { recordRegistration } from "@/lib/funnel-events-server";
 import { regionDefaults } from "@/lib/locale/format";
+import { legacyRegionalProfileDefaults } from "@/lib/locale/regional-profile";
 import {
   CLINIC_REGION_CODES,
   explicitJurisdictionState,
@@ -285,6 +286,7 @@ export const authRouter = createRouter({
       const passwordHash = await hash(input.password, PASSWORD_HASH_COST);
       const registeredAt = new Date().toISOString();
       const defaults = regionDefaults(input.country);
+      const regionalProfile = legacyRegionalProfileDefaults(input.country);
       const onboardingState: Record<string, unknown> = {
         ...explicitJurisdictionState(
           input.country,
@@ -332,6 +334,10 @@ export const authRouter = createRouter({
               currency: defaults.currency,
               taxRatePercent: defaults.taxRatePercent,
               timezone: defaults.timezone,
+              language: regionalProfile.language,
+              formatLocale: regionalProfile.formatLocale,
+              regulatoryProfile: regionalProfile.regulatoryProfile,
+              fiscalProvider: regionalProfile.fiscalProvider,
               // Card-free trial grants Cloud access immediately with no Stripe
               // subscription; the trial-lifecycle sweep lapses it at expiry.
               ...(noCardTrial

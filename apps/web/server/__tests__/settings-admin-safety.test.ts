@@ -156,6 +156,20 @@ describe("settings admin stale target safety", () => {
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
 
     await expect(
+      callerWithDb(db).updatePractice({ language: "fr" as never }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    await expect(
+      callerWithDb(db).updatePractice({
+        regulatoryProfile: "INVALID" as never,
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    await expect(
+      callerWithDb(db).updatePractice({ fiscalProvider: "gti" as never }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    await expect(
       callerWithDb(db).updatePractice({ timezone: "   " }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
 
@@ -383,6 +397,34 @@ describe("settings admin stale target safety", () => {
     expect(updatePracticeBlock).toContain("jurisdictionPatch,");
     expect(getPracticeBlock).toContain("hasExplicitPracticeJurisdiction(");
     expect(getPracticeBlock).toContain("jurisdictionConfirmed:");
+  });
+
+  it("persists regional profile fields only within the caller practice scope", async () => {
+    const { db, updateSet } = createDb({
+      updatedRows: [{ id: PRACTICE_ID, language: "es" }],
+    });
+
+    await expect(
+      callerWithDb(db).updatePractice({
+        language: "es",
+        formatLocale: "es-CR",
+        regulatoryProfile: "CR_NEUTRAL",
+        fiscalProvider: "none",
+      }),
+    ).resolves.toMatchObject({ id: PRACTICE_ID, language: "es" });
+
+    expect(updateSet).toHaveBeenCalledWith({
+      language: "es",
+      formatLocale: "es-CR",
+      regulatoryProfile: "CR_NEUTRAL",
+      fiscalProvider: "none",
+    });
+    const updatePracticeBlock = SETTINGS_SOURCE.match(
+      /updatePractice:[\s\S]+?setMarketingEmailPreference:/,
+    )?.[0];
+    expect(updatePracticeBlock).toContain(
+      ".where(activePracticeWhere(ctx.practiceId))",
+    );
   });
 
   it("rejects missing or deleted practice metadata reads", async () => {

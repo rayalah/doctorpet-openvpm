@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   legacyRegionalProfileDefaults,
+  practiceRegionalProfileFromPersisted,
   regionalCatalogEntryForCountry,
   regionalProfileDefaultsForCountry,
   withRegionalProfileOverrides,
@@ -86,5 +87,91 @@ describe("regional profile foundation", () => {
   it("does not infer US DEA for an unknown country", () => {
     expect(regionalProfileDefaultsForCountry("ZZ")).toBeNull();
     expect(regionalProfileDefaultsForCountry(null)).toBeNull();
+    expect(
+      practiceRegionalProfileFromPersisted({
+        country: "ZZ",
+        currency: "usd",
+        timezone: "America/New_York",
+        language: "en",
+        formatLocale: "en-US",
+        regulatoryProfile: "US_DEA",
+        fiscalProvider: "none",
+      }),
+    ).toBeNull();
+  });
+
+  it("reconstructs legacy-compatible persisted fields without re-deriving them", () => {
+    expect(
+      practiceRegionalProfileFromPersisted({
+        country: "IE",
+        currency: "eur",
+        timezone: "Europe/Dublin",
+        language: "en",
+        formatLocale: "en-IE",
+        regulatoryProfile: "US_DEA",
+        fiscalProvider: "none",
+      }),
+    ).toEqual(legacyRegionalProfileDefaults("IE"));
+  });
+
+  it("reconstructs a conceptual Costa Rica profile from storage only", () => {
+    expect(
+      practiceRegionalProfileFromPersisted({
+        country: "CR",
+        currency: "crc",
+        timezone: "America/Costa_Rica",
+        language: "es",
+        formatLocale: "es-CR",
+        regulatoryProfile: "CR_NEUTRAL",
+        fiscalProvider: "none",
+      }),
+    ).toEqual(regionalProfileDefaultsForCountry("CR"));
+  });
+
+  it("keeps persisted language, currency, and regulatory choices independent", () => {
+    const base = {
+      country: "US",
+      currency: "usd",
+      timezone: "America/New_York",
+      language: "en",
+      formatLocale: "en-US",
+      regulatoryProfile: "US_DEA",
+      fiscalProvider: "none",
+    } as const;
+
+    expect(
+      practiceRegionalProfileFromPersisted({ ...base, language: "es" }),
+    ).toMatchObject({ countryCode: "US", language: "es" });
+    expect(
+      practiceRegionalProfileFromPersisted({ ...base, currency: "crc" }),
+    ).toMatchObject({ countryCode: "US", currencyCode: "crc" });
+    expect(
+      practiceRegionalProfileFromPersisted({
+        ...base,
+        regulatoryProfile: "CR_NEUTRAL",
+      }),
+    ).toMatchObject({ countryCode: "US", regulatoryProfile: "CR_NEUTRAL" });
+  });
+
+  it("rejects invalid persisted dimensions and only accepts the none provider", () => {
+    const base = {
+      country: "US",
+      currency: "usd",
+      timezone: "America/New_York",
+      language: "en",
+      formatLocale: "en-US",
+      regulatoryProfile: "US_DEA",
+      fiscalProvider: "none",
+    } as const;
+
+    expect(
+      practiceRegionalProfileFromPersisted({ ...base, language: "fr" }),
+    ).toBeNull();
+    expect(
+      practiceRegionalProfileFromPersisted({ ...base, fiscalProvider: "gtI" }),
+    ).toBeNull();
+    expect(practiceRegionalProfileFromPersisted(base)?.fiscalProvider).toBe(
+      "none",
+    );
   });
 });
