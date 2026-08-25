@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   legacyRegionalProfileDefaults,
+  regionalCatalogEntryForCountry,
   regionalProfileDefaultsForCountry,
   withRegionalProfileOverrides,
 } from "../regional-profile";
+import { isSupportedPracticeTimezone } from "../../settings-policy";
 
 describe("regional profile foundation", () => {
   it("represents every legacy selectable country without changing its defaults", () => {
@@ -38,6 +40,26 @@ describe("regional profile foundation", () => {
       regulatoryProfile: "CR_NEUTRAL",
       fiscalProvider: "none",
     });
+  });
+
+  it("provides Costa Rica catalog metadata without adding it to active UI options", () => {
+    const entry = regionalCatalogEntryForCountry("CR");
+
+    expect(entry).toMatchObject({
+      countryCode: "CR",
+      countryName: "Costa Rica",
+      currency: {
+        code: "CRC",
+        name: "Colón costarricense",
+        symbol: "₡",
+      },
+      phoneCountryCode: "+506",
+    });
+    expect(entry?.currencyCode.toUpperCase()).toBe("CRC");
+  });
+
+  it("recognizes the Costa Rica timezone as a valid IANA timezone", () => {
+    expect(isSupportedPracticeTimezone("America/Costa_Rica")).toBe(true);
   });
 
   it("keeps regional dimensions independent when one value changes", () => {

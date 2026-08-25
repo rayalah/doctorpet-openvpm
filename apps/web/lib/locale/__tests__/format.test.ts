@@ -21,6 +21,14 @@ describe("formatCurrency", () => {
   it("formats EUR", () => {
     expect(formatCurrency(40, "eur", "IE")).toContain("€");
   });
+  it("uses native es-CR formatting for CRC", () => {
+    const expected = new Intl.NumberFormat("es-CR", {
+      style: "currency",
+      currency: "CRC",
+    }).format(1234.5);
+
+    expect(formatCurrency(1234.5, "crc", "CR")).toBe(expected);
+  });
   it("accepts string amounts from the DB and coerces them", () => {
     const s = formatCurrency("65.00", "gbp", "GB");
     expect(s).toContain("£");
@@ -65,6 +73,7 @@ describe("regionDefaults", () => {
 describe("localeForCountry", () => {
   it("maps known countries and falls back to en-US", () => {
     expect(localeForCountry("GB")).toBe("en-GB");
+    expect(localeForCountry("CR")).toBe("es-CR");
     expect(localeForCountry("xx")).toBe("en-US");
     expect(localeForCountry(null)).toBe("en-US");
   });

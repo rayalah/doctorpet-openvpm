@@ -10,6 +10,7 @@ const COUNTRY_LOCALE: Record<string, string> = {
   IE: "en-IE",
   CA: "en-CA",
   AU: "en-AU",
+  CR: "es-CR",
 };
 
 export function localeForCountry(country?: string | null): string {

@@ -52,6 +52,16 @@ export interface PracticeRegionalProfile {
   fiscalProvider: FiscalProvider;
 }
 
+export interface RegionalCatalogEntry extends PracticeRegionalProfile {
+  countryName: string;
+  currency: {
+    code: string;
+    name: string;
+    symbol: string;
+  };
+  phoneCountryCode: string;
+}
+
 const REGIONAL_PROFILE_DEFAULTS: Readonly<
   Record<RegionalProfileCountryCode, PracticeRegionalProfile>
 > = {
@@ -111,6 +121,50 @@ const REGIONAL_PROFILE_DEFAULTS: Readonly<
   },
 };
 
+/**
+ * Presentation metadata for the regional catalog. Currency `code` is the
+ * uppercase ISO form; profile `currencyCode` preserves the lowercase
+ * Stripe-compatible convention used by the existing application storage.
+ */
+const REGIONAL_CATALOG_METADATA: Readonly<
+  Record<RegionalProfileCountryCode, Omit<RegionalCatalogEntry, keyof PracticeRegionalProfile>>
+> = {
+  US: {
+    countryName: "United States",
+    currency: { code: "USD", name: "US dollar", symbol: "$" },
+    phoneCountryCode: "+1",
+  },
+  CA: {
+    countryName: "Canada",
+    currency: { code: "CAD", name: "Canadian dollar", symbol: "$" },
+    phoneCountryCode: "+1",
+  },
+  GB: {
+    countryName: "United Kingdom",
+    currency: { code: "GBP", name: "Pound sterling", symbol: "£" },
+    phoneCountryCode: "+44",
+  },
+  IE: {
+    countryName: "Ireland",
+    currency: { code: "EUR", name: "Euro", symbol: "€" },
+    phoneCountryCode: "+353",
+  },
+  AU: {
+    countryName: "Australia",
+    currency: { code: "AUD", name: "Australian dollar", symbol: "A$" },
+    phoneCountryCode: "+61",
+  },
+  CR: {
+    countryName: "Costa Rica",
+    currency: {
+      code: "CRC",
+      name: "Colón costarricense",
+      symbol: "₡",
+    },
+    phoneCountryCode: "+506",
+  },
+};
+
 export function isRegionalProfileCountryCode(
   value: string,
 ): value is RegionalProfileCountryCode {
@@ -130,6 +184,14 @@ export function regionalProfileDefaultsForCountry(
   const normalized = countryCode?.trim().toUpperCase();
   if (!normalized || !isRegionalProfileCountryCode(normalized)) return null;
   return { ...REGIONAL_PROFILE_DEFAULTS[normalized] };
+}
+
+export function regionalCatalogEntryForCountry(
+  countryCode: string | null | undefined,
+): RegionalCatalogEntry | null {
+  const profile = regionalProfileDefaultsForCountry(countryCode);
+  if (!profile) return null;
+  return { ...profile, ...REGIONAL_CATALOG_METADATA[profile.countryCode] };
 }
 
 /**

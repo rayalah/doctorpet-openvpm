@@ -22,6 +22,10 @@ describe("normalizeE164", () => {
     expect(normalizeE164("+44 20 7946 0958")).toBe("+442079460958");
   });
 
+  it("keeps an explicit Costa Rica number", () => {
+    expect(normalizeE164("+506 8888 8888")).toBe("+50688888888");
+  });
+
   it("rejects plus-prefixed numbers with an invalid zero country code", () => {
     expect(normalizeE164("+05555550123")).toBeNull();
     expect(normalizeE164("+0 555 555 0123")).toBeNull();
