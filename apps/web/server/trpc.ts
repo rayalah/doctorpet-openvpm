@@ -21,6 +21,7 @@ import {
   type Feature,
 } from "@/lib/billing/plans";
 import { readHostedAiAccess } from "@/lib/billing/ai-access";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 type UserRole =
   | "admin"
@@ -366,7 +367,7 @@ export const protectedProcedure = t.procedure.use(
             throw new TRPCError({
               code: "FORBIDDEN",
               message:
-                "OpenVPM Cloud is read-only until your trial or subscription is active. You can still manage billing and export your data.",
+                `${platformBrand.displayName} Cloud is read-only until your trial or subscription is active. You can still manage billing and export your data.`,
             });
           }
         }
