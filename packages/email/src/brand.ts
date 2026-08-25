@@ -1,5 +1,5 @@
 /**
- * Brand identity passed into every email shell. Defaults resolve OpenVPM's
+ * Brand identity passed into every email shell. Defaults resolve Doctor Pet's
  * hosted identity from env (so app + emails stay in sync), with sane fallbacks
  * for local rendering / previews.
  */
@@ -28,10 +28,10 @@ function nonBlankEnv(name: string): string | undefined {
   return value ? value : undefined;
 }
 
-export function openvpmBrand(): Brand {
+export function doctorPetBrand(): Brand {
   return {
-    name: "OpenVPM",
-    companyName: nonBlankEnv("EMAIL_COMPANY_NAME") ?? "OpenVPM",
+    name: "Doctor Pet by ResilIA",
+    companyName: nonBlankEnv("EMAIL_COMPANY_NAME") ?? "ResilIA",
     supportEmail: nonBlankEnv("EMAIL_SUPPORT_ADDRESS") ?? "support@openvpm.com",
     companyAddress: nonBlankEnv("EMAIL_COMPANY_ADDRESS"),
     appUrl: nonBlankEnv("NEXT_PUBLIC_APP_URL") ?? "https://app.openvpm.com",
@@ -39,3 +39,6 @@ export function openvpmBrand(): Brand {
     logoUrl: nonBlankEnv("EMAIL_LOGO_URL"),
   };
 }
+
+/** @deprecated Kept as a stable package export for existing app callers. */
+export const openvpmBrand = doctorPetBrand;

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import {
   AUTH_PASSWORD_MAX_LENGTH,
   AUTH_PASSWORD_MIN_LENGTH,
@@ -28,7 +29,7 @@ function ResetPasswordInner() {
     <div className="flex min-h-screen items-center justify-center bg-surface">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8">
         <div className="mb-6 text-center">
-          <h1 className="font-heading text-2xl font-bold text-foreground">OpenVPM</h1>
+          <h1 className="font-heading text-2xl font-bold text-foreground">{platformBrand.displayName}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Choose a new password</p>
         </div>
 

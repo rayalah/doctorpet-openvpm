@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const metadata: Metadata = {
-  title: "Legal - OpenVPM",
-  description: "OpenVPM terms of service and privacy policy",
+  title: `Legal | ${platformBrand.productName}`,
+  description: `${platformBrand.displayName} legal and open-source information`,
 };
 
 export default function LegalLayout({
@@ -16,7 +17,7 @@ export default function LegalLayout({
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <Link href="/" className="font-heading text-lg font-semibold">
-            OpenVPM
+            {platformBrand.displayName}
           </Link>
           <nav className="flex gap-4 text-sm text-muted-foreground">
             <Link href="/legal/terms" className="hover:text-foreground">
@@ -24,6 +25,9 @@ export default function LegalLayout({
             </Link>
             <Link href="/legal/privacy" className="hover:text-foreground">
               Privacy
+            </Link>
+            <Link href="/legal/open-source" className="hover:text-foreground">
+              Open source
             </Link>
           </nav>
         </div>

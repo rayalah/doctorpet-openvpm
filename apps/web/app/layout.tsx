@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, DM_Sans } from "next/font/google";
 import { Providers } from "@/lib/providers";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import "@/styles/globals.css";
 
 const inter = Inter({
@@ -14,11 +15,14 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "OpenVPM: Open-Source Veterinary Practice Management",
-  description:
-    "The first modern, open-source, API-first practice management system built for the veterinary community. Beautiful, fast, and free.",
+  title: {
+    default: platformBrand.displayName,
+    template: `%s | ${platformBrand.productName}`,
+  },
+  description: `${platformBrand.displayName}. ${platformBrand.tagline}`,
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    icon: [{ url: platformBrand.assets.mark, type: "image/png" }],
+    shortcut: platformBrand.assets.mark,
   },
 };
 

@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TrialBadge } from "@/components/layout/trial-badge";
 import { trpc } from "@/lib/trpc";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 const routeLabels: Record<string, string> = {
   "/": "Dashboard",
@@ -96,7 +97,7 @@ export function TopBar({
     basePath === "/controlled-substances" &&
     regulatoryAccess?.supportsDeaFeatures !== true
       ? "Dashboard"
-      : (routeLabels[basePath] ?? "OpenVPM");
+      : (routeLabels[basePath] ?? platformBrand.productName);
   const { data: session } = useSession();
   const role = session?.user?.role as UserRole | undefined;
   const availableNewActions = role

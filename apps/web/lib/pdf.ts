@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import { soapSectionText } from "@/lib/records/soap-content";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 // ---------------------------------------------------------------------------
 // Shared constants
@@ -56,6 +57,29 @@ function formatGeneratedDateUtc(): string {
   return new Date().toLocaleDateString("en-US", { timeZone: "UTC" });
 }
 
+/** Optional in-memory tenant logo. Callers remain compatible when omitted. */
+export type PdfBranding = {
+  tenantLogoDataUrl?: string;
+};
+
+function drawOptionalTenantLogo(doc: jsPDF, branding?: PdfBranding) {
+  if (!branding?.tenantLogoDataUrl) return;
+  try {
+    doc.addImage(branding.tenantLogoDataUrl, "PNG", PAGE_MARGIN, 10, 18, 18);
+  } catch {
+    // A tenant logo must never prevent a clinical or financial document download.
+  }
+}
+
+function drawPlatformFooter(doc: jsPDF, y: number, align: "center" | "left" = "center") {
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(7);
+  setColor(doc, COLOR_GRAY);
+  doc.text(`Powered by ${platformBrand.displayName}`, align === "center" ? PAGE_WIDTH / 2 : PAGE_MARGIN, y, {
+    align,
+  });
+}
+
 /**
  * Brand mark: a white paw print on a teal rounded square, drawn with
  * primitives so PDFs need no image asset. Matches the in-app brand color.
@@ -82,6 +106,7 @@ function drawPawMark(doc: jsPDF, x: number, y: number, size: number) {
 // ---------------------------------------------------------------------------
 
 export interface InvoiceData {
+  branding?: PdfBranding;
   practiceName: string;
   practiceAddress?: string;
   practicePhone?: string;
@@ -110,6 +135,7 @@ export interface InvoiceData {
 export function generateInvoicePdf(data: InvoiceData): jsPDF {
   const doc = new jsPDF();
   let y = PAGE_MARGIN;
+  drawOptionalTenantLogo(doc, data.branding);
 
   // --- Header: Practice info -------------------------------------------------
   doc.setFont(FONT, "bold");
@@ -299,6 +325,7 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
     pageHeight - 15,
     { align: "center" }
   );
+  drawPlatformFooter(doc, pageHeight - 10);
 
   return doc;
 }
@@ -878,6 +905,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
 // ---------------------------------------------------------------------------
 
 export interface VaccinationCertificateData {
+  branding?: PdfBranding;
   practiceName: string;
   practiceAddress?: string;
   practicePhone?: string;
@@ -902,6 +930,7 @@ export function generateVaccinationCertificatePdf(
 ): jsPDF {
   const doc = new jsPDF();
   let y = PAGE_MARGIN;
+  drawOptionalTenantLogo(doc, data.branding);
 
   doc.setFont(FONT, "bold");
   doc.setFontSize(20);
@@ -1002,6 +1031,7 @@ export function generateVaccinationCertificatePdf(
   doc.text(`Generated on ${generatedDate}`, PAGE_WIDTH / 2, pageHeight - 10, {
     align: "center",
   });
+  drawPlatformFooter(doc, pageHeight - 6);
 
   return doc;
 }

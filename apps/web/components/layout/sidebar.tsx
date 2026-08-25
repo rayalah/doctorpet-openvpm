@@ -28,7 +28,8 @@ import {
   ChevronRight,
   LogOut,
 } from "lucide-react";
-import { PawMark } from "@/components/brand/paw-mark";
+import { PlatformLogo } from "@/components/brand/platform-logo";
+import { resolveTenantBrand } from "@/lib/brand/tenant-brand";
 
 type UserRole =
   | "admin"
@@ -134,6 +135,7 @@ export function Sidebar({
   const { data: session, status } = useSession();
   const role = isUserRole(session?.user?.role) ? session.user.role : undefined;
   const { data: branding } = trpc.settings.getBranding.useQuery();
+  const tenantBrand = resolveTenantBrand(branding);
   const isCollapsed = collapsible && collapsed;
   const canShowNav = status === "authenticated" && role !== undefined;
   const { data: unreadInbox } = trpc.communications.listConversations.useQuery(
@@ -172,20 +174,27 @@ export function Sidebar({
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-border px-4">
         <Link href="/" className="flex items-center gap-2">
-          {branding?.logoUrl ? (
+          {tenantBrand.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={branding.logoUrl}
-              alt={branding.name ?? "Practice logo"}
+              src={tenantBrand.logoUrl}
+              alt={`${tenantBrand.name} logo`}
               className="h-8 w-8 rounded-lg object-cover"
             />
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <PawMark className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <PlatformLogo variant="mark" className="h-8 w-8 rounded-lg object-cover" />
           )}
           {!isCollapsed && (
-            <span className="font-heading text-lg font-semibold">OpenVPM</span>
+            <span className="min-w-0">
+              <span className="block truncate font-heading text-lg font-semibold">
+                {tenantBrand.name}
+              </span>
+              {tenantBrand.isTenantBranded ? (
+                <span className="block truncate text-[10px] text-muted-foreground">
+                  {tenantBrand.platformName}
+                </span>
+              ) : null}
+            </span>
           )}
         </Link>
       </div>

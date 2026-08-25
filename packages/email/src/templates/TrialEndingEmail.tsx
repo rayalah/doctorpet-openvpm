@@ -33,15 +33,15 @@ export function TrialEndingEmail({
       brand={brand}
       preview={
         billingConnected
-          ? `Your OpenVPM trial ends ${whenLabel}. Your billing setup is connected.`
-          : `Your OpenVPM trial ends ${whenLabel}. Add billing and nothing changes.`
+          ? `Your ${brand.name} trial ends ${whenLabel}. Your billing setup is connected.`
+          : `Your ${brand.name} trial ends ${whenLabel}. Add billing and nothing changes.`
       }
       unsubscribeUrl={unsubscribeUrl}
-      recipientReason={`This address is the OpenVPM billing contact for ${practiceName}.`}
+      recipientReason={`This address is the ${brand.name} billing contact for ${practiceName}.`}
     >
       <Heading>Your trial ends {whenLabel}</Heading>
       <Paragraph>
-        Hi {practiceName}, your OpenVPM trial ends on{" "}
+        Hi {practiceName}, your {brand.name} trial ends on{" "}
         <strong>{trialEndDate}</strong>.{" "}
         {billingConnected
           ? "You already completed billing setup, so there is no need to add it again."

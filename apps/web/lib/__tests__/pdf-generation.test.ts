@@ -129,3 +129,13 @@ describe("pdf generation date labels", () => {
     expect(source).toContain("doc.text(`Page ${i} of ${pageCount}`");
   });
 });
+
+describe("PDF branding compatibility", () => {
+  const source = readFileSync("lib/pdf.ts", "utf8");
+
+  it("keeps tenant branding optional and adds a discrete platform footer", () => {
+    expect(source).toContain("export type PdfBranding");
+    expect(source).toContain("tenantLogoDataUrl?: string;");
+    expect(source).toContain("Powered by ${platformBrand.displayName}");
+  });
+});

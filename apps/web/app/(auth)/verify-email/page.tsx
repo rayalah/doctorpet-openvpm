@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MailCheck, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 function VerifyEmailInner() {
   const params = useSearchParams();
@@ -51,7 +52,7 @@ function ConfirmToken({ token }: { token: string }) {
             href="/"
             className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Open OpenVPM
+            Open {platformBrand.productName}
           </Link>
         </>
       )}
@@ -64,7 +65,7 @@ function ConfirmToken({ token }: { token: string }) {
             href="/"
             className="mt-6 inline-block text-sm text-primary hover:underline"
           >
-            Open OpenVPM to resend
+            Open {platformBrand.productName} to resend
           </Link>
         </>
       )}
@@ -84,7 +85,7 @@ function VerificationRecovery() {
         Confirm your email
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Your trial is already active. Open OpenVPM and use the verification
+        Your trial is already active. Open {platformBrand.productName} and use the verification
         banner to send a new link securely. Any unexpired verification link will
         work.
       </p>
@@ -92,10 +93,10 @@ function VerificationRecovery() {
         href="/"
         className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
       >
-        Open OpenVPM
+        Open {platformBrand.productName}
       </Link>
       <p className="mt-4 text-xs text-muted-foreground">
-        If you&apos;re signed out, OpenVPM will ask you to sign in first.
+        If you&apos;re signed out, {platformBrand.productName} will ask you to sign in first.
       </p>
     </Shell>
   );
@@ -105,7 +106,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface p-4">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8 text-center">
-        <h1 className="font-heading text-2xl font-bold text-foreground">OpenVPM</h1>
+        <h1 className="font-heading text-2xl font-bold text-foreground">{platformBrand.displayName}</h1>
         {children}
       </div>
     </div>

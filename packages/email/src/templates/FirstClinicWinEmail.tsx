@@ -25,13 +25,13 @@ export function FirstClinicWinEmail({
   return (
     <EmailLayout
       brand={brand}
-      preview="Your team completed its first real visit in OpenVPM."
+      preview={`Your team completed its first real visit in ${brand.name}.`}
       unsubscribeUrl={unsubscribeUrl}
-      recipientReason={`This is the verified OpenVPM administrator address saved for ${practiceName}.`}
+      recipientReason={`This is the verified ${brand.name} administrator address saved for ${practiceName}.`}
     >
       <Heading>You ran your first real visit.</Heading>
       <Paragraph>
-        Your team just took OpenVPM through a real clinic workflow—not a demo or
+        Your team just took {brand.name} through a real clinic workflow—not a demo or
         a setup checklist. That&apos;s a meaningful first win.
       </Paragraph>
 

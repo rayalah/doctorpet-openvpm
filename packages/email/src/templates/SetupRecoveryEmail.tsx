@@ -30,7 +30,7 @@ export function SetupRecoveryEmail({
       brand={brand}
       preview={`Resume ${practiceName} at ${stepTitle}`}
       unsubscribeUrl={unsubscribeUrl}
-      recipientReason="You're receiving this because you started an OpenVPM trial."
+      recipientReason={`You're receiving this because you started a ${brand.name} trial.`}
     >
       <Heading>
         {attemptNumber === 1
@@ -38,7 +38,7 @@ export function SetupRecoveryEmail({
           : `Can we help with ${stepTitle}?`}
       </Heading>
       <Paragraph>
-        {practiceName} is saved exactly where you left it. OpenVPM will take you
+        {practiceName} is saved exactly where you left it. {brand.name} will take you
         straight back to the next setup step—no call or credit card required.
       </Paragraph>
 

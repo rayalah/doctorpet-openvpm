@@ -9,7 +9,8 @@ import {
   isAuthEmailLengthValid,
 } from "@/lib/auth-input-policy";
 import { AUTH_PASSWORD_MAX_LENGTH } from "@/lib/auth-password-policy";
-import { PawMark } from "@/components/brand/paw-mark";
+import { PlatformLogo } from "@/components/brand/platform-logo";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import { isValidEmail } from "@/lib/utils";
 import {
   buildCloudSignupUrl,
@@ -133,12 +134,13 @@ function LoginPageInner() {
     <div className="flex min-h-screen items-center justify-center bg-surface p-4">
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-8">
         <div className="mb-6 text-center">
-          <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <PawMark className="h-6 w-6" />
-          </span>
+          <PlatformLogo className="mx-auto mb-3 h-12 w-auto" />
           <h1 className="font-heading text-2xl font-bold text-foreground">
-            OpenVPM
+            {platformBrand.displayName}
           </h1>
+          <p className="mt-1 text-sm font-medium text-primary">
+            {platformBrand.tagline}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {DEMO_MODE
               ? "Explore the live product"

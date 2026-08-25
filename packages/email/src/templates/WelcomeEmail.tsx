@@ -29,11 +29,11 @@ export function WelcomeEmail({
   return (
     <EmailLayout
       brand={brand}
-      preview={`Welcome to OpenVPM — your ${trialDays}-day trial is ready`}
+      preview={`Welcome to ${brand.name} — your ${trialDays}-day trial is ready`}
       unsubscribeUrl={unsubscribeUrl}
-      recipientReason="You're receiving this because you created an OpenVPM account."
+      recipientReason={`You're receiving this because you created a ${brand.name} account.`}
     >
-      <Heading>Welcome to OpenVPM 🎉</Heading>
+      <Heading>Welcome to {brand.name} 🎉</Heading>
       <Paragraph>
         Hi {practiceName}, your workspace is ready. We set it up with a sample
         practice — real clients, pets, and appointments — so the app feels alive

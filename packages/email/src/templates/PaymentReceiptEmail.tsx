@@ -24,7 +24,7 @@ export function PaymentReceiptEmail({
   return (
     <EmailLayout
       brand={brand}
-      preview={`Your OpenVPM receipt — ${amount}`}
+      preview={`Your ${brand.name} receipt — ${amount}`}
     >
       <Heading>Payment received</Heading>
       <Paragraph>

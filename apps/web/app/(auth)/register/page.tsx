@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { PawMark } from "@/components/brand/paw-mark";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import { cn, initials, isValidEmail } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -373,7 +374,7 @@ function RegisterPageInner() {
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
                 <PawMark className="h-5 w-5" />
               </span>
-              OpenVPM
+              {platformBrand.displayName}
             </Link>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 sm:gap-3 sm:text-sm">
               <span className="whitespace-nowrap">Step 1 of 4</span>
@@ -434,7 +435,7 @@ function RegisterPageInner() {
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
                 <PawMark className="h-5 w-5" />
               </span>
-              OpenVPM
+              {platformBrand.displayName}
             </Link>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 sm:gap-3 sm:text-sm">
               <span className="whitespace-nowrap">Step 2 of 4</span>
@@ -556,7 +557,7 @@ function RegisterPageInner() {
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
                 <PawMark className="h-5 w-5" />
               </span>
-              OpenVPM
+              {platformBrand.displayName}
             </Link>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 sm:gap-3 sm:text-sm">
               <span className="whitespace-nowrap">Step 3 of 4</span>
@@ -624,7 +625,7 @@ function RegisterPageInner() {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <PawMark className="h-4 w-4" />
               </span>
-              OpenVPM {cloudIntent ? "Cloud" : ""}
+              {platformBrand.displayName} {cloudIntent ? "Cloud" : ""}
             </Link>
             <span className="text-xs font-medium text-slate-500">
               Step 4 of 4
@@ -720,7 +721,7 @@ function RegisterPageInner() {
               <div className="flex gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>
-                  OpenVPM can format this workspace for your region, but the
+                  {platformBrand.productName} can format this workspace for your region, but the
                   supported design-partner rollout is currently limited to US
                   clinics. Explore with sample data only; do not move live
                   clinic work yet.
