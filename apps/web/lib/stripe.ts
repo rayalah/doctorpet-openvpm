@@ -9,6 +9,7 @@ import {
 } from "@/lib/stripe-config";
 import { envFlagEnabled } from "@/lib/env-bool";
 import type { BillingCadence } from "@/lib/billing/catalog";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const STRIPE_TAX_ENABLED_ENV = "STRIPE_TAX_ENABLED";
 export const INVOICE_CHECKOUT_CAPTURE_MODE = "manual_v1";
@@ -577,7 +578,7 @@ export function buildSubscriptionCheckoutSessionParams(data: {
     metadata,
     ...subscriptionTaxCheckoutParams(data.customerId),
     subscription_data: {
-      description: `OpenVPM Cloud — ${
+      description: `${platformBrand.displayName} Cloud — ${
         billingCadence === "year" ? "annual" : "monthly"
       }`,
       metadata,

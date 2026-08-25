@@ -148,7 +148,7 @@ describe("buildSubscriptionCheckoutSessionParams", () => {
 
     expect(params.payment_method_collection).toBe("always");
     expect(params.subscription_data).toEqual({
-      description: "OpenVPM Cloud — monthly",
+      description: "Doctor Pet by ResilIA Cloud — monthly",
       metadata: {
         practiceId: "practice_123",
         billingCadence: "month",
@@ -175,7 +175,7 @@ describe("buildSubscriptionCheckoutSessionParams", () => {
       source: "settings",
     });
     expect(params.subscription_data).toMatchObject({
-      description: "OpenVPM Cloud — annual",
+      description: "Doctor Pet by ResilIA Cloud — annual",
       metadata: { billingCadence: "year" },
     });
   });

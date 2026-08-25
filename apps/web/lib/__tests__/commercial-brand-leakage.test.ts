@@ -18,6 +18,7 @@ const commercialSurfaces = [
   "../../app/sms/[practiceId]/privacy/page.tsx",
   "../../app/sms/[practiceId]/terms/page.tsx",
   "../../app/api-docs/page.tsx",
+  "../../lib/stripe.ts",
   "../../components/welcome/welcome-copy.ts",
   "../../components/welcome/welcome-surface.tsx",
   "../../components/settings/messaging-tab.tsx",
