@@ -4,6 +4,9 @@ import { enCommonMessages, esCommonMessages } from "./messages/common";
 import { enDashboardMessages, esDashboardMessages } from "./messages/dashboard";
 import { enNavigationMessages, esNavigationMessages } from "./messages/navigation";
 import { enWelcomeMessages, esWelcomeMessages } from "./messages/welcome";
+import { enClientMessages, esClientMessages } from "./messages/clients";
+import { enPatientMessages, esPatientMessages } from "./messages/patients";
+import { enAppointmentMessages, esAppointmentMessages } from "./messages/appointments";
 
 export const enMessages = {
   ...enCommonMessages,
@@ -11,6 +14,9 @@ export const enMessages = {
   ...enNavigationMessages,
   ...enDashboardMessages,
   ...enWelcomeMessages,
+  ...enClientMessages,
+  ...enPatientMessages,
+  ...enAppointmentMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -25,6 +31,9 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
     ...esNavigationMessages,
     ...esDashboardMessages,
     ...esWelcomeMessages,
+    ...esClientMessages,
+    ...esPatientMessages,
+    ...esAppointmentMessages,
   },
 };
 

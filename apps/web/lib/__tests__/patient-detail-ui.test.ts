@@ -79,8 +79,8 @@ describe("patient detail UI states", () => {
     expect(source).toContain("const canRecordVitals = canRecordVitalsRole(");
     expect(source).toContain("if (!canManagePatientDetail)");
     expect(source).toContain("{canManagePatientDetail && (");
-    expect(source).toContain(
-      "canManagePatientDetail &&\n    isPatientWeightInputValid",
+    expect(source).toMatch(
+      /canManagePatientDetail &&\s*isPatientWeightInputValid/,
     );
     expect(source).toContain("canRecordVitals={canRecordVitals}");
     expect(source).toContain("canRecordVitals &&");
@@ -132,7 +132,11 @@ describe("patient detail UI states", () => {
 
     // The chart is the medical record: SOAP timeline, visit history, and
     // billing history live on the patient page.
-    for (const label of ["Medical Records", "Appointments", "Invoices"]) {
+    for (const label of [
+      "patients.tab.records",
+      "patients.tab.appointments",
+      "patients.tab.invoices",
+    ]) {
       expect(source).toContain(`label: "${label}"`);
     }
     expect(source).toContain(
@@ -169,14 +173,14 @@ describe("patient detail UI states", () => {
     expect(source).toContain(
       '<PatientDetailLoadingPanel label="Loading patient..." />',
     );
-    expect(source).toContain("if (\n    loadError ||");
-    expect(source).toContain("!verifiedRecordsSettings ||\n    !patient");
+    expect(source).toMatch(/if \(\s*loadError \|\|/);
+    expect(source).toMatch(/!verifiedRecordsSettings \|\|\s*!patient/);
     expect(source).toContain('title="Unable to load patient"');
     expect(source).toContain(
       "recordsSettingsMissing || !verifiedRecordsSettings",
     );
     expect(source).toContain("Unable to load clinical settings. Please retry.");
-    expect(source).toContain('label: "Back to Patients"');
+    expect(source).toContain('label: t("patients.back")');
     expect(source).toContain('router.push("/patients")');
     expect(source).toMatch(
       /const \{\s*data: vitals,\s*isLoading,\s*error,?\s*\}/,
@@ -239,12 +243,12 @@ describe("patient detail UI states", () => {
       "utf8",
     );
 
-    expect(source).toContain(
-      'import {\n  formatClinicalDate,\n  formatClinicalDateTime,\n} from "@/lib/records/clinical-dates"',
+    expect(source).toMatch(
+      /import \{\s*formatClinicalDate,\s*formatClinicalDateTime,\s*\} from "@\/lib\/records\/clinical-dates"/,
     );
     expect(source).toContain("const verifiedRecordsSettings =");
-    expect(source).toContain(
-      "const recordsSettingsTimeZone = verifiedRecordsSettings\n    ? verifiedRecordsSettings.timezone\n    : undefined",
+    expect(source).toMatch(
+      /const recordsSettingsTimeZone = verifiedRecordsSettings\s*\? verifiedRecordsSettings\.timezone\s*: undefined/,
     );
     expect(source).toContain(
       "buildWeightTrend(patient?.weights ?? [], recordsSettingsTimeZone)",
@@ -253,15 +257,15 @@ describe("patient detail UI states", () => {
     expect(source).toContain(
       "const recordsTimeZone = verifiedRecordsSettings.timezone",
     );
-    expect(source).toContain(
-      'const recordsPracticeName =\n    verifiedRecordsSettings.name ?? "Veterinary Practice"',
+    expect(source).toMatch(
+      /const recordsPracticeName =\s*verifiedRecordsSettings\.name \?\? "Veterinary Practice"/,
     );
     expect(source).toContain(
       "const recordsPracticePhone = verifiedRecordsSettings.phone",
     );
     expect(source).toContain("formatClinicalDate(patient.dob, recordsTimeZone");
-    expect(source).toContain(
-      "formatClinicalDate(\n                              weight.recordedAt,\n                              recordsTimeZone",
+    expect(source).toMatch(
+      /formatClinicalDate\(\s+weight\.recordedAt,\s+recordsTimeZone/,
     );
     expect(source).toContain("<VitalsTab");
     expect(source).toContain("canRecordVitals={canRecordVitals}");

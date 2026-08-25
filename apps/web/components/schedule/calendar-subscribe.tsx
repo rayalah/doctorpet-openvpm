@@ -6,6 +6,7 @@ import { CalendarPlus, Copy, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/lib/i18n/client";
 import {
   Popover,
   PopoverContent,
@@ -22,6 +23,7 @@ import {
  * desk staff can reach it; Settings is admin-only in the sidebar.
  */
 export function CalendarSubscribe() {
+  const t = useTranslations();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
   const utils = trpc.useUtils();
@@ -38,7 +40,7 @@ export function CalendarSubscribe() {
     onSuccess: (data) => {
       utils.appointments.calendarFeed.setData(undefined, { url: data.url });
       setConfirmRotate(false);
-      toast.success("New calendar link created. The old one stopped working.");
+      toast.success(t("appointments.updated"));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -49,10 +51,10 @@ export function CalendarSubscribe() {
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Calendar link copied");
+      toast.success(t("appointments.calendarLinkCopied"));
       emitGuideSignal(GUIDE_SIGNALS.calendarUrlCopied);
     } catch {
-      toast.error("Could not copy the link");
+      toast.error(t("appointments.calendarLinkCopyError"));
     }
   };
 
@@ -61,17 +63,15 @@ export function CalendarSubscribe() {
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" data-tour="calendar-subscribe">
           <CalendarPlus className="mr-1.5 h-3.5 w-3.5" />
-          Add to your calendar
+          {t("appointments.addToCalendar")}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">
         <h4 className="font-heading text-sm font-semibold">
-          Your schedule, in your calendar
+          {t("appointments.calendarTitle")}
         </h4>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          Subscribe once and the clinic schedule stays up to date in Google,
-          Apple, or Outlook on its own. The link shows patient names and visit
-          types only, so share it with staff, not clients.
+          {t("appointments.addToCalendarDescription")}
         </p>
 
         {feed.isLoading ? (
@@ -102,7 +102,7 @@ export function CalendarSubscribe() {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Button size="sm" onClick={copyUrl} className="gap-1.5">
                 <Copy className="h-3.5 w-3.5" />
-                Copy link
+                {t("appointments.copyLink")}
               </Button>
               {isAdmin ? (
                 <Button
@@ -142,7 +142,7 @@ export function CalendarSubscribe() {
                 Turning on...
               </>
             ) : (
-              "Turn on the calendar link"
+              t("appointments.turnOnCalendar")
             )}
           </Button>
         )}

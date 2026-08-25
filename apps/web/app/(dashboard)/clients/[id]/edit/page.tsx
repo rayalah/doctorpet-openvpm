@@ -27,17 +27,21 @@ import {
   phoneNumbersMatchForConsent,
   SMS_CONSENT_DISCLOSURE,
 } from "@/lib/messaging/consent";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
+import { dateLocaleForLanguage } from "@/lib/i18n/language";
 
 function EditClientLoadingPanel() {
+  const t = useTranslations();
   return (
     <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
       <Loader2 className="h-4 w-4 animate-spin" />
-      Loading client...
+      {t("clients.loading")}
     </div>
   );
 }
 
 export default function EditClientPage() {
+  const t = useTranslations();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -46,7 +50,7 @@ export default function EditClientPage() {
     return (
       <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Checking client access...
+        {t("clients.loading")}
       </div>
     );
   }
@@ -61,14 +65,14 @@ export default function EditClientPage() {
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Client
+          {t("clients.backOne")}
         </Button>
         <EmptyState
           icon={AlertCircle}
-          title="Client actions are read-only"
-          description="Only staff roles with client write access can edit clients."
+          title={t("clients.readOnly")}
+          description={t("clients.editAccess")}
           action={{
-            label: "Back to Client",
+            label: t("clients.backOne"),
             onClick: () => router.push(`/clients/${params.id}`),
           }}
         />
@@ -89,6 +93,8 @@ function canManageClientFormRole(role?: string | null): boolean {
 }
 
 function EditClientForm() {
+  const t = useTranslations();
+  const dateLocale = dateLocaleForLanguage(useLanguage());
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [form, setForm] = useState({
@@ -139,7 +145,7 @@ function EditClientForm() {
 
   const updateClient = trpc.clients.update.useMutation({
     onSuccess: () => {
-      toast.success("Client updated");
+      toast.success(t("clients.updatedToast"));
       router.push(`/clients/${params.id}`);
     },
     onError: (err) => {
@@ -214,7 +220,7 @@ function EditClientForm() {
       return;
     }
     if (!canSubmit) {
-      setError("Check required fields and field lengths.");
+      setError(t("clients.requiredError"));
       return;
     }
 
@@ -261,13 +267,13 @@ function EditClientForm() {
     return (
       <EmptyState
         icon={AlertCircle}
-        title="Unable to load client"
+        title={t("clients.unavailable")}
         description={
           loadError?.message ??
-          "Choose a client from the Clients list before editing."
+          t("clients.chooseFromList")
         }
         action={{
-          label: "Back to Clients",
+          label: t("clients.back"),
           onClick: () => router.push("/clients"),
           icon: ArrowLeft,
         }}
@@ -284,12 +290,12 @@ function EditClientForm() {
         className="mb-4"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Client
+        {t("clients.backOne")}
       </Button>
 
-      <h2 className="font-heading text-xl font-semibold">Edit Client</h2>
+      <h2 className="font-heading text-xl font-semibold">{t("clients.edit")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Update client information
+        {t("clients.subtitle")}
       </p>
 
       {error && (
@@ -302,13 +308,13 @@ function EditClientForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-sm font-medium" htmlFor="firstName">
-              First Name *
+              {t("clients.firstName")} *
             </label>
             <Input
               id="firstName"
               value={form.firstName}
               onChange={(e) => updateField("firstName", e.target.value)}
-              placeholder="First name"
+              placeholder={t("clients.firstNamePlaceholder")}
               className="mt-1"
               maxLength={CLIENT_NAME_MAX_LENGTH}
               required
@@ -316,13 +322,13 @@ function EditClientForm() {
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="lastName">
-              Last Name *
+              {t("clients.lastName")} *
             </label>
             <Input
               id="lastName"
               value={form.lastName}
               onChange={(e) => updateField("lastName", e.target.value)}
-              placeholder="Last name"
+              placeholder={t("clients.lastNamePlaceholder")}
               className="mt-1"
               maxLength={CLIENT_NAME_MAX_LENGTH}
               required
@@ -333,7 +339,7 @@ function EditClientForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-sm font-medium" htmlFor="email">
-              Email
+              {t("clients.email")}
             </label>
             <Input
               id="email"
@@ -347,7 +353,7 @@ function EditClientForm() {
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="phone">
-              Phone
+              {t("clients.phone")}
             </label>
             <Input
               id="phone"
@@ -494,7 +500,7 @@ function EditClientForm() {
                     {` · ${event.destinationE164}`}
                   </p>
                   <p className="mt-0.5 text-muted-foreground">
-                    {new Date(event.occurredAt).toLocaleString()} ·{" "}
+                    {new Date(event.occurredAt).toLocaleString(dateLocale)} ·{" "}
                     {event.source}
                     {event.actorName
                       ? ` · ${event.actorName}`
@@ -513,13 +519,13 @@ function EditClientForm() {
 
         <div>
           <label className="text-sm font-medium" htmlFor="address">
-            Address
+            {t("clients.address")}
           </label>
           <Input
             id="address"
             value={form.address}
             onChange={(e) => updateField("address", e.target.value)}
-            placeholder="Street address"
+            placeholder={t("clients.addressPlaceholder")}
             className="mt-1"
             maxLength={CLIENT_ADDRESS_MAX_LENGTH}
           />
@@ -528,39 +534,39 @@ function EditClientForm() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className="text-sm font-medium" htmlFor="city">
-              City
+              {t("clients.city")}
             </label>
             <Input
               id="city"
               value={form.city}
               onChange={(e) => updateField("city", e.target.value)}
-              placeholder="City"
+              placeholder={t("clients.cityPlaceholder")}
               className="mt-1"
               maxLength={CLIENT_CITY_MAX_LENGTH}
             />
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="state">
-              State
+              {t("clients.state")}
             </label>
             <Input
               id="state"
               value={form.state}
               onChange={(e) => updateField("state", e.target.value)}
-              placeholder="State"
+              placeholder={t("clients.statePlaceholder")}
               className="mt-1"
               maxLength={CLIENT_STATE_MAX_LENGTH}
             />
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="zip">
-              Zip
+              {t("clients.zip")}
             </label>
             <Input
               id="zip"
               value={form.zip}
               onChange={(e) => updateField("zip", e.target.value)}
-              placeholder="Zip code"
+              placeholder={t("clients.zipPlaceholder")}
               className="mt-1"
               maxLength={CLIENT_ZIP_MAX_LENGTH}
             />
@@ -569,14 +575,14 @@ function EditClientForm() {
 
         <div className="flex gap-3 pt-4">
           <Button type="submit" disabled={!canSubmit || updateClient.isPending}>
-            {updateClient.isPending ? "Saving..." : "Save Changes"}
+            {updateClient.isPending ? t("clients.saving") : t("clients.save")}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push(`/clients/${params.id}`)}
           >
-            Cancel
+            {t("clients.cancel")}
           </Button>
         </div>
       </form>

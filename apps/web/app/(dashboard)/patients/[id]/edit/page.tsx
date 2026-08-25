@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/common/empty-state";
 import { toast } from "sonner";
+import { useTranslations } from "@/lib/i18n/client";
+import { patientStatusLabel, sexLabel, speciesLabel } from "@/lib/i18n/presentation-labels";
 import {
   PATIENT_BREED_MAX_LENGTH,
   PATIENT_COLOR_MAX_LENGTH,
@@ -28,29 +30,19 @@ function EditPatientLoadingPanel() {
 }
 
 const speciesOptions = [
-  { value: "canine", label: "Canine" },
-  { value: "feline", label: "Feline" },
-  { value: "avian", label: "Avian" },
-  { value: "rabbit", label: "Rabbit" },
-  { value: "reptile", label: "Reptile" },
-  { value: "equine", label: "Equine" },
-  { value: "other", label: "Other" },
+  { value: "canine" }, { value: "feline" }, { value: "avian" }, { value: "rabbit" }, { value: "reptile" }, { value: "equine" }, { value: "other" },
 ] as const;
 
 const sexOptions = [
-  { value: "male", label: "Male (Intact)" },
-  { value: "female", label: "Female (Intact)" },
-  { value: "male_neutered", label: "Male (Neutered)" },
-  { value: "female_spayed", label: "Female (Spayed)" },
+  { value: "male" }, { value: "female" }, { value: "male_neutered" }, { value: "female_spayed" },
 ] as const;
 
 const statusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "deceased", label: "Deceased" },
+  { value: "active" }, { value: "inactive" }, { value: "deceased" },
 ] as const;
 
 export default function EditPatientPage() {
+  const t = useTranslations();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -102,6 +94,7 @@ function canManagePatientFormRole(role?: string | null): boolean {
 }
 
 function EditPatientForm() {
+  const t = useTranslations();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const utils = trpc.useUtils();
@@ -148,7 +141,7 @@ function EditPatientForm() {
           ? { ...currentPatient, ...updatedPatient }
           : currentPatient
       );
-      toast.success("Patient updated");
+      toast.success(t("patients.updatedToast"));
       router.push(`/patients/${params.id}`);
     },
     onError: (err) => {
@@ -179,11 +172,11 @@ function EditPatientForm() {
       return;
     }
     if (!form.name.trim()) {
-      setError("Patient name is required.");
+      setError(t("patients.nameRequired"));
       return;
     }
     if (!canSubmit) {
-      setError("Check required fields and field lengths.");
+      setError(t("patients.requiredError"));
       return;
     }
 
@@ -238,7 +231,7 @@ function EditPatientForm() {
         Back to Patient
       </Button>
 
-      <h2 className="font-heading text-xl font-semibold">Edit Patient</h2>
+      <h2 className="font-heading text-xl font-semibold">{t("patients.edit")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Update patient information
       </p>
@@ -252,13 +245,13 @@ function EditPatientForm() {
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label className="text-sm font-medium" htmlFor="name">
-            Patient Name *
+            {t("patients.name")} *
           </label>
           <Input
             id="name"
             value={form.name}
             onChange={(e) => updateField("name", e.target.value)}
-            placeholder="Patient name"
+            placeholder={t("patients.namePlaceholder")}
             className="mt-1"
             maxLength={PATIENT_NAME_MAX_LENGTH}
             required
@@ -268,7 +261,7 @@ function EditPatientForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-sm font-medium" htmlFor="species">
-              Species *
+              {t("patients.species")} *
             </label>
             <select
               id="species"
@@ -278,20 +271,20 @@ function EditPatientForm() {
             >
               {speciesOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {speciesLabel(t, opt.value)}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="breed">
-              Breed
+              {t("patients.breed")}
             </label>
             <Input
               id="breed"
               value={form.breed}
               onChange={(e) => updateField("breed", e.target.value)}
-              placeholder="Breed"
+              placeholder={t("patients.breedPlaceholder")}
               className="mt-1"
               maxLength={PATIENT_BREED_MAX_LENGTH}
             />
@@ -301,7 +294,7 @@ function EditPatientForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-sm font-medium" htmlFor="sex">
-              Sex
+              {t("patients.sex")}
             </label>
             <select
               id="sex"
@@ -309,17 +302,17 @@ function EditPatientForm() {
               onChange={(e) => updateField("sex", e.target.value)}
               className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <option value="">Select sex...</option>
+              <option value="">{t("patients.selectSex")}</option>
               {sexOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {sexLabel(t, opt.value)}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="dob">
-              Date of Birth
+              {t("patients.birthDate")}
             </label>
             <Input
               id="dob"
@@ -335,26 +328,26 @@ function EditPatientForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-sm font-medium" htmlFor="color">
-              Color/Markings
+              {t("patients.color")}
             </label>
             <Input
               id="color"
               value={form.color}
               onChange={(e) => updateField("color", e.target.value)}
-              placeholder="e.g., Black and white"
+              placeholder={t("patients.colorPlaceholder")}
               className="mt-1"
               maxLength={PATIENT_COLOR_MAX_LENGTH}
             />
           </div>
           <div>
             <label className="text-sm font-medium" htmlFor="microchipNumber">
-              Microchip Number
+              {t("patients.microchip")}
             </label>
             <Input
               id="microchipNumber"
               value={form.microchipNumber}
               onChange={(e) => updateField("microchipNumber", e.target.value)}
-              placeholder="Microchip ID"
+              placeholder={t("patients.microchipPlaceholder")}
               className="mt-1"
               maxLength={PATIENT_MICROCHIP_NUMBER_MAX_LENGTH}
             />
@@ -363,7 +356,7 @@ function EditPatientForm() {
 
         <div>
           <label className="text-sm font-medium" htmlFor="status">
-            Status
+            {t("patients.status")}
           </label>
           <select
             id="status"
@@ -373,7 +366,7 @@ function EditPatientForm() {
           >
             {statusOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {patientStatusLabel(t, opt.value)}
               </option>
             ))}
           </select>
@@ -381,14 +374,14 @@ function EditPatientForm() {
 
         <div className="flex gap-3 pt-4">
           <Button type="submit" disabled={!canSubmit || updatePatient.isPending}>
-            {updatePatient.isPending ? "Saving..." : "Save Changes"}
+            {updatePatient.isPending ? t("patients.saving") : t("patients.save")}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push(`/patients/${params.id}`)}
           >
-            Cancel
+            {t("patients.cancel")}
           </Button>
         </div>
       </form>

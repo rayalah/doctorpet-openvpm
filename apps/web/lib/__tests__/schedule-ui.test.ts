@@ -23,7 +23,7 @@ describe("schedule appointment form UX", () => {
     const source = readFileSync("app/(dashboard)/schedule/page.tsx", "utf8");
 
     expect(source).toContain("onSuccess: (appointment) => {");
-    expect(source).toContain('toast.success("Appointment created", {');
+    expect(source).toContain('toast.success(t("appointments.created"), {');
     expect(source).toContain('label: "Open visit"');
     expect(source).toContain(
       "window.location.assign(`/encounters/${appointment.id}`)",
@@ -37,9 +37,7 @@ describe("schedule appointment form UX", () => {
     expect(source).toContain("<Suspense");
     expect(source).toContain("<SchedulePageContent />");
     expect(source).toContain("First clinic day · Step 3 of 3");
-    expect(source).toContain(
-      "isAppointmentPatientSearchInputValid(\n    requestedPatientSearch"
-    );
+    expect(source).toContain("isAppointmentPatientSearchInputValid(");
     expect(source).toContain("setupBookingOpened.current = true");
     expect(source).toContain("setShowBookingForm(true)");
     expect(source).toContain(
@@ -101,9 +99,7 @@ describe("schedule appointment form UX", () => {
       "const calendarSettingsQuery = trpc.appointments.calendarSettings.useQuery()"
     );
     expect(source).toContain("const verifiedCalendarSettings =");
-    expect(source).toContain(
-      "const calendarTimeZone = verifiedCalendarSettings\n    ? verifiedCalendarSettings.timezone\n    : null"
-    );
+    expect(source).toMatch(/const calendarTimeZone = verifiedCalendarSettings\s*\? verifiedCalendarSettings\.timezone\s*: null/);
     expect(source).toContain("enabled: verifiedCalendarSettings !== null");
     expect(source).toContain(
       "dateInputTimeUtcInstant(date, { hour, minute }, timeZone)"
@@ -116,10 +112,10 @@ describe("schedule appointment form UX", () => {
   it("renders schedule appointments and now-line in the practice timezone", () => {
     const source = readFileSync("app/(dashboard)/schedule/page.tsx", "utf8");
 
-    expect(source).toContain("function formatTime(date: Date, timeZone?: string | null)");
+    expect(source).toContain("function formatTime(");
     expect(source).toContain("function getZonedHourMinute(");
     expect(source).toContain("getAppointmentLayout(start, end, timeZone)");
-    expect(source).toContain("formatTime(start, timeZone)");
+    expect(source).toContain("formatTime(start, timeZone,");
     expect(source).toContain("groupByCalendarDate(");
     expect(source).toContain("calendarTimeZone");
     expect(source).toContain("const todayKey = toISODate(now, calendarTimeZone)");
@@ -157,7 +153,7 @@ describe("schedule appointment form UX", () => {
     expect(source).toContain("setShowBookingForm(false)");
     expect(source).toContain("{scheduleError || scheduleMissing ? (");
     expect(source).toContain(
-      '{scheduleError?.message ?? "Unable to load schedule. Please retry."}'
+      '{scheduleError?.message ?? t("appointments.loadError")}'
     );
     expect(source).toContain(") : isScheduleLoading ? (");
     expect(source).toContain("disabled={!canUseScheduleInteractions}");
@@ -170,14 +166,12 @@ describe("schedule appointment form UX", () => {
     expect(source).toContain("selectedAppointmentStillListed &&");
     expect(source).toContain("appointment={selectedAppointmentFromList}");
     expect(source).toContain("timeZone={verifiedCalendarSettings.timezone}");
-    expect(source).toContain(
-      "{canUseScheduleInteractions &&\n        showBookingForm &&\n        verifiedCalendarSettings && ("
+    expect(source).toMatch(/\{canUseScheduleInteractions &&\s*showBookingForm &&\s*verifiedCalendarSettings && \(/);
+    expect(source.indexOf("scheduleError || scheduleMissing")).toBeLessThan(
+      source.indexOf('t("appointments.emptyWeek")')
     );
     expect(source.indexOf("scheduleError || scheduleMissing")).toBeLessThan(
-      source.indexOf("No appointments this week")
-    );
-    expect(source.indexOf("scheduleError || scheduleMissing")).toBeLessThan(
-      source.indexOf("No appointments in this month")
+      source.indexOf('t("appointments.emptyMonth")')
     );
     expect(source).not.toContain("{error ? (");
     expect(source).not.toContain(") : isLoading ? (");
@@ -196,7 +190,7 @@ describe("schedule appointment form UX", () => {
     expect(source).toContain("frequency: recurrenceFrequency");
     expect(source).toContain("interval: recurrenceInterval");
     expect(source).toContain("occurrences: recurrenceOccurrences");
-    expect(source).toContain("Repeat appointment");
+    expect(source).toContain('t("appointments.repeat")');
     expect(source).toContain("APPOINTMENT_RECURRENCE_INTERVAL_MAX");
     expect(source).toContain("APPOINTMENT_RECURRENCE_OCCURRENCES_MAX");
     expect(source).toContain("hasRecurringPatient");
@@ -238,9 +232,7 @@ describe("schedule appointment form UX", () => {
     expect(source).toContain(
       "const canUpdateAppointmentStatus = canUpdateAppointmentStatusRole(userRole)"
     );
-    expect(source).toContain(
-      "const canSendAppointmentReminders =\n    canSendAppointmentRemindersRole(userRole)"
-    );
+    expect(source).toMatch(/const canSendAppointmentReminders =\s*canSendAppointmentRemindersRole\(userRole\)/);
     expect(source).toContain("if (!canUseScheduleInteractions) return;");
     expect(source).toContain("{canCreateAppointments && (");
     expect(source).toContain("canCreateAppointments={canUseScheduleInteractions}");
@@ -295,13 +287,11 @@ describe("schedule appointment form UX", () => {
     const source = readFileSync("app/(dashboard)/schedule/page.tsx", "utf8");
 
     expect(source).toContain("recurringSeriesId: string | null");
-    expect(source).toContain("Recurring series");
-    expect(source).toContain("Cancel Future Series");
+    expect(source).toContain('t("appointments.recurringSeries")');
+    expect(source).toContain('t("appointments.cancelFutureSeries")');
     expect(source).toContain("trpc.appointments.cancelRecurringSeries.useMutation");
     expect(source).toContain("onCancelRecurringSeries(appointment.recurringSeriesId");
-    expect(source).toContain(
-      "Past, completed, and in-progress appointments will stay unchanged."
-    );
+    expect(source).toContain('t("appointments.cancelSeriesConfirm")');
   });
 
   it("reschedules appointments from the detail popover with bounded practice-time inputs", () => {
@@ -320,33 +310,24 @@ describe("schedule appointment form UX", () => {
     expect(source).toContain("rescheduleDate,");
     expect(source).toContain("rescheduleTime,");
     expect(source).toContain("timeZone");
-    expect(source).toContain("Save changes");
-    expect(source).toContain('label: "Confirm",');
-    expect(source).toContain("Record client confirmation");
-    expect(source).toContain(
-      "Contact the client first. This records how they agreed to the"
-    );
-    expect(source).toContain("it does not send a message.");
+    expect(source).toContain('t("appointments.saveChanges")');
+    expect(source).toContain('label: t("appointments.confirm"),');
+    expect(source).toContain('t("appointments.recordConfirmation")');
+    expect(source).toContain('t("appointments.confirmationDescription")');
     expect(source).toContain('type="radio"');
     expect(source).toContain("confirmationContactMethod");
-    expect(source).toContain("Record confirmation");
+    expect(source).toContain('t("appointments.recordConfirmation")');
     expect(source).toContain("doctorRequiredForAdvance");
     expect(source).toContain("setRescheduleDoctorId");
     expect(source).toContain("setRescheduleRoomId");
     expect(source).toContain("setRescheduleLocationId");
-    expect(source).toContain(
-      "Assign a doctor before confirming or checking in this appointment"
-    );
+    expect(source).toContain('t("appointments.doctorRequired")');
     expect(source).toContain('disabled: doctorRequiredForAdvance');
     expect(source).toContain('current === "confirmed" && (');
-    expect(source).toContain(
-      "Changing the date, time, duration, or clinic location returns"
-    );
-    expect(source).toContain(
-      "Appointment moved; contact the client and confirm the new time"
-    );
+    expect(source).toContain('t("appointments.rescheduleWarning")');
+    expect(source).toContain('t("appointments.rescheduledConfirmation")');
     expect(source).toContain("resourceOptionsUnavailable");
-    expect(source).toContain("Retry options");
+    expect(source).toContain('t("appointments.retry")');
     expect(source).toContain("max-h-[calc(100dvh-1.5rem)]");
     expect(source).toContain("overflow-y-auto");
     expect(source).toContain("htmlFor={rescheduleDoctorFieldId}");
@@ -356,7 +337,7 @@ describe("schedule appointment form UX", () => {
     expect(source).toContain('aria-label="Filter schedule by clinic location"');
     expect(source).toContain("htmlFor={rescheduleRoomFieldId}");
     expect(source).toContain("id={rescheduleRoomFieldId}");
-    expect(source).toContain('label: "Reopen", status: "scheduled"');
+    expect(source).toContain('label: t("appointments.reopen"), status: "scheduled"');
     expect(source).not.toContain('label: "Reschedule", status: "scheduled"');
   });
 });

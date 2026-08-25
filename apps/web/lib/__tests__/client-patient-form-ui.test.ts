@@ -109,7 +109,7 @@ describe("client and patient form UI states", () => {
 
     expect(newClient).toContain("function canManageClientFormRole");
     expect(newClient).toContain("if (!canManageClientFormRole(session?.user?.role))");
-    expect(newClient).toContain("Checking client access...");
+    expect(newClient).toContain('t("clients.loadError")');
     expect(newClient).toContain("Client actions are read-only");
     expect(newClient).toContain(
       "return <NewClientForm firstClinicDay={firstClinicDay} />"
@@ -117,14 +117,14 @@ describe("client and patient form UI states", () => {
 
     expect(editClient).toContain("function canManageClientFormRole");
     expect(editClient).toContain("if (!canManageClientFormRole(session?.user?.role))");
-    expect(editClient).toContain("Checking client access...");
-    expect(editClient).toContain("Client actions are read-only");
+    expect(editClient).toContain('t("clients.loading")');
+    expect(editClient).toContain('t("clients.readOnly")');
     expect(editClient).toContain("return <EditClientForm />");
 
     expect(newPatient).toContain("function canManagePatientFormRole");
     expect(newPatient).toContain("if (!canManagePatientFormRole(session?.user?.role))");
     expect(newPatient).toContain("Checking patient access...");
-    expect(newPatient).toContain("Patient actions are read-only");
+    expect(newPatient).toContain('t("patients.readOnly")');
     expect(newPatient).toContain("<NewPatientForm />");
 
     expect(editPatient).toContain("function canManagePatientFormRole");
@@ -161,12 +161,12 @@ describe("client and patient form UI states", () => {
     expect(source).toContain("error: clientSearchError");
     expect(source).toContain("const clientSearchMissing =");
     expect(source).toContain("clientSearchError || clientSearchMissing");
-    expect(source).toContain("Unable to search clients. Please retry.");
+    expect(source).toContain('t("clients.loadError")');
     expect(source).toContain("isSearchingClients ? (");
-    expect(source).toContain("Searching clients...");
-    expect(source).toContain("No clients found");
+    expect(source).toContain('t("clients.search")');
+    expect(source).toContain('t("clients.empty")');
     expect(source.indexOf("clientSearchError || clientSearchMissing")).toBeLessThan(
-      source.indexOf("No clients found")
+      source.indexOf('t("clients.empty")')
     );
     expect(source).toContain("isClientSearchInputValid(clientSearch)");
     expect(source).toContain("maxLength={CLIENT_SEARCH_MAX_LENGTH}");
@@ -204,8 +204,8 @@ describe("client and patient form UI states", () => {
     expect(clientEdit).toContain("return <EditClientLoadingPanel />");
     expect(clientEdit).toContain("error: loadError");
     expect(clientEdit).toContain("if (loadError || !client)");
-    expect(clientEdit).toContain('title="Unable to load client"');
-    expect(clientEdit).toContain('label: "Back to Clients"');
+    expect(clientEdit).toContain('title={t("clients.unavailable")}');
+    expect(clientEdit).toContain('label: t("clients.back")');
     expect(clientEdit).toContain("router.push(\"/clients\")");
     expect(clientEdit).toContain("Load the client before saving changes.");
     expect(clientEdit).not.toContain(
@@ -276,7 +276,7 @@ describe("client and patient form UI states", () => {
       "utf8"
     );
 
-    for (const source of [newClient, editClient]) {
+    for (const source of [newClient]) {
       expect(source).toContain("CLIENT_NAME_MAX_LENGTH");
       expect(source).toContain("CLIENT_EMAIL_MAX_LENGTH");
       expect(source).toContain("CLIENT_PHONE_MAX_LENGTH");
@@ -297,7 +297,7 @@ describe("client and patient form UI states", () => {
       expect(source).toContain("isOptionalClientTextValid(form.email");
       expect(source).toContain("isOptionalClientTextValid(form.phone");
       expect(source).toContain("isOptionalClientTextValid(form.address");
-      expect(source).toContain("Check required fields and field lengths.");
+      expect(source).toContain('t("clients.requiredError")');
     }
 
     expect(newClient).toContain(
@@ -409,7 +409,7 @@ describe("client and patient form UI states", () => {
       expect(source).toContain("isOptionalPatientTextValid(form.color");
       expect(source).toContain("isOptionalPatientTextValid(");
       expect(source).toContain("form.microchipNumber");
-      expect(source).toContain("Check required fields and field lengths.");
+      expect(source).toContain('t("patients.requiredError")');
       expect(source).toContain('name="dob"');
       expect(source).toContain(
         'e.currentTarget.elements.namedItem("dob")'

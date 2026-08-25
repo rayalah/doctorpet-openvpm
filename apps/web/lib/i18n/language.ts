@@ -35,6 +35,14 @@ export function resolveAuthenticatedPracticeLanguage(
 }
 
 /**
+ * Date labels follow the selected UI language. This is deliberately separate
+ * from the practice's country, currency, timezone, and regional profile.
+ */
+export function dateLocaleForLanguage(language: SupportedLanguage): string {
+  return language === "es" ? "es" : "en-US";
+}
+
+/**
  * Public tenant routes use the tenant's explicit language when it is available.
  */
 export function resolvePublicTenantLanguage(

@@ -26,6 +26,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
+import { dateLocaleForLanguage } from "@/lib/i18n/language";
+import { patientStatusLabel, sexLabel, speciesLabel } from "@/lib/i18n/presentation-labels";
 import { trpc } from "@/lib/trpc";
 import { useCurrencyFormatter } from "@/lib/locale/useCurrency";
 import { EmptyState } from "@/components/common/empty-state";
@@ -139,19 +142,8 @@ const speciesEmoji: Record<string, string> = {
   other: "\uD83D\uDC3E",
 };
 
-function formatSex(sex: string | null): string {
-  if (!sex) return "Unknown";
-  const labels: Record<string, string> = {
-    male: "Male (Intact)",
-    female: "Female (Intact)",
-    male_neutered: "Male (Neutered)",
-    female_spayed: "Female (Spayed)",
-  };
-  return labels[sex] ?? sex;
-}
-
-function calculateAge(dob: string | null): string {
-  if (!dob) return "Unknown";
+function calculateAge(dob: string | null, t: ReturnType<typeof useTranslations>): string {
+  if (!dob) return t("patients.unknown");
   const birth = new Date(dob);
   const now = new Date();
   const years = now.getFullYear() - birth.getFullYear();
@@ -160,10 +152,10 @@ function calculateAge(dob: string | null): string {
   const adjustedYears = months < 0 ? years - 1 : years;
 
   if (adjustedYears === 0) {
-    return `${adjustedMonths} month${adjustedMonths !== 1 ? "s" : ""}`;
+    return `${adjustedMonths} ${t("patients.ageMonths")}`;
   }
   if (adjustedMonths === 0) {
-    return `${adjustedYears} year${adjustedYears !== 1 ? "s" : ""}`;
+    return `${adjustedYears} ${t("patients.ageYears")}`;
   }
   return `${adjustedYears}y ${adjustedMonths}m`;
 }
@@ -178,15 +170,18 @@ type Tab =
   | "vaccinations"
   | "invoices";
 
-const tabs: { id: Tab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "records", label: "Medical Records" },
-  { id: "documents", label: "Documents" },
-  { id: "appointments", label: "Appointments" },
-  { id: "weight", label: "Weight History" },
-  { id: "vitals", label: "Vitals" },
-  { id: "vaccinations", label: "Vaccinations" },
-  { id: "invoices", label: "Invoices" },
+const tabs: {
+  id: Tab;
+  label: Parameters<ReturnType<typeof useTranslations>>[0];
+}[] = [
+  { id: "overview", label: "patients.tab.overview" },
+  { id: "records", label: "patients.tab.records" },
+  { id: "documents", label: "patients.tab.documents" },
+  { id: "appointments", label: "patients.tab.appointments" },
+  { id: "weight", label: "patients.tab.weight" },
+  { id: "vitals", label: "patients.tab.vitals" },
+  { id: "vaccinations", label: "patients.tab.vaccinations" },
+  { id: "invoices", label: "patients.tab.invoices" },
 ];
 
 function canManagePatientDetailRole(role?: string | null): boolean {
@@ -259,6 +254,8 @@ function PatientDetailLoadingPanel({ label }: { label: string }) {
 }
 
 export default function PatientDetailPage() {
+  const t = useTranslations();
+  const dateLocale = dateLocaleForLanguage(useLanguage());
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session } = useSession();
@@ -503,7 +500,7 @@ export default function PatientDetailPage() {
             : "Choose a patient from the Patients list before opening the detail page.")
         }
         action={{
-          label: "Back to Patients",
+            label: t("patients.back"),
           onClick: () => router.push("/patients"),
           icon: ArrowLeft,
         }}
@@ -712,7 +709,7 @@ export default function PatientDetailPage() {
         className="mb-4"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Patients
+        {t("patients.back")}
       </Button>
 
       {patient.mergeMetadata ? (
@@ -764,7 +761,7 @@ export default function PatientDetailPage() {
                       disabled={uploadingPhoto}
                       onClick={() => fileInputRef.current?.click()}
                       className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-wait"
-                      title="Upload photo"
+                      title={t("patients.uploadPhoto")}
                     >
                       {uploadingPhoto ? (
                         <Loader2 className="h-5 w-5 animate-spin text-white" />
@@ -789,7 +786,7 @@ export default function PatientDetailPage() {
                   onClick={() => void uploadPatientPhoto()}
                   className="whitespace-nowrap text-xs font-medium text-destructive underline underline-offset-2 disabled:opacity-50"
                 >
-                  Try photo again
+                  {t("patients.retryPhoto")}
                 </button>
               ) : null}
             </div>
@@ -803,23 +800,21 @@ export default function PatientDetailPage() {
                     "inline-block h-2.5 w-2.5 rounded-full",
                     statusColor,
                   )}
-                  title={patient.status ?? "active"}
+                  title={patientStatusLabel(t, patient.status)}
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                {patient.species &&
-                  patient.species.charAt(0).toUpperCase() +
-                    patient.species.slice(1)}
+                {patient.species && speciesLabel(t, patient.species)}
                 {patient.breed ? ` \u00B7 ${patient.breed}` : ""}
                 {" \u00B7 "}
-                {calculateAge(patient.dob)}
+                {calculateAge(patient.dob, t)}
                 {" \u00B7 "}
-                {formatSex(patient.sex)}
+                {sexLabel(t, patient.sex)}
               </p>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                {patient.color && <span>Color: {patient.color}</span>}
+                {patient.color && <span>{t("patients.color")}: {patient.color}</span>}
                 {patient.microchipNumber && (
-                  <span>Microchip: {patient.microchipNumber}</span>
+                  <span>{t("patients.microchip")}: {patient.microchipNumber}</span>
                 )}
               </div>
               {patient.clientFirstName && (
@@ -842,7 +837,7 @@ export default function PatientDetailPage() {
             )}
             <Button variant="outline" size="sm" onClick={handleDownloadSummary}>
               <FileDown className="mr-2 h-4 w-4" />
-              Download Summary
+              {t("patients.downloadSummary")}
             </Button>
             {canManagePatientDetail && (
               <Button
@@ -850,7 +845,7 @@ export default function PatientDetailPage() {
                 size="sm"
                 onClick={() => router.push(`/patients/${patient.id}/edit`)}
               >
-                Edit
+                {t("patients.edit")}
               </Button>
             )}
           </div>
@@ -863,7 +858,7 @@ export default function PatientDetailPage() {
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-red-800 dark:text-red-300">
-              Allergies
+              {t("patients.allergies")}
             </p>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
               {patient.allergies.map((allergy) => (
@@ -881,11 +876,11 @@ export default function PatientDetailPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-semibold">{allergy.allergen}</span>
                     <span className="text-xs font-semibold uppercase tracking-wide">
-                      {allergy.severity}
+                      {t(`patients.severity.${allergy.severity}` as Parameters<typeof t>[0])}
                     </span>
                   </div>
                   <p className="mt-1 text-xs">
-                    Reaction: {allergy.reaction || "Not documented"}
+                    {t("patients.reaction")}: {allergy.reaction || t("patients.notDocumented")}
                   </p>
                   <ClinicalCorrectionControl
                     correction={null}
@@ -913,7 +908,7 @@ export default function PatientDetailPage() {
                   className="inline-flex items-center gap-1 rounded-full border border-dashed border-red-300 px-2.5 py-0.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-100 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
                 >
                   <Plus className="h-3 w-3" />
-                  Add
+                  {t("patients.add")}
                 </button>
               ) : null}
             </div>
@@ -950,14 +945,14 @@ export default function PatientDetailPage() {
             />
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-              <span>No known allergies recorded.</span>
+              <span>{t("patients.noKnownAllergies")}</span>
               <button
                 type="button"
                 onClick={() => setShowAllergyForm(true)}
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Add allergy
+                {t("patients.addAllergy")}
               </button>
             </div>
           )}
@@ -1024,7 +1019,7 @@ export default function PatientDetailPage() {
       <div className="mt-6 overflow-x-auto border-b border-border">
         <div
           role="tablist"
-          aria-label="Patient chart sections"
+          aria-label={t("patients.chartSections")}
           className="flex min-w-max gap-0"
         >
           {tabs.map((tab) => (
@@ -1043,7 +1038,7 @@ export default function PatientDetailPage() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {tab.label}
+              {t(tab.label)}
               {activeTab === tab.id && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
@@ -1062,68 +1057,65 @@ export default function PatientDetailPage() {
         {activeTab === "overview" && (
           <div className="rounded-lg border border-border bg-card p-6">
             <h3 className="font-heading text-base font-semibold mb-4">
-              Basic Information
+              {t("patients.basicInformation")}
             </h3>
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-sm text-muted-foreground">Name</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.nameLabel")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">{patient.name}</dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Species</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.species")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">
-                  {patient.species
-                    ? patient.species.charAt(0).toUpperCase() +
-                      patient.species.slice(1)
-                    : "\u2014"}
+                  {patient.species ? speciesLabel(t, patient.species) : "\u2014"}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Breed</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.breed")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">
                   {patient.breed || "\u2014"}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Sex</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.sex")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">
-                  {formatSex(patient.sex)}
+                  {sexLabel(t, patient.sex)}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Date of Birth</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.birthDate")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">
-                  {formatClinicalDate(patient.dob, recordsTimeZone, "\u2014")}
+                  {formatClinicalDate(patient.dob, recordsTimeZone, "\u2014", dateLocale)}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Age</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.age")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">
-                  {calculateAge(patient.dob)}
+                  {calculateAge(patient.dob, t)}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Color</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.color")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">
                   {patient.color || "\u2014"}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm text-muted-foreground">
-                  Microchip Number
+                  {t("patients.microchipNumber")}
                 </dt>
                 <dd className="mt-0.5 text-sm font-medium">
                   {patient.microchipNumber || "\u2014"}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Status</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.status")}</dt>
                 <dd className="mt-0.5 text-sm font-medium capitalize">
-                  {patient.status ?? "active"}
+                  {patientStatusLabel(t, patient.status)}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Owner</dt>
+                <dt className="text-sm text-muted-foreground">{t("patients.tutor")}</dt>
                 <dd className="mt-0.5 text-sm font-medium">
                   {patient.clientFirstName
                     ? `${patient.clientFirstName} ${patient.clientLastName}`
@@ -2640,6 +2632,7 @@ function AllergyForm({
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations();
   return (
     <form onSubmit={onSubmit} className="mt-3 flex flex-wrap items-end gap-2">
       <div className="w-full sm:w-44">
@@ -2647,7 +2640,7 @@ function AllergyForm({
           htmlFor="allergy-allergen"
           className="mb-1 block text-xs font-medium text-muted-foreground"
         >
-          Allergen
+          {t("patients.allergen")}
         </label>
         <input
           id="allergy-allergen"
@@ -2665,7 +2658,7 @@ function AllergyForm({
           htmlFor="allergy-severity"
           className="mb-1 block text-xs font-medium text-muted-foreground"
         >
-          Severity
+          {t("patients.severity")}
         </label>
         <select
           id="allergy-severity"
@@ -2677,9 +2670,9 @@ function AllergyForm({
           }
           className="rounded-md border border-border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
         >
-          <option value="mild">Mild</option>
-          <option value="moderate">Moderate</option>
-          <option value="severe">Severe</option>
+          <option value="mild">{t("patients.severity.mild")}</option>
+          <option value="moderate">{t("patients.severity.moderate")}</option>
+          <option value="severe">{t("patients.severity.severe")}</option>
         </select>
       </div>
       <div className="w-full sm:w-56">
@@ -2687,7 +2680,7 @@ function AllergyForm({
           htmlFor="allergy-reaction"
           className="mb-1 block text-xs font-medium text-muted-foreground"
         >
-          Reaction (optional)
+          {t("patients.reactionOptional")}
         </label>
         <input
           id="allergy-reaction"
@@ -2706,10 +2699,10 @@ function AllergyForm({
           ) : (
             <Plus className="mr-1.5 h-3.5 w-3.5" />
           )}
-          {isPending ? "Saving..." : "Save allergy"}
+          {isPending ? t("patients.saving") : t("patients.saveAllergy")}
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t("patients.cancel")}
         </Button>
       </div>
     </form>

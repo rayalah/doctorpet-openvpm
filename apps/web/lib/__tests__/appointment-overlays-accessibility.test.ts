@@ -18,12 +18,16 @@ const overlaySources = [
 describe("appointment detail overlay accessibility", () => {
   it.each(overlaySources)(
     "%s exposes a named modal dialog with an accessible close control",
-    (_surface, source) => {
+    (surface, source) => {
       expect(source).toContain('role="dialog"');
       expect(source).toContain('aria-modal="true"');
       expect(source).toContain("aria-labelledby={dialogTitleId}");
       expect(source).toContain("id={dialogTitleId}");
-      expect(source).toContain('aria-label="Close appointment details"');
+      expect(source).toContain(
+        surface === "schedule"
+          ? 'aria-label={t("appointments.closeDetails")}'
+          : 'aria-label="Close appointment details"',
+      );
       expect(source).toContain("tabIndex={-1}");
     },
   );

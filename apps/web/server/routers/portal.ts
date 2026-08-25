@@ -63,6 +63,8 @@ import {
   resolveAppointmentLocation,
   takeAppointmentSchedulingLock,
 } from "@/lib/scheduling/location";
+import { resolvePublicTenantLanguage } from "@/lib/i18n/language";
+import { getTranslations } from "@/lib/i18n/server";
 
 const portalBookingDateInput = clinicalDateInput("Booking date");
 const portalBookingTimeInput = z
@@ -217,6 +219,25 @@ async function practiceTimeZone(
   return practice.timezone ?? null;
 }
 
+async function practicePortalRequestContext(db: any, practiceId: string) {
+  const [practice] = await db
+    .select({
+      timezone: practices.timezone,
+      language: practices.language,
+    })
+    .from(practices)
+    .where(activePracticeWhere(practiceId))
+    .limit(1);
+  if (!practice) {
+    throw invalidPortalLink();
+  }
+
+  return {
+    timezone: practice.timezone ?? null,
+    language: resolvePublicTenantLanguage(practice),
+  };
+}
+
 async function practicePortalProfile(db: any, practiceId: string) {
   const [practice] = await db
     .select({
@@ -271,6 +292,26 @@ function formatPortalRequestDateTime(
   timeZone?: string | null
 ): string {
   return timeZone ? `${date} ${time} (${timeZone})` : `${date} ${time}`;
+}
+
+function portalAppointmentRequestCommunication(input: {
+  language: ReturnType<typeof resolvePublicTenantLanguage>;
+  patientName: string;
+  requestedAt: string;
+  locationName: string;
+  reason: string;
+}) {
+  const t = getTranslations(input.language);
+
+  return {
+    subject: `${t("appointments.request.subject")} ${input.patientName}`,
+    content: [
+      `${t("appointments.request.patient")}: ${input.patientName}`,
+      `${t("appointments.request.requested")}: ${input.requestedAt}`,
+      `${t("appointments.request.location")}: ${input.locationName}`,
+      `${t("appointments.request.reason")}: ${input.reason}`,
+    ].join("\n"),
+  };
 }
 
 async function assertPortalWriteAccess(
@@ -1104,7 +1145,11 @@ export const portalRouter = createRouter({
 
       const client = await getClientByToken(ctx.db, input.token);
       await assertPortalWriteAccess(ctx.db, client.practiceId, "booking");
-      const timezone = await practiceTimeZone(ctx.db, client.practiceId);
+      const requestContext = await practicePortalRequestContext(
+        ctx.db,
+        client.practiceId
+      );
+      const timezone = requestContext.timezone;
 
       // Verify the patient belongs to this client.
       const [patient] = await ctx.db
@@ -1262,22 +1307,25 @@ export const portalRouter = createRouter({
       );
 
       // Mirror into the communications inbox so front desk sees it there too.
+      const communication = portalAppointmentRequestCommunication({
+        language: requestContext.language,
+        patientName: patient.name,
+        requestedAt: formatPortalRequestDateTime(
+          input.preferredDate,
+          input.preferredTime,
+          timezone
+        ),
+        locationName: selectedLocation.name,
+        reason: input.reason,
+      });
+
       await ctx.db.insert(communications).values({
         practiceId: client.practiceId,
         clientId: client.id,
         channel: "portal",
         direction: "inbound",
-        subject: `Appointment request for ${patient.name}`,
-        content: [
-          `Pet: ${patient.name}`,
-          `Requested: ${formatPortalRequestDateTime(
-            input.preferredDate,
-            input.preferredTime,
-            timezone
-          )}`,
-          `Location: ${selectedLocation.name}`,
-          `Reason: ${input.reason}`,
-        ].join("\n"),
+        subject: communication.subject,
+        content: communication.content,
         status: "pending",
         assignedTo: latestAssignedToForClient(client.practiceId, client.id),
       });

@@ -37,6 +37,9 @@ import {
   formatClinicalDateTime,
 } from "@/lib/records/clinical-dates";
 import { communicationStatusLabel } from "@/lib/communications/status";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
+import { dateLocaleForLanguage } from "@/lib/i18n/language";
+import { patientStatusLabel, speciesLabel } from "@/lib/i18n/presentation-labels";
 
 const speciesEmoji: Record<string, string> = {
   canine: "\uD83D\uDC36",
@@ -48,11 +51,11 @@ const speciesEmoji: Record<string, string> = {
   other: "\uD83D\uDC3E",
 };
 
-const communicationChannelLabels = {
-  phone: "Phone",
-  sms: "SMS",
-  email: "Email",
-  portal: "Portal",
+const communicationChannelKeys = {
+  phone: "clients.channel.phone",
+  sms: "clients.channel.sms",
+  email: "clients.channel.email",
+  portal: "clients.channel.portal",
 } as const;
 
 function canManageClientDetailsRole(role?: string | null): boolean {
@@ -71,7 +74,7 @@ function canManageWellnessMembershipRole(role?: string | null): boolean {
 function CommunicationChannelIcon({
   channel,
 }: {
-  channel: keyof typeof communicationChannelLabels;
+  channel: keyof typeof communicationChannelKeys;
 }) {
   const Icon =
     channel === "sms"
@@ -84,16 +87,38 @@ function CommunicationChannelIcon({
   return <Icon className="h-3.5 w-3.5" />;
 }
 
+function communicationStatusPresentationLabel(
+  message: Parameters<typeof communicationStatusLabel>[0],
+  t: ReturnType<typeof useTranslations>,
+): string {
+  const status = communicationStatusLabel(message);
+  const keys: Record<string, Parameters<typeof t>[0]> = {
+    Pending: "clients.communication.pending",
+    Sent: "clients.communication.sent",
+    Delivered: "clients.communication.delivered",
+    Read: "clients.communication.read",
+    Failed: "clients.communication.failed",
+    Unread: "clients.communication.unread",
+    "Read by clinic": "clients.communication.readByClinic",
+    "Read by client": "clients.communication.readByClient",
+    "Delivered to portal": "clients.communication.deliveredToPortal",
+  };
+  return keys[status] ? t(keys[status]) : status;
+}
+
 function ClientDetailLoadingPanel() {
+  const t = useTranslations();
   return (
     <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
       <Loader2 className="h-4 w-4 animate-spin" />
-      Loading client...
+      {t("clients.loading")}
     </div>
   );
 }
 
 export default function ClientDetailPage() {
+  const t = useTranslations();
+  const dateLocale = dateLocaleForLanguage(useLanguage());
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const utils = trpc.useUtils();
@@ -114,7 +139,7 @@ export default function ClientDetailPage() {
     onSuccess: () => {
       utils.clients.getById.invalidate({ id: params.id });
       setConfirmRotatePortal(false);
-      toast.success("Portal link updated");
+      toast.success(t("clients.portalUpdated"));
     },
     onError: (err) => {
       toast.error(err.message);
@@ -129,13 +154,13 @@ export default function ClientDetailPage() {
     return (
       <EmptyState
         icon={AlertCircle}
-        title="Unable to load client"
+        title={t("clients.unavailable")}
         description={
           error?.message ??
-          "Choose a client from the Clients list before opening the detail page."
+          t("clients.chooseFromList")
         }
         action={{
-          label: "Back to Clients",
+          label: t("clients.back"),
           onClick: () => router.push("/clients"),
           icon: ArrowLeft,
         }}
@@ -156,10 +181,10 @@ export default function ClientDetailPage() {
       await navigator.clipboard.writeText(
         `${window.location.origin}${portalPath}`
       );
-      toast.success("Portal link copied");
+      toast.success(t("clients.portalCopied"));
       emitGuideSignal(GUIDE_SIGNALS.portalLinkCopied);
     } catch {
-      toast.error("Could not copy portal link");
+      toast.error(t("clients.portalCopyError"));
     }
   };
 
@@ -181,7 +206,7 @@ export default function ClientDetailPage() {
         className="mb-4"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Clients
+        {t("clients.back")}
       </Button>
 
       <div className="rounded-lg border border-border bg-card p-6">
@@ -217,7 +242,7 @@ export default function ClientDetailPage() {
               size="sm"
               onClick={() => router.push(`/clients/${client.id}/edit`)}
             >
-              Edit
+              {t("clients.editAction")}
             </Button>
           )}
         </div>
@@ -230,15 +255,14 @@ export default function ClientDetailPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h3 className="font-heading text-lg font-semibold">
-              Client Portal
+              {t("clients.portal")}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Share this private link so the client can view pets, request
-              appointments, and pay invoices online.
+              {t("clients.portalDescription")}
             </p>
             {!canManageClientDetails ? (
               <p className="mt-3 text-sm text-muted-foreground">
-                Portal links are available to staff with client write access.
+                {t("clients.portalAccess")}
               </p>
             ) : portalPath ? (
               <div className="mt-3 break-all rounded-md border border-border bg-muted px-3 py-2 text-sm">
@@ -246,13 +270,12 @@ export default function ClientDetailPage() {
               </div>
             ) : (
               <p className="mt-3 text-sm text-muted-foreground">
-                No portal link has been issued for this client yet.
+                {t("clients.portalNone")}
               </p>
             )}
             {confirmRotatePortal ? (
               <p className="mt-2 text-xs text-amber-700">
-                Rotating this link will immediately invalidate the previous
-                portal URL.
+                {t("clients.portalRotateWarning")}
               </p>
             ) : null}
           </div>
@@ -266,7 +289,7 @@ export default function ClientDetailPage() {
                   className="gap-2"
                 >
                   <Copy className="h-4 w-4" />
-                  Copy
+                  {t("clients.copy")}
                 </Button>
                 <Button
                   variant="outline"
@@ -276,7 +299,7 @@ export default function ClientDetailPage() {
                 >
                   <a href={portalPath} target="_blank" rel="noreferrer">
                     <ExternalLink className="h-4 w-4" />
-                    Open
+                    {t("clients.openPortal")}
                   </a>
                 </Button>
               </>
@@ -291,12 +314,12 @@ export default function ClientDetailPage() {
               >
                 <RefreshCw className="h-4 w-4" />
                 {rotatePortalToken.isPending
-                  ? "Updating..."
+                  ? t("clients.updating")
                   : client.accessToken
                     ? confirmRotatePortal
-                      ? "Confirm Rotate"
-                      : "Rotate Link"
-                    : "Create Link"}
+                      ? t("clients.confirmRotate")
+                      : t("clients.rotateLink")
+                    : t("clients.createLink")}
               </Button>
             )}
             {canManageClientDetails && confirmRotatePortal ? (
@@ -321,7 +344,7 @@ export default function ClientDetailPage() {
 
       <div className="mt-6">
         <h3 className="font-heading text-lg font-semibold mb-4">
-          Patients ({client.patients.length})
+          {t("clients.patients")} ({client.patients.length})
         </h3>
         {client.patients.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -338,9 +361,7 @@ export default function ClientDetailPage() {
                   <span className="font-medium">{patient.name}</span>
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground">
-                  {patient.species &&
-                    patient.species.charAt(0).toUpperCase() +
-                      patient.species.slice(1)}
+                  {patient.species && speciesLabel(t, patient.species)}
                   {patient.breed ? ` \u00B7 ${patient.breed}` : ""}
                 </div>
                 <div className="mt-1">
@@ -353,7 +374,7 @@ export default function ClientDetailPage() {
                           : "bg-amber-100 text-amber-700"
                     }`}
                   >
-                    {patient.status ?? "active"}
+                    {patientStatusLabel(t, patient.status)}
                   </span>
                 </div>
               </div>
@@ -362,11 +383,11 @@ export default function ClientDetailPage() {
         ) : (
           <EmptyState
             icon={PawPrint}
-            title="No patients for this client yet"
+            title={t("clients.noPatients")}
             action={
               canManageClientDetails
                 ? {
-                    label: "Add patient",
+                    label: t("clients.addPatient"),
                     onClick: () => {
                       const ownerName = `${client.firstName} ${client.lastName}`;
                       router.push(
@@ -385,6 +406,8 @@ export default function ClientDetailPage() {
 }
 
 function CommunicationLogPanel({ clientId }: { clientId: string }) {
+  const t = useTranslations();
+  const dateLocale = dateLocaleForLanguage(useLanguage());
   const {
     data: communicationSettings,
     isLoading: settingsLoading,
@@ -416,33 +439,35 @@ function CommunicationLogPanel({ clientId }: { clientId: string }) {
     <div className="mt-6 rounded-lg border border-border bg-card p-6">
       <div>
         <h3 className="font-heading text-lg font-semibold">
-          Communication Log
+          {t("clients.communicationLog")}
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Calls, texts, emails, and portal requests linked to this client.
+          {t("clients.communicationDescription")}
         </p>
       </div>
 
       {communicationLogError || communicationLogMissing ? (
         <div className="mt-4 rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
           {communicationLogError?.message ??
-            "Unable to load communication log. Please retry."}
+            t("clients.communicationLoadError")}
         </div>
       ) : isCommunicationLogLoading ? (
         <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Loading communication log...
+          {t("clients.communicationLoading")}
         </div>
       ) : verifiedCommunicationSettings &&
         communications &&
         communications.length > 0 ? (
         <div className="mt-4 divide-y divide-border rounded-lg border border-border">
           {communications.map((message) => {
-            const channel =
-              message.channel as keyof typeof communicationChannelLabels;
-            const directionLabel =
-              message.direction === "outbound" ? "Outbound" : "Inbound";
-            const statusLabel = communicationStatusLabel(message);
+            const channel = message.channel as keyof typeof communicationChannelKeys;
+            const directionLabel = t(
+              message.direction === "outbound"
+                ? "clients.direction.outbound"
+                : "clients.direction.inbound",
+            );
+            const statusLabel = communicationStatusPresentationLabel(message, t);
 
             return (
               <article key={message.id} className="p-4">
@@ -451,7 +476,7 @@ function CommunicationLogPanel({ clientId }: { clientId: string }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline" className="gap-1.5">
                         <CommunicationChannelIcon channel={channel} />
-                        {communicationChannelLabels[channel]}
+                        {t(communicationChannelKeys[channel])}
                       </Badge>
                       <span className="text-xs font-medium uppercase text-muted-foreground">
                         {directionLabel}
@@ -464,14 +489,16 @@ function CommunicationLogPanel({ clientId }: { clientId: string }) {
                       <p className="text-sm font-medium">{message.subject}</p>
                     ) : null}
                     <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                      {message.content?.trim() || "No content"}
+                      {message.content?.trim() || t("clients.communication.noContent")}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="h-3.5 w-3.5" />
                     {formatClinicalDateTime(
                       message.createdAt,
-                      verifiedCommunicationSettings.timezone
+                      verifiedCommunicationSettings.timezone,
+                      "--",
+                      dateLocale,
                     )}
                   </div>
                 </div>
@@ -483,8 +510,8 @@ function CommunicationLogPanel({ clientId }: { clientId: string }) {
         <EmptyState
           className="mt-4"
           icon={MessageSquare}
-          title="No communication log yet"
-          description="Messages, calls, and portal requests linked to this client will appear here."
+          title={t("clients.noCommunication")}
+          description={t("clients.noCommunicationDescription")}
         />
       )}
     </div>

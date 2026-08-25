@@ -583,7 +583,7 @@ describe("portal booking input validation", () => {
       selectResults: [
         [{ id: CLIENT_ID, practiceId: PRACTICE_ID }],
         ACTIVE_PRACTICE,
-        [{ timezone: "America/Los_Angeles" }],
+        [{ timezone: "America/Los_Angeles", language: "es" }],
         [],
       ],
     });
@@ -830,7 +830,7 @@ describe("portal booking input validation", () => {
     expect(mocks.dispatchWebhookEvent).not.toHaveBeenCalled();
   });
 
-  it("stores portal appointment requests in the practice timezone", async () => {
+  it("stores portal appointment requests in the practice language and timezone", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-01T14:00:00.000Z"));
     const { db, insertValues, execute, operations } = createDb({
@@ -838,7 +838,7 @@ describe("portal booking input validation", () => {
         [{ id: CLIENT_ID, practiceId: PRACTICE_ID }],
         ACTIVE_PRACTICE,
         ACTIVE_PRACTICE,
-        [{ timezone: "America/Los_Angeles" }],
+        [{ timezone: "America/Los_Angeles", language: "es" }],
         [{ id: PATIENT_ID, name: "Juniper" }],
         [{ id: TYPE_ID, durationMinutes: 30 }],
         [],
@@ -896,7 +896,7 @@ describe("portal booking input validation", () => {
         clientId: CLIENT_ID,
         channel: "portal",
         content: expect.stringContaining(
-          "Requested: 2026-07-01 09:00 (America/Los_Angeles)"
+          "Solicitada: 2026-07-01 09:00 (America/Los_Angeles)"
         ),
       })
     );

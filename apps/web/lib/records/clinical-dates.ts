@@ -38,59 +38,62 @@ function parseClinicalInstant(
 function formatWithTimeZone(
   date: Date,
   options: Intl.DateTimeFormatOptions,
-  timeZone?: string | null
+  timeZone?: string | null,
+  locale = "en-US"
 ): string {
   try {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(locale, {
       ...options,
       timeZone: timeZone ?? undefined,
     });
   } catch {
-    return date.toLocaleDateString("en-US", options);
+    return date.toLocaleDateString(locale, options);
   }
 }
 
 export function formatClinicalDate(
   value: Date | string | null | undefined,
   timeZone?: string | null,
-  fallback = "--"
+  fallback = "--",
+  locale = "en-US"
 ): string {
   if (!value) return fallback;
 
   if (typeof value === "string") {
     const dateOnly = dateOnlyToUtcDate(value.trim());
     if (dateOnly) {
-      return formatWithTimeZone(dateOnly, CLINICAL_DATE_FORMAT, "UTC");
+      return formatWithTimeZone(dateOnly, CLINICAL_DATE_FORMAT, "UTC", locale);
     }
   }
 
   const date = parseClinicalInstant(value);
   if (!date) return fallback;
-  return formatWithTimeZone(date, CLINICAL_DATE_FORMAT, timeZone);
+  return formatWithTimeZone(date, CLINICAL_DATE_FORMAT, timeZone, locale);
 }
 
 export function formatClinicalDateTime(
   value: Date | string | null | undefined,
   timeZone?: string | null,
-  fallback = "--"
+  fallback = "--",
+  locale = "en-US"
 ): string {
   if (!value) return fallback;
 
   if (typeof value === "string") {
     const dateOnly = dateOnlyToUtcDate(value.trim());
-    if (dateOnly) return formatClinicalDate(value, timeZone, fallback);
+    if (dateOnly) return formatClinicalDate(value, timeZone, fallback, locale);
   }
 
   const date = parseClinicalInstant(value);
   if (!date) return fallback;
 
   try {
-    return date.toLocaleString("en-US", {
+    return date.toLocaleString(locale, {
       ...CLINICAL_DATE_TIME_FORMAT,
       timeZone: timeZone ?? undefined,
     });
   } catch {
-    return date.toLocaleString("en-US", CLINICAL_DATE_TIME_FORMAT);
+    return date.toLocaleString(locale, CLINICAL_DATE_TIME_FORMAT);
   }
 }
 
