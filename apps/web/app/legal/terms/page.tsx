@@ -1,6 +1,6 @@
-export const metadata = {
-  title: "Terms of Service - OpenVPM",
-};
+import { platformBrand } from "@/lib/brand/platform-brand";
+
+export const metadata = { title: `Terms of Service | ${platformBrand.productName}` };
 
 export default function TermsPage() {
   return (
@@ -9,18 +9,18 @@ export default function TermsPage() {
       <p>Last updated: July 7, 2026</p>
 
       <p>
-        These terms cover OpenVPM Cloud, the hosted veterinary practice
+        These terms cover {platformBrand.displayName}, the hosted veterinary practice
         management service at app.openvpm.com. By creating an account or using
         the service, you agree to them. If you self-host the open-source
         edition of OpenVPM, these terms do not apply; your use is governed by
         the software license in the code repository.
       </p>
 
-      <h2>What OpenVPM is</h2>
+      <h2>What Doctor Pet is</h2>
       <p>
-        OpenVPM is practice management software for veterinary clinics. It
+        {platformBrand.displayName} is practice management software for veterinary clinics. It
         stores your practice&apos;s records, helps you schedule and bill, and
-        sends messages to your clients. OpenVPM is a tool for your team. It is
+        sends messages to your clients. {platformBrand.productName} is a tool for your team. It is
         not a veterinarian and it does not give medical advice. Your team is
         responsible for all clinical decisions and for meeting the
         record-keeping rules that apply to your practice.
@@ -59,7 +59,7 @@ export default function TermsPage() {
         </li>
         <li>
           Payments your clients make to your practice go to your own Stripe
-          account. OpenVPM may charge a small platform fee on those payments,
+          account. {platformBrand.productName} may charge a small platform fee on those payments,
           shown in the product.
         </li>
       </ul>
@@ -73,16 +73,16 @@ export default function TermsPage() {
 
       <h2>Messaging</h2>
       <p>
-        OpenVPM sends texts and emails on your behalf. You are the sender: you
+        {platformBrand.productName} sends texts and emails on your behalf. You are the sender: you
         must have consent from your clients, honor opt-outs, and follow rules
-        like the TCPA. OpenVPM enforces opt-outs automatically and blocks
+        like the TCPA. {platformBrand.productName} enforces opt-outs automatically and blocks
         sends to suppressed contacts, but responsibility for lawful messaging
         stays with your practice.
       </p>
 
       <h2>Availability and support</h2>
       <p>
-        We work hard to keep OpenVPM available and back up hosted data
+        We work hard to keep {platformBrand.productName} available and back up hosted data
         regularly. Like any online service, we cannot promise zero downtime.
         We announce planned maintenance ahead of time when we can.
       </p>
@@ -98,7 +98,7 @@ export default function TermsPage() {
       <h2>Disclaimers and liability</h2>
       <p>
         The service is provided &quot;as is.&quot; To the extent the law
-        allows, OpenVPM is not liable for indirect damages, and our total
+        allows, {platformBrand.productName} is not liable for indirect damages, and our total
         liability for any claim is limited to the fees you paid us in the 12
         months before the claim. Nothing in these terms limits liability that
         cannot be limited by law.

@@ -74,7 +74,7 @@ export function migrationSourceName(sourceId: string): string {
 export function migrationSourceExportHint(sourceId: string): string {
   return (
     MIGRATION_SOURCES.find((source) => source.id === sourceId)?.exportHint ??
-    "Keep using this exact source for the rest of this migration so saved owner and patient IDs stay linked. Ask OpenVPM support if you need help exporting another file."
+    "Keep using this exact source for the rest of this migration so saved owner and patient IDs stay linked. Ask your Doctor Pet representative if you need help exporting another file."
   );
 }
 

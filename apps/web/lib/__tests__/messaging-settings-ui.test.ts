@@ -13,20 +13,20 @@ describe("messaging settings UI", () => {
   const tabSource = readFileSync(
     "components/settings/messaging-tab.tsx",
     "utf8",
-  );
+  ).replace(/\r\n/g, "\n");
   const wizardSource = readFileSync(
     "components/settings/messaging-wizard.tsx",
     "utf8",
-  );
+  ).replace(/\r\n/g, "\n");
   const registrationSource = readFileSync(
     "components/settings/messaging-registration-form.tsx",
     "utf8",
-  );
-  const routerSource = readFileSync("server/routers/messaging.ts", "utf8");
+  ).replace(/\r\n/g, "\n");
+  const routerSource = readFileSync("server/routers/messaging.ts", "utf8").replace(/\r\n/g, "\n");
   const onboardingSource = readFileSync(
     "components/onboarding/steps/set-up-texting.tsx",
     "utf8",
-  );
+  ).replace(/\r\n/g, "\n");
 
   it("keeps messaging phone policy aligned across settings and router", () => {
     expect(MESSAGING_PHONE_MIN_LENGTH).toBe(7);
@@ -81,7 +81,7 @@ describe("messaging settings UI", () => {
     expect(tabSource).toContain("data.launch.setupAvailable");
     expect(tabSource).toContain("Texting is a controlled clinic pilot");
     expect(tabSource).toContain(
-      "OpenVPM will not\n            search for or purchase a number",
+      "Doctor Pet will not\n            search for or purchase a number",
     );
     expect(tabSource).toContain(
       "Email appointment reminders remain\n            available",
@@ -106,7 +106,7 @@ describe("messaging settings UI", () => {
       "data.launch.setupAvailable ||\n      locations.some((location) => location.messaging)",
     );
     expect(tabSource).toContain(
-      "Number setup is disabled by your OpenVPM administrator",
+      "Number setup is disabled by your Doctor Pet administrator",
     );
     expect(tabSource).toContain("hosted={data.launch.hosted}");
     expect(wizardSource).toContain("hosted: boolean");
@@ -114,7 +114,7 @@ describe("messaging settings UI", () => {
       "<ConfirmStep\n                hosted={hosted}",
     );
     expect(wizardSource).toContain(
-      'hosted\n          ? "OpenVPM reviews them."\n          : "your administrator finishes provider activation."',
+      'hosted\n          ? "Doctor Pet reviews them."\n          : "your administrator finishes provider activation."',
     );
     expect(wizardSource).toContain(
       "Your administrator must finish provider activation",
@@ -128,7 +128,7 @@ describe("messaging settings UI", () => {
     );
     expect(registrationSource).not.toContain("an OpenVPM operator reviews it");
     expect(tabSource).toContain(
-      "OpenVPM support must review this failed pilot setup",
+      "Doctor Pet support must review this failed pilot setup",
     );
     expect(routerSource).toContain(
       "!existing && !provisioningAvailableForPractice(ctx.practiceId)",
@@ -235,7 +235,7 @@ describe("messaging settings UI", () => {
     expect(onboardingSource).toContain("setupDisabled && !messaging");
     expect(onboardingSource).toContain('href="/settings?tab=messaging"');
     expect(onboardingSource).toContain(
-      'href="mailto:support@openvpm.com?subject=OpenVPM%20texting%20pilot"',
+      "platformOperationalConfig.supportEmail",
     );
     expect(onboardingSource).toContain("setupAvailable === false || messaging");
     expect(onboardingSource).toContain(

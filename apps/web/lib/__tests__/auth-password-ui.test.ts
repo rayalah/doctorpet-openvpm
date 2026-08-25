@@ -17,14 +17,14 @@ import {
 } from "../auth-input-policy";
 
 describe("auth password UI policy", () => {
-  const registerSource = readFileSync("app/(auth)/register/page.tsx", "utf8");
-  const loginSource = readFileSync("app/(auth)/login/page.tsx", "utf8");
+  const registerSource = readFileSync("app/(auth)/register/page.tsx", "utf8").replace(/\r\n/g, "\n");
+  const loginSource = readFileSync("app/(auth)/login/page.tsx", "utf8").replace(/\r\n/g, "\n");
   const forgotSource = readFileSync(
     "app/(auth)/forgot-password/page.tsx",
     "utf8"
-  );
-  const resetSource = readFileSync("app/(auth)/reset-password/page.tsx", "utf8");
-  const inviteSource = readFileSync("app/(auth)/accept-invite/page.tsx", "utf8");
+  ).replace(/\r\n/g, "\n");
+  const resetSource = readFileSync("app/(auth)/reset-password/page.tsx", "utf8").replace(/\r\n/g, "\n");
+  const inviteSource = readFileSync("app/(auth)/accept-invite/page.tsx", "utf8").replace(/\r\n/g, "\n");
   const authRouterSource = readFileSync("server/routers/auth.ts", "utf8");
   const authSource = readFileSync("lib/auth.ts", "utf8");
   const sources = [registerSource, resetSource, inviteSource].join("\n");

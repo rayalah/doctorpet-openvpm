@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageSquare, Check, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { platformBrand } from "@/lib/brand/platform-brand";
+import { platformOperationalConfig } from "@/lib/brand/platform-operational-config";
 import { Button } from "@/components/ui/button";
 import {
   MessagingWizard,
@@ -97,7 +99,7 @@ export function SetUpTextingStep({
       messaging.launchEligible === false
     ) {
       return hosted
-        ? "Carrier registration is approved, but outbound texting remains off until OpenVPM approves this clinic location for the controlled pilot."
+        ? "Carrier registration is approved, but outbound texting remains off until the platform approves this clinic location for the controlled pilot."
         : "Carrier registration is approved, but outbound texting remains off until your administrator enables this clinic location.";
     }
     if (isActive) return "Texting is active.";
@@ -106,7 +108,7 @@ export function SetUpTextingStep({
     }
     if (messaging.registrationStatus === "suspended") {
       return hosted
-        ? "Texting is suspended. Review Messaging settings and contact OpenVPM support."
+        ? "Texting is suspended. Review Messaging settings and contact your platform representative."
         : "Texting is suspended. Review Messaging settings and contact your administrator.";
     }
     return "Texting is not ready yet. Review Messaging settings before sending.";
@@ -136,12 +138,16 @@ export function SetUpTextingStep({
                 Messaging settings
               </Link>{" "}
               or{" "}
-              <a
-                href="mailto:support@openvpm.com?subject=OpenVPM%20texting%20pilot"
-                className="font-medium text-emerald-700 underline underline-offset-2"
-              >
-                contact OpenVPM support
-              </a>{" "}
+              {platformOperationalConfig.supportEmail ? (
+                <a
+                  href={`mailto:${platformOperationalConfig.supportEmail}?subject=${encodeURIComponent(`${platformBrand.productName} texting pilot`)}`}
+                  className="font-medium text-emerald-700 underline underline-offset-2"
+                >
+                  contact {platformBrand.productName} support
+                </a>
+              ) : (
+                "contact your platform representative"
+              )}{" "}
               {hasAnyNumber
                 ? " for help with the existing setup."
                 : " when your clinic is ready to join the pilot."}
@@ -157,7 +163,7 @@ export function SetUpTextingStep({
         ) : (
           <>
             Text your clients about appointments, reminders, and results, and
-            let them text you back. OpenVPM can set up a new local texting
+            let them text you back. {platformBrand.productName} can set up a new local texting
             number; your existing clinic voice line stays unchanged. This is
             optional, so skip it and set it up later if you like.
           </>
@@ -193,7 +199,7 @@ export function SetUpTextingStep({
                 </p>
                 <p className="text-xs text-slate-500">
                   {hosted
-                    ? "Email appointment reminders remain available while OpenVPM approves clinics for texting setup."
+                    ? "Email appointment reminders remain available while the platform approves clinics for texting setup."
                     : "Email appointment reminders remain available while your administrator configures texting."}
                 </p>
               </div>

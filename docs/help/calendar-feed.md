@@ -34,7 +34,7 @@ schedule, so share it only with your team.
 
 ## It stays up to date on its own
 
-Book or change a visit in OpenVPM and your calendar picks it up
+Book or change a visit in Doctor Pet and your calendar picks it up
 automatically. Calendar apps refresh on their own schedule, so a new visit
 can take a little while to appear.
 

@@ -1,6 +1,6 @@
-# OpenVPM Help
+# Doctor Pet Help
 
-Short guides for running your clinic on OpenVPM. Each one takes a minute or
+Short guides for running your clinic on Doctor Pet. Each one takes a minute or
 two. The same walkthroughs live inside the app: open **Settings** and click
 **Guides** to see them with your own data.
 
@@ -32,4 +32,4 @@ two. The same walkthroughs live inside the app: open **Settings** and click
   here. Take it with you any time.
 
 Need help with something these pages do not cover? Email
-[hello@openvpm.com](mailto:hello@openvpm.com) and a real person will answer.
+your Doctor Pet representative and a real person will answer.

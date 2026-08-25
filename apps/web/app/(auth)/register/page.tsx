@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
 import { PawMark } from "@/components/brand/paw-mark";
 import { platformBrand } from "@/lib/brand/platform-brand";
+import { platformOperationalConfig } from "@/lib/brand/platform-operational-config";
 import { cn, initials, isValidEmail } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -733,12 +734,16 @@ function RegisterPageInner() {
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-700">
                 Hosted workspaces are not available in your country yet. You can
                 still{" "}
-                <a
-                  href="https://demo.openvpm.com"
-                  className="font-medium text-primary underline underline-offset-2"
-                >
-                  explore the immediate demo
-                </a>{" "}
+                {platformOperationalConfig.marketingUrl ? (
+                  <a
+                    href={platformOperationalConfig.marketingUrl}
+                    className="font-medium text-primary underline underline-offset-2"
+                  >
+                    explore the available preview
+                  </a>
+                ) : (
+                  "contact your platform representative"
+                )}{" "}
                 or review the{" "}
                 <a
                   href="https://github.com/evangauer/openvpm"

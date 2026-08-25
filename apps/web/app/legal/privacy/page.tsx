@@ -1,6 +1,6 @@
-export const metadata = {
-  title: "Privacy Policy - OpenVPM",
-};
+import { platformBrand } from "@/lib/brand/platform-brand";
+
+export const metadata = { title: `Privacy Policy | ${platformBrand.productName}` };
 
 export default function PrivacyPage() {
   return (
@@ -9,7 +9,7 @@ export default function PrivacyPage() {
       <p>Last updated: August 9, 2026</p>
 
       <p>
-        This policy explains what OpenVPM Cloud collects, why, and the choices
+        This policy explains what {platformBrand.displayName} collects, why, and the choices
         you have. In short: your practice&apos;s data belongs to your
         practice. We use it to run the service, not to sell or advertise.
       </p>
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
 
       <h2>Who helps us run the service</h2>
       <p>
-        We use a small set of service providers to operate OpenVPM: cloud
+        We use a small set of service providers to operate {platformBrand.productName}: cloud
         hosting and databases, file storage, Stripe for payments, an email
         delivery provider, an SMS carrier, and an AI provider for the
         assistant. Each processes data only to provide their service to us.
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
         <li>Export your data at any time.</li>
         <li>Request deletion of your account and data.</li>
         <li>
-          Turn optional OpenVPM product, trial, research, and feedback email off
+          Turn optional {platformBrand.productName} product, trial, research, and feedback email off
           from any such email or from Practice Info in Settings. This choice
           does not apply to required security, billing, and service notices.
         </li>

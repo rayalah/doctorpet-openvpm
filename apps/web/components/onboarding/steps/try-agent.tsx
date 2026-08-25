@@ -130,7 +130,7 @@ export function TryAgentStep({
     return (
       <div className="space-y-4">
         <p className="text-sm leading-6 text-slate-600">
-          AI is built right into OpenVPM. It can answer questions about your
+          AI is built right into Doctor Pet. It can answer questions about your
           clinic in plain words.
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
@@ -138,7 +138,7 @@ export function TryAgentStep({
           <div>
             <p className="font-medium">Add a card to try AI</p>
             <p className="mt-1 text-emerald-900/80">
-              Your free trial keeps going. The rest of OpenVPM is ready to use
+              Your free trial keeps going. The rest of Doctor Pet is ready to use
               without a card.
             </p>
             <Button
@@ -172,7 +172,7 @@ export function TryAgentStep({
     return (
       <div className="space-y-4">
         <p className="text-sm leading-6 text-slate-600">
-          AI is built right into OpenVPM. It can answer questions about your
+          AI is built right into Doctor Pet. It can answer questions about your
           clinic in plain words.
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

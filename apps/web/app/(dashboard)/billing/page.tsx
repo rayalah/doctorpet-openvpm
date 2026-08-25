@@ -876,7 +876,7 @@ function WellnessBillingPanel({
             </p>
             {!dueMembershipsUnavailable && !dueQuery.isLoading && (
               <p className="mt-1 text-xs text-muted-foreground">
-                OpenVPM generates invoices for each billing date; staff still
+                Doctor Pet generates invoices for each billing date; staff still
                 collect payment on each invoice.
               </p>
             )}

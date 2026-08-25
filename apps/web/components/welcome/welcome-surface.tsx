@@ -1,6 +1,8 @@
 "use client";
 
-import { PawPrint, X } from "lucide-react";
+import { X } from "lucide-react";
+import { PlatformLogo } from "@/components/brand/platform-logo";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import type { GuideContext } from "@/components/tour/guide-recipes";
 import type { WelcomeCardId } from "@/lib/welcome/cards";
 import { WELCOME_COPY } from "./welcome-copy";
@@ -52,7 +54,7 @@ export function WelcomeSurface({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Welcome to OpenVPM"
+      aria-label={`Welcome to ${platformBrand.productName}`}
       className="fixed inset-0 z-[80] overflow-y-auto"
       style={{
         background:
@@ -69,11 +71,11 @@ export function WelcomeSurface({
       </button>
 
       <div className="mx-auto flex min-h-full max-w-5xl flex-col items-center justify-center px-6 pb-32 pt-14 text-center">
-        <div className="flex items-center gap-2 text-emerald-700">
-          <PawPrint className="h-5 w-5" aria-hidden="true" />
-          <span className="text-sm font-semibold uppercase tracking-wide">
-            OpenVPM
-          </span>
+        <div className="h-32 w-40 overflow-hidden">
+          <PlatformLogo
+            variant="vertical"
+            className="h-full w-full object-cover object-center"
+          />
         </div>
         <h1 className="mt-3 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">
           {headline}

@@ -1,4 +1,5 @@
 import { WEBHOOK_EVENT_DEFINITIONS } from "@/lib/webhook-events";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export default function AIIntegrationDocs() {
   return (
@@ -13,7 +14,7 @@ export default function AIIntegrationDocs() {
             AI Integration Guide
           </h1>
           <p className="text-lg text-gray-600">
-            Connect AI tools to OpenVPM for automated clinical workflows,
+            Connect AI tools to {platformBrand.productName} for automated clinical workflows,
             intelligent queries, and real-time event processing.
           </p>
         </div>
@@ -21,7 +22,7 @@ export default function AIIntegrationDocs() {
         {/* Overview */}
         <Section id="overview" title="Overview">
           <p className="mb-4 text-gray-700">
-            OpenVPM is designed to be <strong>AI-first</strong>. Every clinical
+            {platformBrand.productName} is designed to be <strong>AI-first</strong>. Every clinical
             action &mdash; creating SOAP notes, querying patient records,
             tracking vaccinations &mdash; is available via a structured API. This
             means AI scribes, voice agents, and dashboard assistants can
@@ -53,7 +54,7 @@ export default function AIIntegrationDocs() {
           </p>
 
           <CodeBlock>
-            {`curl -X POST https://your-practice.openvpm.com/api/v1/agent \\
+            {`curl -X POST https://your-practice.example.com/api/v1/agent \\
   -H "Authorization: Bearer ovpm_<key>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -101,7 +102,7 @@ Content-Type: application/json`}
           </CodeBlock>
           <p className="mt-3 text-sm text-gray-500">
             Create the key with the <strong>records:write</strong> scope.
-            OpenVPM validates the patient, active in-exam appointment, and
+            {platformBrand.productName} validates the patient, active in-exam appointment, and
             author against the authenticated practice. A saved draft or
             effective finalized SOAP note for the encounter returns a conflict
             so an integration cannot silently replace clinical documentation.
@@ -111,7 +112,7 @@ Content-Type: application/json`}
             Example (cURL)
           </h3>
           <CodeBlock>
-            {`curl -X POST https://your-practice.openvpm.com/api/v1/soap-notes \\
+            {`curl -X POST https://your-practice.example.com/api/v1/soap-notes \\
   -H "Authorization: Bearer ovpm_<key>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -196,7 +197,7 @@ Content-Type: application/json`}
         <Section id="webhooks" title="Webhook Events">
           <p className="mb-4 text-gray-700">
             Subscribe to real-time events for reactive AI workflows. When
-            something happens in OpenVPM, your AI system gets notified
+            something happens in {platformBrand.productName}, your AI system gets notified
             instantly.
           </p>
 
@@ -240,7 +241,7 @@ Content-Type: application/json`}
         {/* Footer */}
         <div className="mt-16 border-t border-gray-200 pt-8 text-center text-sm text-gray-500">
           <p>
-            OpenVPM AI Integration API &mdash; Built for the next generation of
+            {platformBrand.productName} AI Integration API &mdash; Built for the next generation of
             veterinary care.
           </p>
         </div>

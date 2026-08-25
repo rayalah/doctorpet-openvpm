@@ -5,7 +5,7 @@ import { practices } from "@openpims/db";
 type RecoveryHoldDb = Pick<Database, "select">;
 
 export const RECOVERY_HOLD_BLOCK_MESSAGE =
-  "This clinic is in protected recovery mode. External delivery and automated changes remain paused until OpenVPM completes recovery reconciliation.";
+  "This clinic is in protected recovery mode. External delivery and automated changes remain paused until Doctor Pet completes recovery reconciliation.";
 
 export async function practiceAllowsExternalSideEffects(
   database: RecoveryHoldDb,

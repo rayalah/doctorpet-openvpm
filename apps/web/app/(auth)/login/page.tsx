@@ -134,7 +134,9 @@ function LoginPageInner() {
     <div className="flex min-h-screen items-center justify-center bg-surface p-4">
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-8">
         <div className="mb-6 text-center">
-          <PlatformLogo className="mx-auto mb-3 h-12 w-auto" />
+          <div className="mx-auto mb-3 h-16 w-48 overflow-hidden">
+            <PlatformLogo className="h-full w-full object-cover object-center" />
+          </div>
           <h1 className="font-heading text-2xl font-bold text-foreground">
             {platformBrand.displayName}
           </h1>

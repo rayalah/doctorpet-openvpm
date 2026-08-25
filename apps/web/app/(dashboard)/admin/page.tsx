@@ -212,7 +212,7 @@ export default function AdminPage() {
         <ShieldAlert className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="font-heading text-xl font-semibold">Access Denied</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          This area is for OpenVPM platform operators only.
+          This area is for Doctor Pet platform operators only.
         </p>
       </div>
     );
@@ -864,7 +864,7 @@ export default function AdminPage() {
                                     onClick={() => {
                                       if (
                                         window.confirm(
-                                          `Install ${registration.practiceName}'s exact clinic-branded START, STOP, and HELP rules, then enable its Telnyx profile only after OpenVPM verifies the webhook, US-only destination list, $10 daily cap, active campaign, and assigned number? Clinic sending will remain off.`,
+                                          `Install ${registration.practiceName}'s exact clinic-branded START, STOP, and HELP rules, then enable its Telnyx profile only after Doctor Pet verifies the webhook, US-only destination list, $10 daily cap, active campaign, and assigned number? Clinic sending will remain off.`,
                                         )
                                       ) {
                                         setMessagingProfileEnabled.mutate({
@@ -1248,7 +1248,7 @@ export default function AdminPage() {
               </table>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Anonymous first touch is carried across openvpm.com, demo, and
+              Anonymous first touch is carried across configured marketing, preview, and
               signup. Rates are visit-to-step for demo and registration, then
               step-to-step. Stalls require seven full days; an active trial with
               a collected payment method is not treated as payment-abandoned.

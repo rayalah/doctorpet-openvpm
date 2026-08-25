@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { WEBHOOK_EVENT_DEFINITIONS } from "@/lib/webhook-events";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const metadata: Metadata = {
-  title: "OpenVPM API Reference",
-  description: "API documentation for OpenVPM veterinary practice management",
+  title: `${platformBrand.productName} API Reference`,
+  description: `API documentation for ${platformBrand.displayName}`,
 };
 
 // ── Endpoint definitions ─────────────────────────────────────
@@ -933,7 +934,7 @@ const sections: Section[] = [
         name: "POST /api/v1/agent",
         method: "POST",
         description:
-          "Run the OpenVPM Agent from an external automation. Instruction text is trimmed and must be nonblank. Cloud trials require signed Stripe billing-setup evidence before AI is enabled; the rest of the free trial remains available. Write-enabled runs require agent:write plus each write tool's resource scope.",
+          "Run the Doctor Pet Agent from an external automation. Instruction text is trimmed and must be nonblank. Cloud trials require signed Stripe billing-setup evidence before AI is enabled; the rest of the free trial remains available. Write-enabled runs require agent:write plus each write tool's resource scope.",
         input: `{
   instruction: string,
   allow_writes?: boolean
@@ -1428,7 +1429,7 @@ export default function ApiDocsPage() {
       <nav className="sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 lg:block">
         <div className="mb-6">
           <h2 className="text-lg font-bold text-teal-600 dark:text-teal-400">
-            OpenVPM API
+            {platformBrand.productName} API
           </h2>
           <p className="text-xs text-slate-500">v1.0 Reference</p>
         </div>
@@ -1476,10 +1477,10 @@ export default function ApiDocsPage() {
           {/* Header */}
           <div className="mb-12">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-              OpenVPM API Reference
+              {platformBrand.productName} API Reference
             </h1>
             <p className="mt-3 text-lg text-slate-600 dark:text-slate-400">
-              Complete API documentation for the OpenVPM veterinary practice
+              Complete API documentation for the {platformBrand.productName} veterinary practice
               management system. The dashboard API uses tRPC, client portal
               flows use portal tokens, and external integrations use API keys
               with REST endpoints under <code>/api/v1</code>.
@@ -1630,7 +1631,10 @@ function verifySignature(
 
           {/* Footer */}
           <footer className="mt-16 border-t border-slate-200 pt-6 text-center text-sm text-slate-500 dark:border-slate-700">
-            <p>OpenVPM &mdash; Open-source veterinary practice management.</p>
+            <p>{platformBrand.displayName} &mdash; veterinary practice management.</p>
+            <p className="mt-1 text-xs">
+              {platformBrand.displayName} is based on OpenVPM; source and license information are available in the project repository.
+            </p>
             <p className="mt-1">
               API questions? Check the{" "}
               <a

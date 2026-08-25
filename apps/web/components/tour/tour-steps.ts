@@ -50,7 +50,7 @@ export function buildTourSteps(ctx: TourContext = {}): TourStep[] {
     {
       id: "welcome",
       route: "/",
-      title: "Welcome to OpenVPM",
+      title: "Welcome to Doctor Pet",
       body: "This is your practice. We added a few sample pets so it feels real while you look around.",
     },
     {

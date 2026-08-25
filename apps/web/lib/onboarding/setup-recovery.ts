@@ -110,7 +110,7 @@ export function setupRecoveryCopy(
       return {
         stepTitle: "choosing how to start",
         nextAction:
-          "Tell us your clinic country and whether OpenVPM will replace, run alongside, or simply be evaluated against your current PIMS.",
+          "Tell us your clinic country and whether Doctor Pet will replace, run alongside, or simply be evaluated against your current PIMS.",
       };
   }
 }

@@ -58,5 +58,5 @@ export function hostedMessagingLaunchBlockMessage(
   if (reason === "missing_scope") {
     return "Hosted SMS requires an explicit clinic practice and location.";
   }
-  return "Texting is not enabled for this clinic pilot. Contact OpenVPM support.";
+  return "Texting is not enabled for this clinic pilot. Contact your Doctor Pet representative.";
 }

@@ -71,7 +71,7 @@ export function ClinicIntentBuilder({
   firstGoal,
   onClinicModelChange,
   onFirstGoalChange,
-  intro = "Start with one useful workflow. We’ll shape OpenVPM around the way your team works—and you stay in control.",
+  intro = "Start with one useful workflow. We’ll shape Doctor Pet around the way your team works—and you stay in control.",
   showClinicModel = true,
   showFirstGoal = true,
   goalLegend = "What would feel useful first?",
@@ -237,7 +237,7 @@ export function ClinicIntentBuilder({
               </span>
               <div>
                 <h3 className="font-heading text-lg font-semibold text-slate-950 sm:text-xl">
-                  Your first OpenVPM day
+                  Your first Doctor Pet day
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500">
                   Shaped for {selectedModel.shortLabel.toLowerCase()} care

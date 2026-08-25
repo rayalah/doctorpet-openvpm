@@ -179,7 +179,7 @@ export async function assertOutboundEmailAllowed(
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
       message:
-        "Email sending is temporarily limited for account safety. Try again after the limit resets or contact OpenVPM support.",
+        "Email sending is temporarily limited for account safety. Try again after the limit resets or contact your platform representative.",
     });
   }
 

@@ -88,7 +88,7 @@ export function summarizeInboxSmsStatus(
       showBanner: true,
       title: "Texting pilot is not active for this clinic",
       description:
-        "OpenVPM has kept outbound SMS off. Contact support when this clinic is ready for the controlled texting pilot.",
+        "Doctor Pet has kept outbound SMS off. Contact support when this clinic is ready for the controlled texting pilot.",
       badge: { label: "Pilot off", variant: "warning" },
       actionLabel: null,
     };

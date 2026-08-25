@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { PawMark } from "@/components/brand/paw-mark";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const metadata: Metadata = {
-  title: "Add Photos - OpenVPM",
+  title: `Add Photos - ${platformBrand.productName}`,
   description: "Add photos to the visit record",
   referrer: "no-referrer",
   robots: { index: false, follow: false, nocache: true },
@@ -28,7 +29,7 @@ export default function CaptureLayout({
             </div>
             <div>
               <span className="font-semibold text-gray-900 text-sm">
-                OpenVPM
+                {platformBrand.productName}
               </span>
               <span className="text-teal-600 text-sm ml-1.5 font-medium">
                 Photo Capture
@@ -40,7 +41,7 @@ export default function CaptureLayout({
       <main className="mx-auto max-w-lg px-4 py-6">{children}</main>
       <footer className="border-t border-gray-100 mt-12">
         <div className="mx-auto max-w-lg px-4 py-6 text-center text-sm text-gray-400">
-          Powered by OpenVPM
+          Powered by {platformBrand.displayName}
         </div>
       </footer>
     </div>

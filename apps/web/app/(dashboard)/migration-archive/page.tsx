@@ -509,7 +509,7 @@ export default function MigrationArchivePage() {
               <p className="mt-1 leading-6 text-muted-foreground">
                 Staff access, passwords, messaging consent, send queues,
                 accounts-receivable balances, and stock counts require a fresh
-                OpenVPM decision or reviewed opening value.
+                Doctor Pet decision or reviewed opening value.
               </p>
             </div>
           </CardContent>

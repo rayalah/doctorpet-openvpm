@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPublicMessagingProgram } from "@/lib/messaging/public-program";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export default async function SmsPrivacyPage({
   params,
@@ -18,7 +19,7 @@ export default async function SmsPrivacyPage({
 
       <p>
         This policy applies to text messages sent by {program.displayName}{" "}
-        through OpenVPM. The clinic controls its client information; OpenVPM
+        through {platformBrand.displayName}. The clinic controls its client information; {platformBrand.productName}
         processes that information to provide the messaging service.
       </p>
 
@@ -39,12 +40,12 @@ export default async function SmsPrivacyPage({
 
       <h2>No sale or promotional sharing</h2>
       <p>
-        The clinic and OpenVPM do not sell your personal information. SMS opt-in
+        The clinic and {platformBrand.productName} do not sell your personal information. SMS opt-in
         data and consent are not shared with third parties for their own
         marketing or promotional purposes.
       </p>
       <p>
-        Information may be processed by OpenVPM&apos;s infrastructure providers,
+        Information may be processed by {platformBrand.productName}&apos;s infrastructure providers,
         telecommunications carriers, and other service providers only as needed
         to deliver, secure, and support the clinic&apos;s messages or meet legal
         obligations.
@@ -55,7 +56,7 @@ export default async function SmsPrivacyPage({
         Consent, message, and opt-out records are retained as part of the
         clinic&apos;s business and medical-record systems for as long as needed
         to provide the service and meet legal or operational requirements.
-        OpenVPM uses encryption in transit, role-based access, and tenant
+        {platformBrand.productName} uses encryption in transit, role-based access, and tenant
         isolation to protect hosted records.
       </p>
 

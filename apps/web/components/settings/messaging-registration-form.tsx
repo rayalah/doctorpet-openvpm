@@ -184,7 +184,7 @@ export function MessagingRegistrationForm() {
             Your clinic&apos;s SMS policies are ready
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            OpenVPM hosts the privacy policy, messaging terms, and exact consent
+            Doctor Pet hosts the privacy policy, messaging terms, and exact consent
             disclosure carriers need to review. You can use these links now or
             replace them with your own public HTTPS pages.
           </p>
@@ -326,7 +326,7 @@ export function MessagingRegistrationForm() {
           value={form.privacyPolicyUrl}
           onChange={(v) => update("privacyPolicyUrl", v)}
           disabled={submitted}
-          description="Leave blank to use the OpenVPM-hosted clinic policy."
+          description="Leave blank to use the Doctor Pet-hosted clinic policy."
         />
         <TextField
           label="SMS terms URL (optional)"
@@ -334,7 +334,7 @@ export function MessagingRegistrationForm() {
           value={form.termsUrl}
           onChange={(v) => update("termsUrl", v)}
           disabled={submitted}
-          description="Leave blank to use the OpenVPM-hosted clinic terms."
+          description="Leave blank to use the Doctor Pet-hosted clinic terms."
         />
       </div>
 

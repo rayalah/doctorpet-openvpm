@@ -7,11 +7,11 @@ const source = readFileSync(
     new URL("../../app/(dashboard)/settings/page.tsx", import.meta.url),
   ),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
 
-describe("OpenVPM email settings UI", () => {
+describe("Doctor Pet email settings UI", () => {
   it("separates optional platform email from required and clinic-sent mail", () => {
-    expect(source).toContain("Emails from OpenVPM");
+    expect(source).toContain("platformBrand.productName");
     expect(source).toContain("Product guidance and feedback");
     expect(source).toContain("Account, security, and billing email");
     expect(source).toContain(

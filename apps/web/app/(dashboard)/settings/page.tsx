@@ -36,6 +36,8 @@ import {
   ReceiptText,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { platformBrand } from "@/lib/brand/platform-brand";
+import { platformOperationalConfig } from "@/lib/brand/platform-operational-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -457,8 +459,8 @@ function PracticeInfoTab() {
         utils.settings.getMarketingEmailPreference.invalidate();
         toast.success(
           preference.enabled
-            ? "Optional OpenVPM emails turned on"
-            : "Optional OpenVPM emails turned off",
+            ? `Optional ${platformBrand.productName} emails turned on`
+            : `Optional ${platformBrand.productName} emails turned off`,
         );
       },
       onError: (err) => toast.error(err.message),
@@ -758,7 +760,7 @@ function PracticeInfoTab() {
           <div className="space-y-1">
             <h3 className="text-sm font-semibold">Branding</h3>
             <p className="text-xs text-muted-foreground">
-              Your logo and accent color appear across OpenVPM. Changes save
+              Your logo and accent color appear across {platformBrand.productName}. Changes save
               immediately.
             </p>
           </div>
@@ -838,12 +840,12 @@ function PracticeInfoTab() {
           </div>
         </div>
 
-        {/* ── OpenVPM email preferences ── */}
+        {/* ── Platform email preferences ── */}
         <div className="space-y-5 rounded-lg border border-border bg-card p-6">
           <div className="space-y-1">
-            <h3 className="text-sm font-semibold">Emails from OpenVPM</h3>
+            <h3 className="text-sm font-semibold">Emails from {platformBrand.productName}</h3>
             <p className="text-xs text-muted-foreground">
-              Controls optional email OpenVPM sends to your clinic, not messages
+              Controls optional email {platformBrand.productName} sends to your clinic, not messages
               your clinic sends to pet owners.
             </p>
           </div>
@@ -916,8 +918,8 @@ function PracticeInfoTab() {
                   marketingEmailPreference?.enabled ? (
                 <p className="text-xs text-emerald-700" role="status">
                   {marketingEmailMutation.data.enabled
-                    ? "Optional OpenVPM emails are on."
-                    : "Optional OpenVPM emails are off."}
+                    ? `Optional ${platformBrand.productName} emails are on.`
+                    : `Optional ${platformBrand.productName} emails are off.`}
                 </p>
               ) : null}
 
@@ -1352,7 +1354,7 @@ function LocationsTab() {
 
 // ── Plan & Billing ──────────────────────────────────────────
 const FEATURE_LABELS: Record<string, string> = {
-  agent: "OpenVPM Agent (AI)",
+  agent: "Doctor Pet Agent (AI)",
   sms: "SMS sending",
   advancedReporting: "Advanced reporting",
   apiAccess: "API access + webhooks",
@@ -1468,9 +1470,9 @@ function BillingTab() {
               </h3>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              You&apos;re running OpenVPM on your own infrastructure. Every
+              You&apos;re running {platformBrand.productName} on your own infrastructure. Every
               feature is available and there&apos;s no subscription — free
-              forever. Plans below are how the managed OpenVPM Cloud is priced,
+              forever. Plans below are how the managed {platformBrand.productName} service is priced,
               for reference.
             </p>
           </div>
@@ -1524,7 +1526,7 @@ function BillingTab() {
       {checkoutStatus === "success" ? (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <p className="font-medium">Your billing details were received</p>
-          <p className="mt-1">OpenVPM is confirming the subscription now.</p>
+          <p className="mt-1">{platformBrand.productName} is confirming the subscription now.</p>
         </div>
       ) : null}
 
@@ -1537,7 +1539,7 @@ function BillingTab() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-medium text-primary">
-                  OpenVPM Cloud
+                  {platformBrand.productName}
                 </p>
                 <Badge
                   variant={data.billingStatus === "active" ? "success" : "info"}
@@ -1795,7 +1797,7 @@ function ClientPaymentProcessingSection({
           <p className="mt-2 text-sm text-muted-foreground">
             {data?.connectRequired
               ? "Stripe Connect lets the clinic collect card payments from pet owners into its own Stripe account."
-              : "This installation can use its configured Stripe key for client invoice payments. Stripe Connect is required for hosted OpenVPM Cloud clinics."}
+              : `This installation can use its configured Stripe key for client invoice payments. Stripe Connect is required for hosted ${platformBrand.productName} clinics.`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -2018,10 +2020,16 @@ function PlanGrid({
                 </Button>
               ) : !p.selfServe ? (
                 <a
-                  href="mailto:support@openvpm.com?subject=OpenVPM%20Enterprise"
+                  href={
+                    platformOperationalConfig.supportEmail
+                      ? `mailto:${platformOperationalConfig.supportEmail}?subject=${encodeURIComponent(`${platformBrand.productName} Enterprise`)}`
+                      : undefined
+                  }
                   className="text-xs font-medium text-primary hover:underline"
                 >
-                  Contact sales
+                  {platformOperationalConfig.supportEmail
+                    ? "Contact sales"
+                    : "Sales contact pending"}
                 </a>
               ) : null}
             </div>
@@ -3447,7 +3455,7 @@ function DataTab() {
         "Could not export full backup",
       );
       const date = formatSettingsDateInput(new Date(), settingsTimeZone);
-      downloadJSON(backup, `openvpm-full-backup-${date}.json`);
+      downloadJSON(backup, `doctor-pet-full-backup-${date}.json`);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Could not export full backup",
@@ -3876,7 +3884,7 @@ function DataTab() {
               <div>
                 <p className="text-sm font-medium">Empty-practice restore</p>
                 <p className="mt-1 text-xs leading-5 text-amber-900 dark:text-amber-200">
-                  OpenVPM first checks the backup sections, row counts, and
+                  {platformBrand.productName} first checks the backup sections, row counts, and
                   internal record links. Restores are non-destructive and only
                   insert rows that do not already exist.{" "}
                   {PRACTICE_BACKUP_JSON_SIZE_MESSAGE}

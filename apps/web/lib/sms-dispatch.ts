@@ -189,7 +189,7 @@ export function prepareCampaignSmsBody(input: {
     return {
       success: false,
       error:
-        "Do not add STOP or HELP instructions; OpenVPM adds the registered compliance footer automatically.",
+        "Do not add STOP or HELP instructions; Doctor Pet adds the registered compliance footer automatically.",
     };
   }
   const repeatedPrefix = `${displayName}:`;
@@ -736,7 +736,7 @@ async function dispatchWinner(
           const rejected: SendMessageResult = {
             status: "definite_failure",
             error:
-              "OpenVPM Cloud is read-only until your trial or subscription is active.",
+              "Doctor Pet Cloud is read-only until your trial or subscription is active.",
           };
           await appendProviderResult(
             tx as unknown as Database,

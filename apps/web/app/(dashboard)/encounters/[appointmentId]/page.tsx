@@ -250,7 +250,7 @@ function PatientAssignmentPanel({
           <p className="mt-1 text-sm">
             {clientName
               ? "Choose a patient belonging to " + clientName + "."
-              : "Choose the patient and OpenVPM will attach the matching client."}{" "}
+              : "Choose the patient and Doctor Pet will attach the matching client."}{" "}
             The exam cannot start until both records are active and matched.
           </p>
         </div>
@@ -1014,7 +1014,7 @@ function VisitCompletionGuide({
           </p>
         ) : action.target === "charge_capture" ? (
           <p className="text-xs text-muted-foreground">
-            OpenVPM will not bill a suggestion automatically. A teammate must
+            Doctor Pet will not bill a suggestion automatically. A teammate must
             add and save each charge, or document a no-charge disposition at
             checkout.
           </p>
@@ -3222,7 +3222,7 @@ function VisitWorkReconciliation({
                       <p className="text-xs text-muted-foreground">
                         {suggestedCatalog
                           ? `Suggested catalog match: ${suggestedCatalog}. Add and save it in Charge capture, then link the saved invoice line here.`
-                          : "Add and save the appropriate service or product in Charge capture, then link the saved invoice line here. OpenVPM never bills a suggestion automatically."}
+                          : "Add and save the appropriate service or product in Charge capture, then link the saved invoice line here. Doctor Pet never bills a suggestion automatically."}
                       </p>
                       {unresolved && canManage ? (
                         <>
@@ -3903,7 +3903,7 @@ function ChargeCapture({
                   Review medication unit before charging
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  OpenVPM blocked a legacy package-priced dispense snapshot. Do
+                  Doctor Pet blocked a legacy package-priced dispense snapshot. Do
                   not copy that package price into an invoice. Record an
                   attributable exception for the legacy work item, then add the
                   current inventory product using its verified per-unit price.

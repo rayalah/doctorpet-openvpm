@@ -320,7 +320,7 @@ export default function PatientDuplicatesPage() {
             Review duplicate patient identities
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            OpenVPM only suggests same-owner matches. A merge is permitted when
+            Doctor Pet only suggests same-owner matches. A merge is permitted when
             the retiring chart has no clinical, medication, controlled,
             financial, or other retained history.
           </p>

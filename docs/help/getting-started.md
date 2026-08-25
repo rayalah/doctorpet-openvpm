@@ -1,7 +1,7 @@
-# Getting Started with OpenVPM
+# Getting Started with Doctor Pet
 
 Welcome! This is the quick look at your new practice. When you first sign in,
-OpenVPM adds a few sample pets so the app feels real while you look around.
+Doctor Pet adds a few sample pets so the app feels real while you look around.
 You can remove them any time in **Settings → Data → Remove sample data**.
 
 ## Your day, at a glance

@@ -1062,7 +1062,7 @@ async function projectA2pEventInTransaction(
         enabled: false,
         registrationStatus: "action_required",
         registrationDetail:
-          "Carrier webhook identities conflict. OpenVPM must reconcile the exact brand, campaign, and number before sending can resume.",
+          "Carrier webhook identities conflict. Doctor Pet must reconcile the exact brand, campaign, and number before sending can resume.",
         providerProfileReady: false,
         providerProfileSyncedAt: null,
         updatedAt: new Date(),
@@ -1131,8 +1131,8 @@ async function projectA2pEventInTransaction(
       status: next,
       statusDetail:
         next === "action_required" || next === "failed" || next === "suspended"
-          ? "Carrier registration needs OpenVPM operator review."
-          : "Carrier update received; OpenVPM will confirm full registration status.",
+          ? "Carrier registration needs Doctor Pet operator review."
+          : "Carrier update received; Doctor Pet will confirm full registration status.",
       lastError:
         next === "action_required" || next === "failed" || next === "suspended"
           ? event.providerDetail
@@ -1181,7 +1181,7 @@ async function projectA2pEventInTransaction(
       registrationStatus: next,
       registrationDetail:
         next === "action_required" || next === "failed" || next === "suspended"
-          ? "Carrier registration needs OpenVPM review."
+          ? "Carrier registration needs Doctor Pet review."
           : "Carrier registration update received; confirmation is pending.",
       ...(next !== "active"
         ? {

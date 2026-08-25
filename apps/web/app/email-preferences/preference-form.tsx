@@ -49,7 +49,7 @@ export function EmailPreferenceForm({ token }: { token: string }) {
         <div>
           <p className="text-sm font-medium">Preference saved</p>
           <p className="mt-1 text-xs leading-5">
-            Optional OpenVPM emails are now off. No sign-in or sales call was
+            Optional Doctor Pet emails are now off. No sign-in or sales call was
             required.
           </p>
         </div>

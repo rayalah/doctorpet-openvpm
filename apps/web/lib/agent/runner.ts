@@ -22,6 +22,7 @@ import {
   lockPracticeForExternalSideEffects,
   RECOVERY_HOLD_BLOCK_MESSAGE,
 } from "@/lib/recovery-hold";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 /**
  * Provider-agnostic agent runner (Vercel AI SDK). The active model is chosen by
@@ -37,7 +38,7 @@ export const AGENT_RUN_RATE_WINDOW_MS = 60_000;
 export const AGENT_RUN_ACTOR_RATE_LIMIT = 20;
 export const AGENT_RUN_PRACTICE_RATE_LIMIT = 120;
 
-const SYSTEM_PROMPT = `You are the OpenVPM Agent, an operations assistant embedded in an open-source veterinary practice management system.
+const SYSTEM_PROMPT = `You are the ${platformBrand.productName} Agent, an operations assistant embedded in an open-source veterinary practice management system.
 
 You help practice staff by using the provided tools to read and act on practice data. Guidelines:
 - Always use tools to ground answers in real data. Never invent client names, patient records, appointment times, or doses.
@@ -63,7 +64,7 @@ export interface AgentRunResult {
 export class AgentNotConfiguredError extends Error {
   constructor() {
     super(
-      "OpenVPM Agent is not configured. Configure Google Vertex AI for Gemini, or set ANTHROPIC_API_KEY for an explicit Claude model.",
+      `${platformBrand.productName} Agent is not configured. Configure Google Vertex AI for Gemini, or set ANTHROPIC_API_KEY for an explicit Claude model.`,
     );
     this.name = "AgentNotConfiguredError";
   }
@@ -382,7 +383,7 @@ export async function runAgent(opts: {
   if (!aiAccess) throw new AgentPracticeNotFoundError();
   if (!aiAccess.allowed) {
     throw new AgentBillingAccessError(
-      aiAccess.message ?? "OpenVPM AI is not available.",
+      aiAccess.message ?? `${platformBrand.productName} AI is not available.`,
     );
   }
 

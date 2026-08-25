@@ -11,15 +11,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PawMark } from "@/components/brand/paw-mark";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import {
   buildClinicFitDemoUrl,
   buildClinicFitSignupUrl,
 } from "@/lib/funnel-analytics";
 
 export const metadata: Metadata = {
-  title: "Clinic fit and pilot readiness | OpenVPM",
+  title: `Clinic fit and pilot readiness | ${platformBrand.productName}`,
   description:
-    "See which OpenVPM clinic workflows are ready today, which need a supported pilot, and which are not yet available.",
+    `See which ${platformBrand.productName} clinic workflows are ready today, which need a supported pilot, and which are not yet available.`,
 };
 
 const READY_NOW = [
@@ -79,7 +80,7 @@ export default async function ClinicFitPage({
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <PawMark className="h-4 w-4" />
             </span>
-            OpenVPM
+            {platformBrand.productName}
           </Link>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -106,7 +107,7 @@ export default async function ClinicFitPage({
               Know what is ready before you move clinic work.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              OpenVPM is strongest today for companion-animal and house-call
+              {platformBrand.productName} is strongest today for companion-animal and house-call
               clinics that can work in a connected browser and start alongside
               their current PIMS. You can try it without a card and decide with
               real workflow evidence.
@@ -218,7 +219,7 @@ export default async function ClinicFitPage({
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild>
-              <a href="mailto:support@openvpm.com?subject=OpenVPM%20clinic%20fit%20review">
+              <a href="mailto:support@openvpm.com?subject=Doctor%20Pet%20clinic%20fit%20review">
                 Plan a clinic pilot
               </a>
             </Button>

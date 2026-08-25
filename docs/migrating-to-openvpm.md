@@ -1,8 +1,8 @@
-# Migrating to OpenVPM
+# Migrating to Doctor Pet
 
 Switching systems is the scary part of buying a PIMS. This guide makes it boring: export a few CSV files from your old system, import them in order, and your clinic is running with its own clients, pets, vaccine history, and medical history. The supported workflow runs a **dry run first** and shows exactly what will be added, reconciled, skipped as a duplicate, or rejected before anything is saved.
 
-On OpenVPM Cloud we can guide a reviewed migration. Do not email raw clinic
+On Doctor Pet Cloud we can guide a reviewed migration. Do not email raw clinic
 exports or other patient/client data. Email support only to arrange an approved
 secure transfer method and agree on the mapping, validation sample, cutoff, and
 acceptance checks.
@@ -19,8 +19,8 @@ acceptance checks.
 Vaccine history is worth the extra file: overdue-vaccine lists, reminders, and the AI assistant all light up with real answers on day one. Medical history brings each pet's past visit notes across so the record is whole from the first appointment; every note keeps its original visit date.
 
 Appointments and invoices are not available in the self-serve CSV importer. For
-a pilot, enter them manually unless OpenVPM has separately scoped and validated
-an assisted converter for that clinic's exact export. A full OpenVPM backup JSON
+a pilot, enter them manually unless Doctor Pet has separately scoped and validated
+an assisted converter for that clinic's exact export. A full Doctor Pet backup JSON
 can also be restored into a fresh practice through the documented operator
 restore process; it does not convert another vendor's backup.
 
@@ -54,7 +54,7 @@ write; the reviewed CSV dry run remains authoritative.
 1. **Clients first.** Pets link to owners by the persisted source client ID or email, so owners must exist before pets.
 2. **Patients second.** Rows whose source owner reference is not found are reported, not guessed.
 3. **Vaccinations third.** Doses link by source patient ID or owner reference + pet name; duplicates (same pet, same vaccine, same date) are skipped automatically, so re-running the same reviewed file is safe.
-4. **Medical history last.** Visit notes link by source patient ID or owner reference + pet name and keep their original visit date; duplicates (same pet, same date, same note) are skipped, so re-running the same reviewed file is safe. Imported notes are labeled **Imported** in the record (and on the printed Medical Record Summary), so a migrated visit note is never mistaken for one written in OpenVPM.
+4. **Medical history last.** Visit notes link by source patient ID or owner reference + pet name and keep their original visit date; duplicates (same pet, same date, same note) are skipped, so re-running the same reviewed file is safe. Imported notes are labeled **Imported** in the record (and on the printed Medical Record Summary), so a migrated visit note is never mistaken for one written in Doctor Pet.
 
 Where: **Settings → Data → Import**. Clients and patients can also be brought in during onboarding in the "Bring your real data" step; vaccine and medical history are done from Settings → Data. Each step shows a dry-run report first: rows parsed, rows that will import, duplicates, unmatched owners or pets, and per-row issues with row numbers.
 
@@ -72,7 +72,7 @@ The smallest supported production pilot is a reviewed clients-and-patients migra
 
 Stop if the dry run has structural errors, unexplained matches, unmatched rows, or a different file/source than the approver reviewed. There is no one-click rollback for a committed CSV import. If a commit is wrong, stop and create a practice-scoped correction plan with support; do not repeatedly edit and re-run files in production. Schedule large imports before go-live or in a maintenance window because they can hold database locks while processing.
 
-## Getting your data OUT of OpenVPM
+## Getting your data OUT of Doctor Pet
 
 The door swings both ways, always: **Settings → Data → Export** gives per-entity CSVs (clients, patients, appointments, invoices) and a full JSON backup of every table, any time, no support ticket. Nightly encrypted backups run on Cloud automatically.
 

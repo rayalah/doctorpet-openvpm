@@ -244,7 +244,7 @@ describe("sendEmail", () => {
     const [payload] = mocks.resendSend.mock.calls[0] ?? [];
     expect(payload).toMatchObject({
       to: "admin@example.com",
-      subject: "Verify your OpenVPM email",
+      subject: "Verify your Doctor Pet email",
     });
     expect(payload.html).toContain("Your trial is already active.");
     expect(payload.html).toContain("Confirm email");
@@ -438,7 +438,7 @@ describe("sendEmail", () => {
   });
 });
 
-describe("openvpmBrand", () => {
+describe("doctorPetBrand compatibility export", () => {
   it("trims configured email brand env values", async () => {
     vi.stubEnv("EMAIL_COMPANY_NAME", " Open Vet Ops ");
     vi.stubEnv("EMAIL_SUPPORT_ADDRESS", " support@example.com ");
@@ -448,7 +448,7 @@ describe("openvpmBrand", () => {
     const { openvpmBrand } = await loadEmailBrand();
 
     expect(openvpmBrand()).toMatchObject({
-      name: "OpenVPM",
+      name: "Doctor Pet by ResilIA",
       companyName: "Open Vet Ops",
       supportEmail: "support@example.com",
       companyAddress: "123 Clinic Way",
@@ -466,7 +466,7 @@ describe("openvpmBrand", () => {
     const { openvpmBrand } = await loadEmailBrand();
 
     expect(openvpmBrand()).toMatchObject({
-      companyName: "OpenVPM",
+      companyName: "ResilIA",
       supportEmail: "support@openvpm.com",
       appUrl: "https://app.openvpm.com",
     });
@@ -554,7 +554,7 @@ describe("lifecycle email branding", () => {
     });
     expect(payload.html).toContain("/email-preferences?token=");
     expect(payload.html).toContain(
-      "This address is the OpenVPM billing contact for Neighborhood Veterinary.",
+      "This address is the Doctor Pet by ResilIA billing contact for Neighborhood Veterinary.",
     );
     expect(payload.html).toContain("Review billing");
     expect(payload.html).toContain("no need to add it again");
@@ -594,7 +594,7 @@ describe("lifecycle email branding", () => {
     const [payload, providerOptions] = mocks.resendSend.mock.calls[0] ?? [];
     expect(payload).toMatchObject({
       to: "owner@example.com",
-      subject: "Your first real OpenVPM visit is complete",
+      subject: "Your first real Doctor Pet by ResilIA visit is complete",
       headers: {
         "List-Unsubscribe": expect.stringContaining(
           "https://app.openvpm.com/api/email-preferences/unsubscribe?token=",
@@ -670,7 +670,9 @@ describe("lifecycle email branding", () => {
       }),
     );
     expect(payload.html).toContain("/email-preferences?token=");
-    expect(payload.html).toContain("because you created an OpenVPM account");
+    expect(payload.html).toContain(
+      "because you created a Doctor Pet by ResilIA account",
+    );
   });
 
   it("falls back from a blank support email before lifecycle sends", async () => {

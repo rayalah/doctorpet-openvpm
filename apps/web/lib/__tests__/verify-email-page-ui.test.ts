@@ -2,12 +2,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("verify email recovery UI", () => {
-  const source = readFileSync("app/(auth)/verify-email/page.tsx", "utf8");
+  const source = readFileSync("app/(auth)/verify-email/page.tsx", "utf8").replace(/\r\n/g, "\n");
 
   it("keeps verification optional and routes recovery through the signed-in app", () => {
     expect(source).toContain("Your trial is already active.");
     expect(source).toContain("Any unexpired verification link will");
-    expect(source).toContain("Open OpenVPM to resend");
+    expect(source).toContain("Open {platformBrand.productName} to resend");
     expect(source).not.toContain("resendVerification.useMutation");
     expect(source).not.toContain('href="/register"');
     expect(source).not.toContain("disabled={!email");

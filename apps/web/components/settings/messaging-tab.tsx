@@ -148,9 +148,9 @@ export function MessagingTab() {
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
           <p className="font-medium">Texting is a controlled clinic pilot</p>
           <p className="mt-1">
-            Number setup is not enabled for this clinic yet, so OpenVPM will not
+            Number setup is not enabled for this clinic yet, so Doctor Pet will not
             search for or purchase a number. Email appointment reminders remain
-            available. Contact OpenVPM support when your clinic is ready to join
+            available. Contact your platform representative when your clinic is ready to join
             the texting pilot.
           </p>
         </div>
@@ -159,7 +159,7 @@ export function MessagingTab() {
           <p className="font-medium">Outbound texting is safely off</p>
           <p className="mt-1">
             Your clinic can continue setup, but no SMS can send until carrier
-            activation is complete and OpenVPM approves the exact clinic
+            activation is complete and Doctor Pet approves the exact clinic
             location for the controlled pilot.
           </p>
         </div>
@@ -482,7 +482,7 @@ function ConfiguredLocation({
         <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
           <p className="font-medium">Provider safety check required</p>
           <p className="mt-1">
-            OpenVPM must verify the exact texting profile immediately before
+            Doctor Pet must verify the exact texting profile immediately before
             sending can be enabled. Your clinic does not need to repeat carrier
             registration; this operational check keeps the webhook, US-only
             destinations, and spend cap in the approved state.
@@ -510,8 +510,8 @@ function ConfiguredLocation({
       ) : m.registrationStatus === "failed" && !m.enabled ? (
         <p className="text-xs text-muted-foreground">
           {hosted
-            ? "OpenVPM support must review this failed pilot setup before another provider reconciliation attempt."
-            : "Your OpenVPM administrator must enable provisioning before another provider reconciliation attempt."}
+            ? "Doctor Pet support must review this failed pilot setup before another provider reconciliation attempt."
+            : "Your Doctor Pet administrator must enable provisioning before another provider reconciliation attempt."}
         </p>
       ) : null}
 
@@ -592,8 +592,8 @@ function UnconfiguredLocation({
             {setupAvailable
               ? "Start a guided setup and choose a new local texting number. Your existing clinic phone line will not be ported or changed."
               : hosted
-                ? "OpenVPM will enable number setup after your clinic joins the controlled texting pilot. Email reminders can be used now."
-                : "Number setup is disabled by your OpenVPM administrator. Email reminders can be used now."}
+                ? "Doctor Pet will enable number setup after your clinic joins the controlled texting pilot. Email reminders can be used now."
+                : "Number setup is disabled by your Doctor Pet administrator. Email reminders can be used now."}
           </p>
           {loc.existingPhone ? (
             <p className="text-xs text-muted-foreground">

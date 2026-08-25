@@ -380,7 +380,7 @@ function ChooseStep({
   return (
     <div className="space-y-4">
       <p className="text-sm leading-6 text-slate-600">
-        OpenVPM currently sets up a new local number for texting. Your
+        Doctor Pet currently sets up a new local number for texting. Your
         clinic&apos;s existing voice line stays unchanged.
       </p>
       <div className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-left">
@@ -501,7 +501,7 @@ function ConfirmStep({
         location. Carrier registration remains not started until you complete
         the clinic details and{" "}
         {hosted
-          ? "OpenVPM reviews them."
+          ? "Doctor Pet reviews them."
           : "your administrator finishes provider activation."}
       </p>
       <div className="flex flex-wrap items-end gap-2">
@@ -621,7 +621,7 @@ function RegistrationStep({
         </p>
         <p className="mt-2 text-sm leading-6 text-teal-800">
           {hosted
-            ? "The selected number will be saved with sending off. After this step, complete the clinic's legal and consent details in Messaging settings; OpenVPM reviews them before any fee-bearing carrier submission."
+            ? "The selected number will be saved with sending off. After this step, complete the clinic's legal and consent details in Messaging settings; Doctor Pet reviews them before any fee-bearing carrier submission."
             : "The selected number will be saved with sending off. After this step, complete the clinic's legal and consent details in Messaging settings; your administrator must finish carrier activation before sending."}
         </p>
       </div>
@@ -669,7 +669,7 @@ function DoneStep({
         </p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           {hosted
-            ? "Complete the US carrier registration form in Messaging settings. OpenVPM will review and submit it. Hosted sending remains off until the clinic and one location are explicitly approved for the pilot; after approval, validate through a current consented client workflow."
+            ? "Complete the US carrier registration form in Messaging settings. Doctor Pet will review and submit it. Hosted sending remains off until the clinic and one location are explicitly approved for the pilot; after approval, validate through a current consented client workflow."
             : "Complete the US carrier registration form in Messaging settings. Your administrator must finish provider activation before enabling sending; after approval, validate through a current consented client workflow."}
         </p>
       </div>

@@ -14,7 +14,7 @@ Everything on this page lives in one place: **Settings → Data**.
   Click **Export Database Backup** and keep the file somewhere safe. Uploaded
   document and image bytes are not embedded in this JSON file.
 
-On OpenVPM Cloud we also take this database backup every night and store it
+On Doctor Pet Cloud we also take this database backup every night and store it
 outside the live database. Independent attachment-file replication is being
 rolled out separately; until its recovery drill passes, do not treat the JSON
 download as a complete attachment archive.
@@ -29,7 +29,7 @@ they only add.
 
 The full step-by-step playbook, including how to export from AVImark,
 Cornerstone, and ezyVet, is here:
-[Switching to OpenVPM](../migrating-to-openvpm.md).
+[Switching to Doctor Pet](../migrating-to-openvpm.md).
 
 ## Restore a database backup
 

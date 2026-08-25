@@ -5,21 +5,22 @@
  */
 
 import type { WelcomeCardId } from "@/lib/welcome/cards";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const WELCOME_COPY = {
   headlineAdmin: (practiceName: string) =>
-    `Welcome to OpenVPM, ${practiceName}!`,
+    `Welcome to ${platformBrand.productName}, ${practiceName}!`,
   headlineStaff: (firstName: string) => `Welcome, ${firstName}!`,
-  headlineFallback: "Welcome to OpenVPM!",
+  headlineFallback: `Welcome to ${platformBrand.productName}!`,
   subline:
-    "Here is what OpenVPM can do for your clinic today. Pick a card and we will show you in about a minute.",
+    `Here is what ${platformBrand.productName} can do for your clinic today. Pick a card and we will show you in about a minute.`,
   skip: "Skip for now",
   reopenHint: "You can come back any time from Guides in the sidebar.",
   setupInstead: "Set up my clinic instead",
   doneBadge: "Done",
   allDone: {
     title: "You tried them all!",
-    body: "That was every guide. Ready to make OpenVPM yours? Add your logo, your team, and your real clients.",
+    body: `That was every guide. Ready to make ${platformBrand.productName} yours? Add your logo, your team, and your real clients.`,
     accept: "Make it mine",
     later: "Later",
   },

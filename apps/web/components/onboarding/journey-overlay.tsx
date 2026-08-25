@@ -441,7 +441,7 @@ function JourneyShell({
           onPointerDownOutside={(event) => event.preventDefault()}
         >
           <DialogPrimitive.Description className="sr-only">
-            Guided setup for your OpenVPM clinic.
+            Guided setup for your Doctor Pet clinic.
           </DialogPrimitive.Description>
           <div className="flex min-h-full items-center justify-center">
             <div
@@ -461,7 +461,7 @@ function JourneyShell({
                     pawClassName="h-5 w-5"
                   />
                   <span className="font-heading text-lg font-semibold tracking-tight">
-                    OpenVPM
+                    Doctor Pet
                   </span>
                 </div>
                 <div className="flex min-w-[132px] items-center gap-3 sm:min-w-[230px]">

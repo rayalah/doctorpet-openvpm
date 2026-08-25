@@ -33,7 +33,7 @@ const reviewSteps = [
   {
     id: "exceptions",
     title: "Sample items marked Needs review",
-    detail: "Check a few familiar examples. OpenVPM remains responsible for the bulk reconciliation queue.",
+    detail: "Check a few familiar examples. Doctor Pet remains responsible for the bulk reconciliation queue.",
   },
 ] as const;
 
@@ -86,7 +86,7 @@ export function MigrationReviewChecklist() {
   async function copyIssueTemplate() {
     try {
       await navigator.clipboard.writeText(
-        "Migration review issue\nCategory: \nOpenVPM record reference: \nWhat I expected: \nWhat I observed: \n\nDo not include names, contact details, medical details, or source-system identifiers.",
+        "Migration review issue\nCategory: \nDoctor Pet record reference: \nWhat I expected: \nWhat I observed: \n\nDo not include names, contact details, medical details, or source-system identifiers.",
       );
       setCopyState("copied");
     } catch {
@@ -190,7 +190,7 @@ export function MigrationReviewChecklist() {
           <div>
             <p className="font-medium">Found something that looks wrong?</p>
             <p className="mt-1 text-sm leading-5 text-muted-foreground">
-              Copy a privacy-safe report outline. Use only the OpenVPM record
+              Copy a privacy-safe report outline. Use only the Doctor Pet record
               reference—never paste names, contact information, medical detail,
               or old-system identifiers into email or chat.
             </p>

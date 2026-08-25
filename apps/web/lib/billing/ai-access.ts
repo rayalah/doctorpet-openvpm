@@ -8,10 +8,10 @@ import {
 } from "@/lib/billing/plans";
 
 export const AI_TRIAL_BILLING_SETUP_MESSAGE =
-  "Add a card to your trial to try OpenVPM AI. The rest of your free trial stays available, and adding a card does not end it.";
+  "Add a card to your trial to try Doctor Pet AI. The rest of your free trial stays available, and adding a card does not end it.";
 
 export const AI_SUBSCRIPTION_INACTIVE_MESSAGE =
-  "OpenVPM AI is available when your trial or subscription is active.";
+  "Doctor Pet AI is available when your trial or subscription is active.";
 
 export type HostedAiAccessReason =
   | "allowed"

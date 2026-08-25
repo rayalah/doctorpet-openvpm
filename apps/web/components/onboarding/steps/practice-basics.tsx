@@ -163,7 +163,7 @@ export function PracticeBasicsStep({
   return (
     <div className="space-y-5">
       <p className="text-sm leading-6 text-slate-600">
-        This is your clinic, and your data. Add a few basics so OpenVPM feels
+        This is your clinic, and your data. Add a few basics so Doctor Pet feels
         right. You can change all of this later in settings.
       </p>
 

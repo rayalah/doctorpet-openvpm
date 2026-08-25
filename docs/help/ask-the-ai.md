@@ -28,7 +28,7 @@ reviews and saves it.
 
 ## If the AI helper is off
 
-Your AI helper turns on once your workspace key is set. On OpenVPM Cloud it
+Your AI helper turns on once your workspace key is set. On Doctor Pet Cloud it
 is ready out of the box. Self-hosting? Add your AI key in the environment
 settings and the Agent page lights up.
 

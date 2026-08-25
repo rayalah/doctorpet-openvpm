@@ -22,7 +22,7 @@ export const HOSTED_CLINIC_PILOT = {
     "Move one real client and pet through an appointment, clinical handoff, charges (or no-charge), and checkout.",
   guardrails: [
     "Keep your current PIMS as the source of truth until your team validates its workflow and export.",
-    "Plan to use OpenVPM online; offline changes stay only in the current tab and cannot be relied on after a close or reload.",
+    "Plan to use Doctor Pet online; offline changes stay only in the current tab and cannot be relied on after a close or reload.",
     "Texting requires separate controlled activation and should not be assumed available.",
     "Herd and large-animal workflows and turnkey third-party integrations are outside this clinic pilot.",
   ],

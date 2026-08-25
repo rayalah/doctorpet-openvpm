@@ -6,7 +6,7 @@ import {
 } from "../agent/policy";
 
 describe("agent UI states", () => {
-  const source = readFileSync("app/(dashboard)/agent/page.tsx", "utf8");
+  const source = readFileSync("app/(dashboard)/agent/page.tsx", "utf8").replace(/\r\n/g, "\n");
   const routerSource = readFileSync("server/routers/agent.ts", "utf8");
   const apiRouteSource = readFileSync("app/api/v1/agent/route.ts", "utf8");
 

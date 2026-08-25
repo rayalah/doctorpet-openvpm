@@ -2,11 +2,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("portal booking UI", () => {
-  const source = readFileSync("app/portal/[token]/book/page.tsx", "utf8");
+  const source = readFileSync("app/portal/[token]/book/page.tsx", "utf8").replace(/\r\n/g, "\n");
   const appointmentsSource = readFileSync(
     "app/portal/[token]/appointments/page.tsx",
     "utf8"
-  );
+  ).replace(/\r\n/g, "\n");
 
   it("fails closed while portal client data is loading or invalid", () => {
     expect(source).toContain('import { EmptyState } from "@/components/common/empty-state"');

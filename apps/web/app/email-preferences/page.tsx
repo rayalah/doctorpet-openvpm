@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmailPreferenceForm } from "./preference-form";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const metadata: Metadata = {
-  title: "Email preferences - OpenVPM",
-  description: "Manage optional OpenVPM email updates.",
+  title: `Email preferences - ${platformBrand.productName}`,
+  description: `Manage optional ${platformBrand.productName} email updates.`,
   robots: { index: false, follow: false },
 };
 
@@ -23,14 +24,14 @@ export default async function EmailPreferencesPage({
     >
       <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <Link href="/" className="font-heading text-lg font-semibold">
-          OpenVPM
+          {platformBrand.productName}
         </Link>
         <div className="mt-8 space-y-3">
           <h1 className="font-heading text-2xl font-semibold">
             Email preferences
           </h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            Stop optional OpenVPM product, trial, research, and feedback emails
+            Stop optional {platformBrand.productName} product, trial, research, and feedback emails
             with one click.
           </p>
         </div>

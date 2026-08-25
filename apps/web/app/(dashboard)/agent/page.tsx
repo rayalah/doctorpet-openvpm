@@ -26,6 +26,7 @@ import {
   AGENT_INSTRUCTION_MAX_LENGTH,
   isAgentInstructionValid,
 } from "@/lib/agent/policy";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 const SUGGESTIONS = [
   "Which patients are overdue for vaccinations?",
@@ -68,7 +69,7 @@ export default function AgentPage() {
         <EmptyState
           icon={Bot}
           title="Agent access is restricted"
-          description="Only administrators and veterinarians can run the OpenVPM Agent."
+          description={`Only administrators and veterinarians can run the ${platformBrand.productName} Agent.`}
           action={{
             label: "Back to dashboard",
             onClick: () => router.push("/"),
@@ -274,7 +275,7 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <p>
         {verifiedAgentStatus?.accessMessage ??
-          "OpenVPM AI is not available for this workspace."}
+          `${platformBrand.productName} AI is not available for this workspace.`}
       </p>
     </div>
   ) : !configured ? (
@@ -308,7 +309,7 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
           <Bot className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="font-heading text-2xl font-semibold">OpenVPM Agent</h1>
+          <h1 className="font-heading text-2xl font-semibold">{platformBrand.productName} Agent</h1>
           <p className="text-sm text-muted-foreground">
             Ask about your clinic. It can look things up and, with your okay, do
             the work.
@@ -329,7 +330,7 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
               What can I help you with?
             </h2>
             <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              AI is built into OpenVPM. Ask a question in plain words, or start
+              AI is built into {platformBrand.productName}. Ask a question in plain words, or start
               with one of these.
             </p>
             <div className="mt-6 grid w-full max-w-xl gap-2 sm:grid-cols-2">

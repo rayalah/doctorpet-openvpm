@@ -10,6 +10,7 @@ import { readHostedAiAccess } from "@/lib/billing/ai-access";
 import { withSystem } from "@/lib/tenant-db";
 import { clientIpFromRequest } from "@/lib/request-ip";
 import { API_KEY_HASH_COST } from "@/lib/auth-hashing";
+import { platformBrand } from "@/lib/brand/platform-brand";
 
 /** Public prefix for every issued key. Also used as the human-visible label. */
 export const API_KEY_PREFIX = "ovpm_";
@@ -250,7 +251,7 @@ export async function authenticateApiKey(
       )
     ) {
       return err(
-        "OpenVPM Cloud is read-only until your trial or subscription is active.",
+        `${platformBrand.productName} Cloud is read-only until your trial or subscription is active.`,
         403,
       );
     }
@@ -269,7 +270,7 @@ export async function authenticateApiKey(
         return err("Invalid API key.", 401);
       }
       if (!aiAccess.allowed) {
-        return err(aiAccess.message ?? "OpenVPM AI is not available.", 403);
+        return err(aiAccess.message ?? `${platformBrand.productName} AI is not available.`, 403);
       }
     }
   }

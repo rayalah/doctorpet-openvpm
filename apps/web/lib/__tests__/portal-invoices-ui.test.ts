@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("portal invoices UI", () => {
-  const source = readFileSync("app/portal/[token]/invoices/page.tsx", "utf8");
+  const source = readFileSync("app/portal/[token]/invoices/page.tsx", "utf8").replace(/\r\n/g, "\n");
 
   it("only exposes online payment actions for sent or overdue invoices", () => {
     expect(source).toContain(

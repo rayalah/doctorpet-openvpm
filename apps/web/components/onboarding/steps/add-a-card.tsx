@@ -43,7 +43,7 @@ export function AddACardStep({
 
       <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
         <div className="flex items-start justify-between gap-4">
-          <span className="text-sm text-slate-600">OpenVPM Cloud</span>
+          <span className="text-sm text-slate-600">Doctor Pet</span>
           <div className="text-right">
             <p className="font-heading text-lg font-bold text-slate-900">
               ${unitPrice}
