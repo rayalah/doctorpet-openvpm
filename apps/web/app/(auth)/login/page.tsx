@@ -20,24 +20,29 @@ import {
 import { trackFunnelEvent } from "@/lib/track-funnel-event";
 import { getFunnelVisitorId, useFunnelVisitorId } from "@/lib/funnel-visitor";
 import { safeAuthNextPath } from "@/lib/auth-redirect";
+import { I18nProvider, useTranslations } from "@/lib/i18n/client";
+import { resolvePreAuthLanguage } from "@/lib/i18n/language";
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE?.trim() === "true";
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-surface">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      }
-    >
-      <LoginPageInner />
-    </Suspense>
+    <I18nProvider language={resolvePreAuthLanguage()}>
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-surface">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        }
+      >
+        <LoginPageInner />
+      </Suspense>
+    </I18nProvider>
   );
 }
 
 function LoginPageInner() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const visitorId = useFunnelVisitorId();
@@ -75,7 +80,7 @@ function LoginPageInner() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError(t("auth.login.invalidCredentials"));
     } else {
       router.push(nextPath);
       router.refresh();
@@ -104,7 +109,7 @@ function LoginPageInner() {
           error?: string;
         } | null;
         if (!gateResponse.ok || !gateResult?.ok) {
-          setError(gateResult?.error ?? "The demo is temporarily unavailable.");
+          setError(gateResult?.error ?? t("auth.login.demo.unavailable"));
           return;
         }
 
@@ -113,14 +118,14 @@ function LoginPageInner() {
           redirect: false,
         });
         if (result?.error) {
-          setError("The demo is temporarily unavailable.");
+          setError(t("auth.login.demo.unavailable"));
           return;
         }
 
         router.push(nextPath);
         router.refresh();
       } catch {
-        setError("The demo is temporarily unavailable.");
+        setError(t("auth.login.demo.unavailable"));
       } finally {
         setLoading(false);
       }
@@ -145,20 +150,18 @@ function LoginPageInner() {
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {DEMO_MODE
-              ? "Explore the live product"
-              : "Sign in to your practice"}
+              ? t("auth.login.demo.heading")
+              : t("auth.login.heading")}
           </p>
         </div>
 
         {DEMO_MODE && (
           <div className="mb-6 rounded-md border border-primary/20 bg-primary/5 p-4">
             <p className="mb-1 text-sm font-semibold text-foreground">
-              Immediate access to the live demo
+              {t("auth.login.demo.noticeTitle")}
             </p>
             <p className="text-xs leading-5 text-muted-foreground">
-              No call, sales form, or credit card. We use your email to protect
-              this shared sandbox from automated abuse. We may send one brief
-              email asking what you thought; unsubscribe anytime.
+              {t("auth.login.demo.noticeBody")}
             </p>
           </div>
         )}
@@ -175,7 +178,7 @@ function LoginPageInner() {
               htmlFor="email"
               className="mb-1.5 block text-sm font-medium text-foreground"
             >
-              Email
+              {t("auth.login.email")}
             </label>
             <input
               id="email"
@@ -196,7 +199,7 @@ function LoginPageInner() {
                 htmlFor="password"
                 className="mb-1.5 block text-sm font-medium text-foreground"
               >
-                Password
+                {t("auth.login.password")}
               </label>
               <input
                 id="password"
@@ -206,7 +209,7 @@ function LoginPageInner() {
                 required
                 maxLength={AUTH_PASSWORD_MAX_LENGTH}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter your password"
+                placeholder={t("auth.login.passwordPlaceholder")}
               />
             </div>
           )}
@@ -218,11 +221,11 @@ function LoginPageInner() {
           >
             {loading
               ? DEMO_MODE
-                ? "Opening demo..."
-                : "Signing in..."
+                ? t("auth.login.demo.opening")
+                : t("auth.login.submitting")
               : DEMO_MODE
-                ? "Open the live demo"
-                : "Sign in"}
+                ? t("auth.login.demo.open")
+                : t("auth.login.submit")}
           </button>
         </form>
 
@@ -232,12 +235,12 @@ function LoginPageInner() {
               href="/forgot-password"
               className="text-primary hover:underline"
             >
-              Forgot your password?
+              {t("auth.login.forgotPassword")}
             </Link>
           </p>
         )}
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          {t("auth.login.noAccount")}{" "}
           {DEMO_MODE ? (
             <a
               href={buildCloudSignupUrl({
@@ -255,7 +258,7 @@ function LoginPageInner() {
               }
               className="text-primary hover:underline"
             >
-              Start my clinic
+              {t("auth.login.demo.startClinic")}
             </a>
           ) : (
             <Link
@@ -266,7 +269,7 @@ function LoginPageInner() {
               }
               className="text-primary hover:underline"
             >
-              Register your practice
+              {t("auth.login.registerPractice")}
             </Link>
           )}
         </p>

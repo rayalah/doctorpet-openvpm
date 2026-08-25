@@ -1,0 +1,41 @@
+export const enAuthMessages = {
+  "auth.login.heading": "Sign in to your practice",
+  "auth.login.email": "Email",
+  "auth.login.password": "Password",
+  "auth.login.passwordPlaceholder": "Enter your password",
+  "auth.login.submit": "Sign in",
+  "auth.login.submitting": "Signing in...",
+  "auth.login.invalidCredentials": "Invalid email or password",
+  "auth.login.forgotPassword": "Forgot your password?",
+  "auth.login.noAccount": "Don't have an account?",
+  "auth.login.registerPractice": "Register your practice",
+  "auth.login.demo.heading": "Explore the live product",
+  "auth.login.demo.noticeTitle": "Immediate access to the live demo",
+  "auth.login.demo.noticeBody":
+    "No call, sales form, or credit card. We use your email to protect this shared sandbox from automated abuse. We may send one brief email asking what you thought; unsubscribe anytime.",
+  "auth.login.demo.unavailable": "The demo is temporarily unavailable.",
+  "auth.login.demo.opening": "Opening demo...",
+  "auth.login.demo.open": "Open the live demo",
+  "auth.login.demo.startClinic": "Start my clinic",
+} as const;
+
+export const esAuthMessages = {
+  "auth.login.heading": "Iniciar sesión en tu clínica",
+  "auth.login.email": "Correo electrónico",
+  "auth.login.password": "Contraseña",
+  "auth.login.passwordPlaceholder": "Ingresa tu contraseña",
+  "auth.login.submit": "Iniciar sesión",
+  "auth.login.submitting": "Iniciando sesión...",
+  "auth.login.invalidCredentials": "Correo electrónico o contraseña incorrectos",
+  "auth.login.forgotPassword": "¿Olvidaste tu contraseña?",
+  "auth.login.noAccount": "¿No tienes una cuenta?",
+  "auth.login.registerPractice": "Registrar tu clínica",
+  "auth.login.demo.heading": "Explora el producto en vivo",
+  "auth.login.demo.noticeTitle": "Acceso inmediato a la demostración en vivo",
+  "auth.login.demo.noticeBody":
+    "Sin llamadas, formularios de ventas ni tarjeta de crédito. Usamos tu correo electrónico para proteger este entorno compartido del abuso automatizado. Podemos enviarte un correo breve para conocer tu opinión; puedes cancelar la suscripción en cualquier momento.",
+  "auth.login.demo.unavailable": "La demostración no está disponible temporalmente.",
+  "auth.login.demo.opening": "Abriendo demostración...",
+  "auth.login.demo.open": "Abrir la demostración en vivo",
+  "auth.login.demo.startClinic": "Crear mi clínica",
+} as const;
