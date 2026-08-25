@@ -602,6 +602,10 @@ function RecordsPageContent() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const isOnline = useOnlineStatus();
+  const { data: regulatoryAccess } =
+    trpc.controlledSubstances.access.useQuery(undefined, { retry: false });
+  const showControlledDrugComplianceNotice =
+    regulatoryAccess?.supportsControlledDrugCompliance === true;
   const linkedPatientId = searchParams.get("patientId") ?? "";
   const linkedAppointmentId = searchParams.get("appointmentId") ?? "";
   const requestedTab = searchParams.get("tab");
@@ -2416,11 +2420,13 @@ function RecordsPageContent() {
                     </div>
 
                     <div className="mt-4 space-y-3">
-                      <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                        Controlled-substance recordkeeping is not automated.
-                        When applicable, complete the clinic&apos;s required
-                        controlled drug log separately.
-                      </p>
+                      {showControlledDrugComplianceNotice ? (
+                        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                          Controlled-substance recordkeeping is not automated.
+                          When applicable, complete the clinic&apos;s required
+                          controlled drug log separately.
+                        </p>
+                      ) : null}
                       <PrescriptionSafetyPanel
                         medicationName={medicationNameForSafety}
                         isLoading={prescriptionSafety.isFetching}
@@ -2629,6 +2635,9 @@ function RecordsPageContent() {
                                   refillsRemaining: rx.refillsRemaining,
                                 }}
                                 canManage={canPrescribe}
+                                showControlledDrugComplianceNotice={
+                                  showControlledDrugComplianceNotice
+                                }
                                 timeZone={recordsTimeZone}
                                 onChanged={async () => {
                                   await refetchPrescriptions();

@@ -161,8 +161,8 @@ describe("settings admin stale target safety", () => {
 
     await expect(
       callerWithDb(db).updatePractice({
-        regulatoryProfile: "INVALID" as never,
-      }),
+        regulatoryProfile: "INVALID",
+      } as never),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
 
     await expect(
@@ -399,7 +399,7 @@ describe("settings admin stale target safety", () => {
     expect(getPracticeBlock).toContain("jurisdictionConfirmed:");
   });
 
-  it("persists regional profile fields only within the caller practice scope", async () => {
+  it("persists configurable regional fields only within the caller practice scope", async () => {
     const { db, updateSet } = createDb({
       updatedRows: [{ id: PRACTICE_ID, language: "es" }],
     });
@@ -408,7 +408,6 @@ describe("settings admin stale target safety", () => {
       callerWithDb(db).updatePractice({
         language: "es",
         formatLocale: "es-CR",
-        regulatoryProfile: "CR_NEUTRAL",
         fiscalProvider: "none",
       }),
     ).resolves.toMatchObject({ id: PRACTICE_ID, language: "es" });
@@ -416,7 +415,6 @@ describe("settings admin stale target safety", () => {
     expect(updateSet).toHaveBeenCalledWith({
       language: "es",
       formatLocale: "es-CR",
-      regulatoryProfile: "CR_NEUTRAL",
       fiscalProvider: "none",
     });
     const updatePracticeBlock = SETTINGS_SOURCE.match(
@@ -425,6 +423,17 @@ describe("settings admin stale target safety", () => {
     expect(updatePracticeBlock).toContain(
       ".where(activePracticeWhere(ctx.practiceId))",
     );
+  });
+
+  it("rejects client attempts to promote the practice regulatory profile", async () => {
+    const { db, updateSet } = createDb();
+
+    await expect(
+      callerWithDb(db).updatePractice({
+        regulatoryProfile: "US_DEA",
+      } as never),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(updateSet).not.toHaveBeenCalled();
   });
 
   it("activates Costa Rica with explicit tax and regional defaults in the caller tenant", async () => {

@@ -40,7 +40,6 @@ import {
   FISCAL_PROVIDERS,
   REGIONAL_FORMAT_LOCALES,
   REGIONAL_LANGUAGES,
-  REGULATORY_PROFILES,
   regionalProfileDefaultsForCountry,
 } from "@/lib/locale/regional-profile";
 import {
@@ -134,7 +133,6 @@ const currencyInput = z
   .transform((value) => value.toLowerCase());
 const languageInput = z.enum(REGIONAL_LANGUAGES);
 const formatLocaleInput = z.enum(REGIONAL_FORMAT_LOCALES);
-const regulatoryProfileInput = z.enum(REGULATORY_PROFILES);
 const fiscalProviderInput = z.enum(FISCAL_PROVIDERS);
 const phoneInput = optionalTrimmedString("Phone", SETTINGS_PHONE_MAX_LENGTH);
 const addressInput = optionalTrimmedString(
@@ -785,11 +783,11 @@ export const settingsRouter = createRouter({
           country: countryInput.optional(),
           jurisdictionSource: z.enum(["onboarding", "settings"]).optional(),
           currency: currencyInput.optional(),
-          // Persisted configuration dimensions. They remain independent from
-          // country and do not activate billing or regulatory behavior.
+          // Persisted presentation/fiscal dimensions remain independently
+          // configurable. regulatoryProfile is deliberately absent: clients
+          // cannot promote themselves into a foreign regulatory capability.
           language: languageInput.optional(),
           formatLocale: formatLocaleInput.optional(),
-          regulatoryProfile: regulatoryProfileInput.optional(),
           fiscalProvider: fiscalProviderInput.optional(),
           taxRatePercent: z
             .string()
@@ -891,8 +889,7 @@ export const settingsRouter = createRouter({
             if (input.language === undefined) patch.language = profile.language;
             if (input.formatLocale === undefined)
               patch.formatLocale = profile.formatLocale;
-            if (input.regulatoryProfile === undefined)
-              patch.regulatoryProfile = profile.regulatoryProfile;
+            patch.regulatoryProfile = profile.regulatoryProfile;
             if (input.fiscalProvider === undefined)
               patch.fiscalProvider = profile.fiscalProvider;
           }

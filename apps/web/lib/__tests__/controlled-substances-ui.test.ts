@@ -123,8 +123,8 @@ describe("controlled substances UI bounds", () => {
       "{canRecordControlledSubstance && showForm && ("
     );
     expect(source).toContain("verifiedLogPayload.log.items.map((entry)");
-    expect(source).toContain(
-      "formatControlledSubstanceDateTime(\n                            entry.performedAt,\n                            verifiedLogPayload.settings.timezone"
+    expect(source).toMatch(
+      /formatControlledSubstanceDateTime\(\s*entry\.performedAt,\s*verifiedLogPayload\.settings\.timezone/,
     );
     expect(source).toContain("verifiedLogPayload.log.total");
     expect(source).not.toContain("const logTimeZone = settingsQuery.data?.timezone");
@@ -144,15 +144,24 @@ describe("controlled substances UI bounds", () => {
     );
     expect(source).toContain('role === "admin" || role === "veterinarian"');
     expect(source).toContain("const { data: session, status } = useSession()");
-    expect(source).toContain('if (status === "loading")');
+    expect(source).toContain('status === "loading"');
+    expect(source).toContain(
+      'status === "authenticated" && accessQuery.isLoading',
+    );
     expect(source).toContain(
       "if (!canManageControlledSubstancesRole(session?.user?.role))"
     );
     expect(source).toContain("Controlled substance log is restricted");
     expect(source).toContain("return <ControlledSubstancesLogPage />");
     expect(source).toContain("function ControlledSubstancesLogPage()");
+    expect(source).toContain("trpc.controlledSubstances.access.useQuery");
+    expect(source).toContain("accessQuery.data.supportsDeaFeatures !== true");
+    expect(source).toContain('router.replace("/")');
     expect(source.indexOf("function ControlledSubstancesLogPage()")).toBeLessThan(
       source.indexOf("trpc.controlledSubstances.settings.useQuery")
+    );
+    expect(source.indexOf("supportsDeaFeatures !== true")).toBeLessThan(
+      source.indexOf("return <ControlledSubstancesLogPage />")
     );
   });
 });

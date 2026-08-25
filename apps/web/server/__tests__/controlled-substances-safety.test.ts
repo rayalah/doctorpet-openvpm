@@ -42,10 +42,18 @@ function callerWithDb(db: Record<string, unknown>) {
 function createDb(opts?: {
   selectResults?: unknown[][];
   insertedRows?: unknown[];
+  regulatoryProfileRows?: unknown[];
 }) {
   const selectResults = [...(opts?.selectResults ?? [])];
-  const select = vi.fn(() => {
-    const result = selectResults.shift() ?? [];
+  const regulatoryProfileRows = opts?.regulatoryProfileRows ?? [
+    { regulatoryProfile: "US_DEA" },
+  ];
+  const select = vi.fn((selection?: Record<string, unknown>) => {
+    const result =
+      selection &&
+      Object.prototype.hasOwnProperty.call(selection, "regulatoryProfile")
+        ? regulatoryProfileRows
+        : (selectResults.shift() ?? []);
     const afterWhere = {
       groupBy: vi.fn(() => afterWhere),
       limit: vi.fn(() => afterWhere),
@@ -89,6 +97,49 @@ afterEach(() => {
 });
 
 describe("controlled substance log safety", () => {
+  it("exposes tenant-derived neutral access without enabling foreign features", async () => {
+    const { db } = createDb({
+      regulatoryProfileRows: [{ regulatoryProfile: "CR_NEUTRAL" }],
+    });
+
+    await expect(callerWithDb(db).access()).resolves.toEqual({
+      regulatoryProfile: "CR_NEUTRAL",
+      supportsDeaFeatures: false,
+      supportsVmdFeatures: false,
+      supportsControlledDrugCompliance: false,
+    });
+  });
+
+  it("rejects CR_NEUTRAL DEA endpoints even when the client spoofs a profile", async () => {
+    const { db, insertValues } = createDb({
+      regulatoryProfileRows: [{ regulatoryProfile: "CR_NEUTRAL" }],
+    });
+
+    await expect(callerWithDb(db).settings()).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(
+      callerWithDb(db).create({
+        drugName: "Ketamine",
+        deaSchedule: "III",
+        action: "received",
+        quantity: "1.5",
+        unit: "ml",
+        regulatoryProfile: "US_DEA",
+      } as never),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(insertValues).not.toHaveBeenCalled();
+  });
+
+  it("keeps UNSPECIFIED out of DEA endpoints", async () => {
+    const { db } = createDb({
+      regulatoryProfileRows: [{ regulatoryProfile: "UNSPECIFIED" }],
+    });
+    await expect(
+      callerWithDb(db).list({ limit: 25, offset: 0 }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
   it("exposes the practice timezone for controlled-substance log timestamps", async () => {
     const { db } = createDb({
       selectResults: [[{ timezone: "America/Los_Angeles" }]],
@@ -229,6 +280,7 @@ describe("controlled substance log safety", () => {
 
   it("rejects reads and writes when the practice is missing or deleted", async () => {
     const { db, select, insertValues } = createDb({
+      regulatoryProfileRows: [],
       selectResults: [[], [], [], [], []],
     });
 
@@ -295,7 +347,7 @@ describe("controlled substance log safety", () => {
       })
     ).resolves.toEqual({ items: [row], total: 1 });
 
-    expect(select).toHaveBeenCalledTimes(4);
+    expect(select).toHaveBeenCalledTimes(5);
   });
 
   it("summarizes controlled-substance logs within practice-local date filters", async () => {
@@ -322,7 +374,7 @@ describe("controlled substance log safety", () => {
       })
     ).resolves.toEqual([row]);
 
-    expect(select).toHaveBeenCalledTimes(3);
+    expect(select).toHaveBeenCalledTimes(4);
   });
 
   it("rejects overlong controlled-substance text before DB work", async () => {

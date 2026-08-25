@@ -4,6 +4,8 @@
  * `country` is ISO 3166-1 alpha-2 (e.g. "US", "GB"); `currency` ISO 4217.
  */
 
+import type { RegulatoryProfile } from "./regional-profile";
+
 const COUNTRY_LOCALE: Record<string, string> = {
   US: "en-US",
   GB: "en-GB",
@@ -40,9 +42,16 @@ export function formatDate(date: Date | string, country?: string | null): string
   }).format(d);
 }
 
-/** Which controlled-drug / prescribing framework applies (used later, P1). */
-export function regulatoryFramework(country?: string | null): "uk_vmd" | "us_dea" {
-  return (country ?? "US").toUpperCase() === "GB" ? "uk_vmd" : "us_dea";
+/**
+ * Maps only an explicit persisted profile to its foreign framework.
+ * Neutral or missing profiles never fall back to DEA.
+ */
+export function regulatoryFramework(
+  profile?: RegulatoryProfile | null,
+): "uk_vmd" | "us_dea" | null {
+  if (profile === "UK_VMD") return "uk_vmd";
+  if (profile === "US_DEA") return "us_dea";
+  return null;
 }
 
 export interface RegionDefaults {

@@ -25,6 +25,10 @@ import {
 } from "@/lib/controlled-substances/policy";
 import { listOffsetInput } from "./pagination";
 import { dateInputDayUtcRange } from "@/lib/date-input";
+import {
+  assertPracticeRegulatoryCapability,
+  resolvePracticeRegulatoryAccess,
+} from "../regulatory-enforcement";
 
 type ControlledSubstancesDb = Pick<Database, "execute" | "select">;
 
@@ -316,13 +320,19 @@ async function assertWitnessBelongsToPractice(
 }
 
 export const controlledSubstancesRouter = createRouter({
-  settings: protectedProcedure.query(async ({ ctx }) => ({
-    timezone: await practiceTimeZone(ctx),
-  })),
+  access: protectedProcedure.query(async ({ ctx }) =>
+    resolvePracticeRegulatoryAccess(ctx),
+  ),
+
+  settings: protectedProcedure.query(async ({ ctx }) => {
+    await assertPracticeRegulatoryCapability(ctx, "US_DEA");
+    return { timezone: await practiceTimeZone(ctx) };
+  }),
 
   listWitnesses: protectedProcedure
     .use(requireRole("admin", "veterinarian"))
     .query(async ({ ctx }) => {
+      await assertPracticeRegulatoryCapability(ctx, "US_DEA");
       await assertActivePractice(ctx);
       return ctx.db
         .select({
@@ -344,6 +354,7 @@ export const controlledSubstancesRouter = createRouter({
   list: protectedProcedure
     .input(listInput)
     .query(async ({ ctx, input }) => {
+      await assertPracticeRegulatoryCapability(ctx, "US_DEA");
       await assertActivePractice(ctx);
       const performer = alias(users, "performer");
       const witness = alias(users, "witness");
@@ -456,6 +467,7 @@ export const controlledSubstancesRouter = createRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      await assertPracticeRegulatoryCapability(ctx, "US_DEA");
       // Waste requires a witness
       if (input.action === "wasted" && !input.witnessedBy) {
         throw new TRPCError({
@@ -513,6 +525,7 @@ export const controlledSubstancesRouter = createRouter({
   summary: protectedProcedure
     .input(summaryInput)
     .query(async ({ ctx, input }) => {
+      await assertPracticeRegulatoryCapability(ctx, "US_DEA");
       await assertActivePractice(ctx);
       const range = await controlledSubstanceDateRange(ctx, input);
       const conditions = [

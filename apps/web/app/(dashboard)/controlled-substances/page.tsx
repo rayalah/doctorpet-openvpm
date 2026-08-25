@@ -523,8 +523,24 @@ function SummarySection() {
 export default function ControlledSubstancesPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const accessQuery = trpc.controlledSubstances.access.useQuery(undefined, {
+    enabled: status === "authenticated",
+    retry: false,
+  });
 
-  if (status === "loading") {
+  useEffect(() => {
+    if (
+      accessQuery.data &&
+      accessQuery.data.supportsDeaFeatures !== true
+    ) {
+      router.replace("/");
+    }
+  }, [accessQuery.data, router]);
+
+  if (
+    status === "loading" ||
+    (status === "authenticated" && accessQuery.isLoading)
+  ) {
     return (
       <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
@@ -541,6 +557,24 @@ export default function ControlledSubstancesPage() {
         icon={ShieldAlert}
         title="Controlled substance log is restricted"
         description="Only administrators and veterinarians can view or record controlled-substance activity."
+        action={{
+          label: "Back to dashboard",
+          onClick: () => router.push("/"),
+        }}
+      />
+    );
+  }
+
+  if (
+    accessQuery.error ||
+    !accessQuery.data ||
+    accessQuery.data.supportsDeaFeatures !== true
+  ) {
+    return (
+      <EmptyState
+        icon={ShieldAlert}
+        title="Regional feature unavailable"
+        description="This practice profile does not enable this region-specific ledger."
         action={{
           label: "Back to dashboard",
           onClick: () => router.push("/"),

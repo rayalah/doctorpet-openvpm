@@ -31,6 +31,9 @@ describe("responsive dashboard shell", () => {
 
     expect(source).toContain('"/agent": "Agent"');
     expect(source).toContain('"/controlled-substances": "Controlled Substances"');
+    expect(source).toContain(
+      "regulatoryAccess?.supportsDeaFeatures !== true",
+    );
     expect(source).toContain("useSession()");
     expect(source).toContain("availableNewActions");
     expect(source).toContain(
@@ -63,6 +66,17 @@ describe("responsive dashboard shell", () => {
     );
     expect(source).toContain("const visibleNavItems = canShowNav");
     expect(source).not.toContain('?? "front_desk"');
+  });
+
+  it("shows DEA navigation only when the authenticated tenant enables it", () => {
+    const source = readFileSync("components/layout/sidebar.tsx", "utf8");
+
+    expect(source).toContain('regulatoryCapability: "US_DEA"');
+    expect(source).toContain("trpc.controlledSubstances.access.useQuery");
+    expect(source).toContain("enabled: canShowNav");
+    expect(source).toContain(
+      "regulatoryAccess?.supportsDeaFeatures === true",
+    );
   });
 
   it("shows a live inbox unread badge without querying before nav access is known", () => {

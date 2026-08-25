@@ -31,6 +31,7 @@ export interface PrescriptionLifecycleControlProps {
     refillsRemaining: number;
   };
   canManage: boolean;
+  showControlledDrugComplianceNotice: boolean;
   timeZone?: string | null;
   onChanged: () => void | Promise<void>;
 }
@@ -54,6 +55,7 @@ function formatEventTime(value: Date | string, timeZone?: string | null) {
 export function PrescriptionLifecycleControl({
   prescription,
   canManage,
+  showControlledDrugComplianceNotice,
   timeZone,
   onChanged,
 }: PrescriptionLifecycleControlProps) {
@@ -228,7 +230,9 @@ export function PrescriptionLifecycleControl({
               operationId.current = null;
             }}
           />
-          {mode === "refill" && !isExternalPrescription ? (
+          {mode === "refill" &&
+          !isExternalPrescription &&
+          showControlledDrugComplianceNotice ? (
             <p className="mt-2 rounded bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
               Controlled-substance log entries are not automated. If applicable,
               complete the required controlled drug record separately before

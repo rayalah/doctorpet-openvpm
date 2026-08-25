@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TrialBadge } from "@/components/layout/trial-badge";
+import { trpc } from "@/lib/trpc";
 
 const routeLabels: Record<string, string> = {
   "/": "Dashboard",
@@ -86,7 +87,16 @@ export function TopBar({
 }) {
   const pathname = usePathname();
   const basePath = "/" + (pathname.split("/")[1] ?? "");
-  const label = routeLabels[basePath] ?? "OpenVPM";
+  const { data: regulatoryAccess } =
+    trpc.controlledSubstances.access.useQuery(undefined, {
+      enabled: basePath === "/controlled-substances",
+      retry: false,
+    });
+  const label =
+    basePath === "/controlled-substances" &&
+    regulatoryAccess?.supportsDeaFeatures !== true
+      ? "Dashboard"
+      : (routeLabels[basePath] ?? "OpenVPM");
   const { data: session } = useSession();
   const role = session?.user?.role as UserRole | undefined;
   const availableNewActions = role

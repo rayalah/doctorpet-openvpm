@@ -24,6 +24,23 @@ describe("prescription lifecycle UI safety", () => {
     expect(source).toContain("Billing: {event.dispenseChargeStatus}");
   });
 
+  it("gates only the foreign controlled-drug notice", () => {
+    const controlSource = readFileSync(
+      "components/records/prescription-lifecycle-control.tsx",
+      "utf8",
+    );
+    const recordsSource = readFileSync(
+      "app/(dashboard)/records/page.tsx",
+      "utf8",
+    );
+
+    expect(controlSource).toContain("showControlledDrugComplianceNotice");
+    expect(recordsSource).toContain(
+      "regulatoryAccess?.supportsControlledDrugCompliance === true",
+    );
+    expect(recordsSource).toContain("createPrescription");
+  });
+
   it("resets the idempotency key when lifecycle intent changes", () => {
     const source = readFileSync(
       "components/records/prescription-lifecycle-control.tsx",

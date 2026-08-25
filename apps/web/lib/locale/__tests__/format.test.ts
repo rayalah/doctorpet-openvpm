@@ -51,10 +51,12 @@ describe("formatDate", () => {
 });
 
 describe("regulatoryFramework", () => {
-  it("returns uk_vmd for GB, us_dea otherwise", () => {
-    expect(regulatoryFramework("GB")).toBe("uk_vmd");
-    expect(regulatoryFramework("US")).toBe("us_dea");
-    expect(regulatoryFramework(null)).toBe("us_dea");
+  it("uses explicit profiles and keeps neutral or missing values neutral", () => {
+    expect(regulatoryFramework("UK_VMD")).toBe("uk_vmd");
+    expect(regulatoryFramework("US_DEA")).toBe("us_dea");
+    expect(regulatoryFramework("CR_NEUTRAL")).toBeNull();
+    expect(regulatoryFramework("UNSPECIFIED")).toBeNull();
+    expect(regulatoryFramework(null)).toBeNull();
   });
 });
 

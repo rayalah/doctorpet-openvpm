@@ -54,6 +54,7 @@ const navItems: {
   label: string;
   icon: React.ElementType;
   roles: UserRole[];
+  regulatoryCapability?: "US_DEA";
 }[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, roles: allRoles },
   { href: "/patients", label: "Patients", icon: PawPrint, roles: allRoles },
@@ -104,6 +105,7 @@ const navItems: {
     label: "Controlled Substances",
     icon: ShieldAlert,
     roles: ["admin", "veterinarian"],
+    regulatoryCapability: "US_DEA",
   },
   {
     href: "/reports",
@@ -142,8 +144,18 @@ export function Sidebar({
       retry: false,
     },
   );
+  const { data: regulatoryAccess } =
+    trpc.controlledSubstances.access.useQuery(undefined, {
+      enabled: canShowNav,
+      retry: false,
+    });
   const visibleNavItems = canShowNav
-    ? navItems.filter((item) => item.roles.includes(role))
+    ? navItems.filter(
+        (item) =>
+          item.roles.includes(role) &&
+          (item.regulatoryCapability !== "US_DEA" ||
+            regulatoryAccess?.supportsDeaFeatures === true),
+      )
     : [];
   const unreadInboxCount = Math.max(0, Number(unreadInbox?.total ?? 0));
   const unreadInboxLabel =
