@@ -16,6 +16,8 @@ describe("clients, patients, and appointments localization", () => {
     expect(t("appointments.title")).toBe("Agenda");
     expect(t("appointments.new")).toBe("Nueva cita");
     expect(t("appointments.request.subject")).toBe("Solicitud de cita para");
+    expect(t("clinicalRecords.title")).toBe("Expedientes clínicos");
+    expect(t("clinicalRecords.tabs.soap")).toBe("Notas SOAP");
   });
 
   it("preserves the English catalog", () => {
@@ -24,6 +26,8 @@ describe("clients, patients, and appointments localization", () => {
     expect(t("clients.editAction")).toBe("Edit");
     expect(t("patients.new")).toBe("New Patient");
     expect(t("patients.capturePhotos")).toBe("Capture photos");
+    expect(t("clinicalRecords.title")).toBe("Medical Records");
+    expect(t("clinicalRecords.tabs.vaccinations")).toBe("Vaccinations");
     expect(t("appointments.status.confirmed")).toBe("Confirmed");
   });
 

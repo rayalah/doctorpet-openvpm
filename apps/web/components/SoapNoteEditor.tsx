@@ -8,6 +8,7 @@ import Highlight from "@tiptap/extension-highlight";
 import { Bold, Italic, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n/client";
 
 interface SoapNoteEditorProps {
   value: string;
@@ -19,9 +20,10 @@ interface SoapNoteEditorProps {
 export function SoapNoteEditor({
   value,
   onChange,
-  placeholder = "Enter text here...",
+  placeholder,
   className,
 }: SoapNoteEditorProps) {
+  const t = useTranslations();
   const [isEmpty, setIsEmpty] = useState(!value);
   const editor = useEditor({
     extensions: [
@@ -78,7 +80,7 @@ export function SoapNoteEditor({
             size="sm"
             variant={editor.isActive("bold") ? "default" : "outline"}
             onClick={toggleBold}
-            title="Bold (Ctrl+B)"
+            title={`${t("clinicalRecords.editor.bold")} (Ctrl+B)`}
             className="h-8 w-8 p-0"
           >
             <Bold className="h-4 w-4" />
@@ -88,7 +90,7 @@ export function SoapNoteEditor({
             size="sm"
             variant={editor.isActive("italic") ? "default" : "outline"}
             onClick={toggleItalic}
-            title="Italic (Ctrl+I)"
+            title={`${t("clinicalRecords.editor.italic")} (Ctrl+I)`}
             className="h-8 w-8 p-0"
           >
             <Italic className="h-4 w-4" />
@@ -98,7 +100,7 @@ export function SoapNoteEditor({
             size="sm"
             variant={editor.isActive("underline") ? "default" : "outline"}
             onClick={toggleUnderline}
-            title="Underline (Ctrl+U)"
+            title={`${t("clinicalRecords.editor.underline")} (Ctrl+U)`}
             className="h-8 w-8 p-0"
           >
             <u className="text-sm font-bold">U</u>
@@ -113,20 +115,20 @@ export function SoapNoteEditor({
             size="sm"
             variant="outline"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            title="Bullet List"
+            title={t("clinicalRecords.editor.bullets")}
             className="h-8 px-2 text-xs"
           >
-            • List
+            {t("clinicalRecords.editor.bulletListButton")}
           </Button>
           <Button
             type="button"
             size="sm"
             variant="outline"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            title="Ordered List"
+            title={t("clinicalRecords.editor.orderedList")}
             className="h-8 px-2 text-xs"
           >
-            1. List
+            {t("clinicalRecords.editor.orderedListButton")}
           </Button>
         </div>
 
@@ -137,7 +139,7 @@ export function SoapNoteEditor({
           size="sm"
           variant="outline"
           onClick={clearFormatting}
-          title="Clear Formatting"
+          title={t("clinicalRecords.editor.clearFormatting")}
           className="h-8 w-8 p-0"
         >
           <Trash2 className="h-4 w-4" />
@@ -149,7 +151,7 @@ export function SoapNoteEditor({
         <EditorContent editor={editor} />
         {isEmpty && (
           <div className="pointer-events-none absolute left-3 top-3 text-sm text-muted-foreground">
-            {placeholder}
+            {placeholder ?? t("clinicalRecords.editor.placeholder")}
           </div>
         )}
       </div>

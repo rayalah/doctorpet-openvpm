@@ -13,6 +13,8 @@ import {
   type PatientHistoryStateFilter,
 } from "@/lib/records/patient-history";
 import { trpc } from "@/lib/trpc";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
+import { dateLocaleForLanguage } from "@/lib/i18n/language";
 
 type HistoryCursor = {
   occurredAt: string;
@@ -28,27 +30,6 @@ type AppliedFilters = {
   toDate?: string;
 };
 
-const recordTypeLabels: Record<PatientHistoryRecordType, string> = {
-  soap_note: "SOAP",
-  prescription: "Medications",
-  vaccination: "Vaccines",
-  lab_result: "Labs",
-  procedure: "Procedures",
-  problem: "Problems",
-  vital_sign: "Vitals",
-  allergy: "Allergies",
-};
-
-const stateLabels: Record<PatientHistoryStateFilter, string> = {
-  all: "All records",
-  current: "Current",
-  corrected: "Corrected / retained",
-};
-
-function statusLabel(value: string): string {
-  return value.replaceAll("_", " ");
-}
-
 export function PatientHistorySearch({
   patientId,
   timeZone,
@@ -58,6 +39,24 @@ export function PatientHistorySearch({
   timeZone?: string | null;
   onSearchModeChange: (active: boolean) => void;
 }) {
+  const t = useTranslations();
+  const dateLocale = dateLocaleForLanguage(useLanguage());
+  const recordTypeLabels: Record<PatientHistoryRecordType, string> = {
+    soap_note: t("clinicalRecords.history.type.soap_note"),
+    prescription: t("clinicalRecords.history.type.prescription"),
+    vaccination: t("clinicalRecords.history.type.vaccination"),
+    lab_result: t("clinicalRecords.history.type.lab_result"),
+    procedure: t("clinicalRecords.history.type.procedure"),
+    problem: t("clinicalRecords.history.type.problem"),
+    vital_sign: t("clinicalRecords.history.type.vital_sign"),
+    allergy: t("clinicalRecords.history.type.allergy"),
+  };
+  const stateLabels: Record<PatientHistoryStateFilter, string> = {
+    all: t("clinicalRecords.history.allRecords"),
+    current: t("clinicalRecords.history.current"),
+    corrected: t("clinicalRecords.history.correctedRetained"),
+  };
+  const statusLabel = (value: string) => value.replaceAll("_", " ");
   const [panelOpen, setPanelOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [recordTypes, setRecordTypes] = useState<PatientHistoryRecordType[]>([
@@ -96,7 +95,7 @@ export function PatientHistorySearch({
   function applyFilters(event: React.FormEvent) {
     event.preventDefault();
     if (fromDate && toDate && fromDate > toDate) {
-      setDateError("To date must be on or after From date.");
+      setDateError(t("clinicalRecords.history.dateRangeError"));
       return;
     }
     setDateError(null);
@@ -159,10 +158,9 @@ export function PatientHistorySearch({
       <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-medium">Find in patient history</p>
+            <p className="font-medium">{t("clinicalRecords.findPatientHistory")}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Reduce a long chart to matching SOAP, medications, labs, and other
-              clinical records.
+              {t("clinicalRecords.findHistoryDescription")}
             </p>
           </div>
           <Button
@@ -172,7 +170,7 @@ export function PatientHistorySearch({
             onClick={() => setPanelOpen(true)}
           >
             <Search className="mr-2 h-4 w-4" />
-            Find in history
+            {t("clinicalRecords.findHistory")}
           </Button>
         </div>
       </div>
@@ -189,15 +187,14 @@ export function PatientHistorySearch({
 
   return (
     <section
-      aria-label="Find in patient history"
+      aria-label={t("clinicalRecords.findPatientHistory")}
       className="rounded-lg border border-border bg-card p-4"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold">Find in patient history</h3>
+          <h3 className="font-semibold">{t("clinicalRecords.findPatientHistory")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Exact text only. Private staff notes and worklists are never
-            searched here.
+            {t("clinicalRecords.history.exactTextDescription")}
           </p>
         </div>
         <Button
@@ -205,7 +202,7 @@ export function PatientHistorySearch({
           variant="ghost"
           size="icon"
           className="min-h-11 min-w-11"
-          aria-label="Close history filters"
+          aria-label={t("clinicalRecords.history.closeFilters")}
           onClick={() => {
             clearFilters();
             setPanelOpen(false);
@@ -221,7 +218,7 @@ export function PatientHistorySearch({
             htmlFor="patient-history-query"
             className="text-sm font-medium"
           >
-            Search medical history
+            {t("clinicalRecords.history.searchLabel")}
           </label>
           <div className="mt-1 flex flex-col gap-2 sm:flex-row">
             <Input
@@ -230,7 +227,7 @@ export function PatientHistorySearch({
               value={query}
               maxLength={120}
               autoComplete="off"
-              placeholder="Try carprofen, condition, or procedure"
+              placeholder={t("clinicalRecords.history.searchPlaceholder")}
               className="min-h-11 flex-1"
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -240,13 +237,17 @@ export function PatientHistorySearch({
               disabled={search.isFetching}
             >
               <Search className="mr-2 h-4 w-4" />
-              {search.isFetching ? "Searching..." : "Apply filters"}
+              {search.isFetching
+                ? t("clinicalRecords.history.searching")
+                : t("clinicalRecords.history.applyFilters")}
             </Button>
           </div>
         </div>
 
         <fieldset>
-          <legend className="text-sm font-medium">Record types</legend>
+          <legend className="text-sm font-medium">
+            {t("clinicalRecords.history.recordTypes")}
+          </legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {PATIENT_HISTORY_RECORD_TYPES.map((recordType) => {
               const selected = recordTypes.includes(recordType);
@@ -269,12 +270,14 @@ export function PatientHistorySearch({
             })}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            At least one record type stays selected.
+            {t("clinicalRecords.history.requireRecordType")}
           </p>
         </fieldset>
 
         <fieldset>
-          <legend className="text-sm font-medium">Record state</legend>
+          <legend className="text-sm font-medium">
+            {t("clinicalRecords.history.recordState")}
+          </legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {(["all", "current", "corrected"] as const).map((value) => (
               <button
@@ -296,10 +299,14 @@ export function PatientHistorySearch({
         </fieldset>
 
         <fieldset>
-          <legend className="text-sm font-medium">Clinical date</legend>
+          <legend className="text-sm font-medium">
+            {t("clinicalRecords.history.clinicalDate")}
+          </legend>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
             <label className="text-sm">
-              <span className="text-muted-foreground">From</span>
+              <span className="text-muted-foreground">
+                {t("clinicalRecords.history.from")}
+              </span>
               <Input
                 type="date"
                 value={fromDate}
@@ -311,7 +318,9 @@ export function PatientHistorySearch({
               />
             </label>
             <label className="text-sm">
-              <span className="text-muted-foreground">To</span>
+              <span className="text-muted-foreground">
+                {t("clinicalRecords.history.to")}
+              </span>
               <Input
                 type="date"
                 value={toDate}
@@ -332,7 +341,7 @@ export function PatientHistorySearch({
 
         <div className="flex justify-end">
           <Button type="button" variant="ghost" onClick={clearFilters}>
-            Clear filters
+            {t("clinicalRecords.history.clearFilters")}
           </Button>
         </div>
       </form>
@@ -348,7 +357,7 @@ export function PatientHistorySearch({
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                   <p className="font-medium">
-                    Unable to search patient history
+                    {t("clinicalRecords.history.searchError")}
                   </p>
                   <p className="mt-1 text-sm">{search.error.message}</p>
                 </div>
@@ -359,29 +368,28 @@ export function PatientHistorySearch({
                 className="mt-3"
                 onClick={retry}
               >
-                Retry
+                {t("clinicalRecords.retry")}
               </Button>
             </div>
           ) : search.isFetching && !search.data ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Searching authorized history...
+              {t("clinicalRecords.history.searchingAuthorized")}
             </p>
           ) : search.data ? (
             <>
               <p className="text-sm text-muted-foreground" aria-live="polite">
                 {search.data.total === 0
-                  ? "No matching records"
-                  : `Showing ${pageStart}-${pageEnd} of ${search.data.total} matching records`}
+                  ? t("clinicalRecords.history.noMatchingRecords")
+                  : `${t("clinicalRecords.history.showing")} ${pageStart}-${pageEnd} ${t("clinicalRecords.history.of")} ${search.data.total} ${t("clinicalRecords.history.matchingRecords")}`}
               </p>
 
               {search.data.items.length === 0 ? (
                 <div className="mt-3 rounded-md border border-dashed border-border p-6 text-center">
                   <p className="font-medium">
-                    No history matches these filters
+                    {t("clinicalRecords.history.noMatchingRecords")}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Try a different exact term, record type, state, or date
-                    range.
+                    {t("clinicalRecords.history.noMatchesDescription")}
                   </p>
                 </div>
               ) : (
@@ -396,12 +404,12 @@ export function PatientHistorySearch({
                           <p className="font-medium">{item.title}</p>
                           <p className="text-xs text-muted-foreground">
                             {recordTypeLabels[item.recordType]} ·{" "}
-                            {formatClinicalDate(item.occurredAt, timeZone)}
+                            {formatClinicalDate(item.occurredAt, timeZone, "—", dateLocale)}
                             {item.authorLabel && item.authorName
                               ? ` · ${item.authorLabel} ${item.authorName}`
                               : ""}
                             {item.finalizerName
-                              ? ` · Finalized by ${item.finalizerName}`
+                              ? ` · ${t("clinicalRecords.finalizedBy")} ${item.finalizerName}`
                               : ""}
                           </p>
                         </div>
@@ -411,26 +419,26 @@ export function PatientHistorySearch({
                           </span>
                           {item.imported ? (
                             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                              Imported
+                              {t("clinicalRecords.history.imported")}
                             </span>
                           ) : null}
                           {item.corrected ? (
                             <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs text-destructive">
-                              Corrected · retained
+                              {t("clinicalRecords.history.correctedRetained")}
                             </span>
                           ) : (
                             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                              Current
+                              {t("clinicalRecords.history.current")}
                             </span>
                           )}
                           {item.replacesRecordId ? (
                             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                              Current replacement
+                              {t("clinicalRecords.history.currentReplacement")}
                             </span>
                           ) : null}
                           {item.replacementRecordId ? (
                             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                              Original replaced
+                              {t("clinicalRecords.history.originalReplaced")}
                             </span>
                           ) : null}
                         </div>
@@ -441,7 +449,7 @@ export function PatientHistorySearch({
                         </p>
                       ) : (
                         <p className="mt-3 text-sm text-muted-foreground">
-                          No additional text is stored for this record.
+                          {t("clinicalRecords.history.noStoredText")}
                         </p>
                       )}
                     </article>
@@ -452,7 +460,7 @@ export function PatientHistorySearch({
               {search.data.total > 0 ? (
                 <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-muted-foreground">
-                    Page {pageNumber}
+                    {t("clinicalRecords.history.page")} {pageNumber}
                   </p>
                   <div className="grid grid-cols-2 gap-2 sm:flex">
                     <Button
@@ -462,7 +470,7 @@ export function PatientHistorySearch({
                       disabled={cursorStack.length <= 1 || search.isFetching}
                       onClick={goToPreviousPage}
                     >
-                      Previous
+                      {t("clinicalRecords.history.previous")}
                     </Button>
                     <Button
                       type="button"
@@ -471,7 +479,7 @@ export function PatientHistorySearch({
                       disabled={!search.data.nextCursor || search.isFetching}
                       onClick={goToNextPage}
                     >
-                      Next
+                      {t("clinicalRecords.history.next")}
                     </Button>
                   </div>
                 </div>
@@ -481,8 +489,8 @@ export function PatientHistorySearch({
         </div>
       ) : (
         <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
-          Apply filters to enter the read-only search view. The complete SOAP
-          timeline remains below.
+          {t("clinicalRecords.history.applyToSearch")} {" "}
+          {t("clinicalRecords.history.timelineBelow")}
         </p>
       )}
     </section>

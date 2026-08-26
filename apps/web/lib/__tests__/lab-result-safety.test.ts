@@ -238,8 +238,8 @@ describe("lab result clinical safety contract", () => {
     expect(records).toContain("function CorrectedLabResultHistory");
     expect(records).toContain("{ enabled: expanded, staleTime: 60_000 }");
     expect(records).toContain("formatClinicalDateTime(");
-    expect(records).toContain('"Time unavailable"');
-    expect(records).toContain("Show evidence history");
+    expect(records).toContain('t("clinicalRecords.timeUnavailable")');
+    expect(records).toContain('t("clinicalRecords.showEvidence")');
     expect(records).toContain("event.eventType.replaceAll");
   });
 
@@ -251,12 +251,12 @@ describe("lab result clinical safety contract", () => {
     expect(records).toContain("wrong-patient repair");
     expect(records).toContain("replacementPatient?.id === selectedPatient?.id");
     expect(records).toContain("replacementSourceLabResult?.appointmentId ??");
-    expect(records).toContain("Only the test name was copied");
+    expect(records).toContain('t("clinicalRecords.labReplacementReviewDescription")');
     expect(records).toContain(
       "!replacesLabResultId || Boolean(labForm.resultValue.trim())",
     );
     expect(records).toContain(
-      "A replacement cannot be saved as an empty pending result.",
+      't("clinicalRecords.labReplacementInstructions")',
     );
     expect(records).toContain('resultValue: ""');
     expect(records).toContain('resultFlag: "unknown"');
@@ -273,7 +273,7 @@ describe("lab result clinical safety contract", () => {
     );
 
     expect(correctionControl).toContain("formatClinicalDateTime(");
-    expect(correctionControl).toContain('"Unknown time"');
+    expect(correctionControl).toContain('t("clinicalRecords.notAvailable")');
     expect(correctionControl).not.toContain("correctedAt.toLocaleString()");
     expect(
       records.match(/timeZone=\{recordsTimeZone\}/g)?.length ?? 0,

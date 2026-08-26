@@ -66,7 +66,7 @@ describe("SOAP note editor UX", () => {
     expect(source).toContain('content: value || ""');
     expect(source).toContain('onChange(editor.isEmpty ? "" : editor.getHTML())');
     expect(source).toContain("pointer-events-none");
-    expect(source).toContain("{placeholder}");
+    expect(source).toContain('placeholder ?? t("clinicalRecords.editor.placeholder")');
     expect(source).toContain("useEffect");
     expect(source).toContain("editor.commands.setContent(nextValue, false)");
     expect(source).not.toContain("`<p>${placeholder}</p>`");
@@ -93,7 +93,7 @@ describe("SOAP note editor UX", () => {
     );
     expect(source).toContain("!canSubmit");
     expect(source).toContain(
-      "Replace or delete every draft prompt before finalizing",
+      't("clinicalRecords.soap.templatePromptsRequired")',
     );
     expect(source).toContain("normalizeSoapSection(sections.subjective)");
   });
@@ -111,9 +111,9 @@ describe("SOAP note editor UX", () => {
     expect(source).toContain("const isOnline = useOnlineStatus()");
     expect(source).toContain('| "offline"');
     expect(source).toContain('setSaveState("offline")');
-    expect(source).toContain("Offline — autosave is paused");
+    expect(source).toContain('t("clinicalRecords.soap.offline")');
     expect(source).toContain(
-      "OpenVPM will retry the same revision-checked draft automatically",
+      "Retry only the in-memory SOAP draft through the existing revision guard.",
     );
     expect(source).toContain("if (wasOnline) return;");
     expect(source).toContain("void persistDraft()");
@@ -153,11 +153,9 @@ describe("SOAP note editor UX", () => {
     expect(source).toContain("setObjective(next.objective)");
     expect(source).toContain("setAssessment(next.assessment)");
     expect(source).toContain("setPlan(next.plan)");
-    expect(source).toContain("Replace existing content");
-    expect(source).toContain("Apply template");
-    expect(source).toContain(
-      "Templates add drafting prompts, not assumed findings"
-    );
+    expect(source).toContain('t("clinicalRecords.soap.replaceExisting")');
+    expect(source).toContain('t("clinicalRecords.soap.applyTemplate")');
+    expect(source).toContain('t("clinicalRecords.soap.templateDescription")');
   });
 
   it("keeps the SOAP author access gate after hooks are declared", () => {
@@ -181,10 +179,10 @@ describe("SOAP note editor UX", () => {
     expect(source).toContain(
       "{ enabled: !!params.patientId && canCreateSoapNote && !!appointmentId }"
     );
-    expect(source).toContain('title="Open an active visit first"');
+    expect(source).toContain('title={t("clinicalRecords.soap.openActiveVisit")}');
     expect(source).toContain("if (!appointmentId)");
     expect(source).toContain('if (status === "loading")');
-    expect(source).toContain("Checking SOAP note access");
+    expect(source).toContain('t("clinicalRecords.soap.checkingAccess")');
     expect(source.indexOf("const [subjective")).toBeLessThan(
       source.indexOf("if (accessDenied)")
     );
@@ -203,12 +201,12 @@ describe("SOAP note editor UX", () => {
       'import { EmptyState } from "@/components/common/empty-state"'
     );
     expect(source).toContain("error: patientError");
-    expect(source).toContain("Loading patient...");
+    expect(source).toContain('t("clinicalRecords.soap.loadingPatient")');
     expect(source).toContain("if (patientError || !patient)");
-    expect(source).toContain('title="Unable to load patient"');
-    expect(source).toContain('label: "Back to Records"');
+    expect(source).toContain('title={t("clinicalRecords.soap.patientLoadError")}');
+    expect(source).toContain('label: t("clinicalRecords.soap.backToRecords")');
     expect(source).toContain("!params.patientId || !patient");
-    expect(source).toContain("Load the patient before finalizing a SOAP note");
+    expect(source).toContain('t("clinicalRecords.soap.patientRequired")');
     expect(source.indexOf("if (patientError || !patient)")).toBeLessThan(
       source.indexOf("<SoapNoteEditor")
     );
@@ -249,11 +247,11 @@ describe("SOAP note editor UX", () => {
 
     expect(source).toContain("localSoapTextForClipboard");
     expect(source).toContain("copyTextToClipboard");
-    expect(source).toContain("SOAP note finalized in another session");
-    expect(source).toContain("was NOT included in the");
-    expect(source).toContain("Preserved local SOAP text");
-    expect(source).toContain("Copy local SOAP text");
-    expect(source).toContain("View signed patient chart");
+    expect(source).toContain('t("clinicalRecords.soap.finalizedElsewhere")');
+    expect(source).toContain('t("clinicalRecords.soap.finalizedElsewhereWarning")');
+    expect(source).toContain('t("clinicalRecords.soap.preservedLocalText")');
+    expect(source).toContain('t("clinicalRecords.soap.copyLocalText")');
+    expect(source).toContain('t("clinicalRecords.soap.viewSignedChart")');
     expect(source).toContain("if (finalizedElsewhereRef.current) return;");
     expect(source).toContain(
       "finalizedElsewhere || !draftInitialized || conflictRef.current",
@@ -305,10 +303,10 @@ describe("records prescription form UX", () => {
     expect(source).toContain("const verifiedInventoryProducts =");
     expect(source).toContain("verifiedInventoryProducts.items.find");
     expect(source).toContain("verifiedInventoryProducts.items.map");
-    expect(source).toContain("Inventory unavailable");
-    expect(source).toContain("Unable to load inventory products. Please retry.");
+    expect(source).toContain('t("clinicalRecords.inventoryUnavailable")');
+    expect(source).toContain('t("clinicalRecords.loadError")');
     expect(source).toContain("prescriptionQuantity <= selectedPrescriptionProduct.stockQuantity");
-    expect(source).toContain("Quantity (inventory units)");
+    expect(source).toContain('t("clinicalRecords.quantityInventory")');
     expect(source).toMatch(
       /\{product\.stockQuantity\} units\s+on hand · \{product\.unitPrice\} each/
     );
@@ -331,7 +329,7 @@ describe("records prescription form UX", () => {
     const source = readFileSync("app/(dashboard)/records/page.tsx", "utf8");
 
     expect(source).toMatch(
-      /End Date[\s\S]*?<Input[\s\S]*?type="date"[\s\S]*?min=\{prescriptionForm\.startDate \|\| undefined\}/
+      /clinicalRecords\.endDate[\s\S]*?<Input[\s\S]*?type="date"[\s\S]*?min=\{prescriptionForm\.startDate \|\| undefined\}/
     );
   });
 });
@@ -378,11 +376,9 @@ describe("records lab result form UX", () => {
   it("clearly presents lab results as manual entry until provider adapters are connected", () => {
     const source = readFileSync("app/(dashboard)/records/page.tsx", "utf8");
 
-    expect(source).toContain("Manual lab entry only");
-    expect(source).toMatch(
-      /Reference lab ordering is disabled until IDEXX,\s+Antech,/,
-    );
-    expect(source).toContain("Add Manual Lab Result");
+    expect(source).toContain('t("clinicalRecords.manualLabEntry")');
+    expect(source).toContain('t("clinicalRecords.referenceLabDisabled")');
+    expect(source).toContain('t("clinicalRecords.addManualLabResult")');
     expect(source).not.toContain("Order Lab");
   });
 
@@ -420,7 +416,7 @@ describe("records vaccination form UX", () => {
     expect(source).toContain("trpc.records.createVaccination.useMutation");
     expect(source).toContain("const canCreateVaccinations =");
     expect(source).toContain("const canSubmitVaccination =");
-    expect(source).toContain("Add Vaccination");
+    expect(source).toContain('t("clinicalRecords.addVaccination")');
     expect(source).toContain("maxLength={VACCINATION_NAME_MAX_LENGTH}");
     expect(source).toContain(
       "maxLength={VACCINATION_LOT_NUMBER_MAX_LENGTH}"
@@ -450,7 +446,12 @@ describe("records problem list UX", () => {
     expect(source).toContain("trpc.records.updateProblemStatus.useMutation");
     expect(source).toContain("const canManageProblems =");
     expect(source).toContain("const canSubmitProblem =");
-    expect(source).toContain("Add Problem");
+    expect(source).toContain('t("clinicalRecords.addProblem")');
+    expect(source).toContain('t("clinicalRecords.problemPlaceholder")');
+    expect(source).toContain('t("clinicalRecords.onsetDate")');
+    expect(source).toContain('t("clinicalRecords.problemsLoadError")');
+    expect(source).not.toContain('placeholder="e.g. Chronic otitis"');
+    expect(source).not.toContain("Onset Date");
     expect(source).toContain("maxLength={PROBLEM_DESCRIPTION_MAX_LENGTH}");
     expect(source).toContain("PROBLEM_STATUSES.map");
     expect(source).toContain("isProblemOptionalDateInputValid");
@@ -507,15 +508,13 @@ describe("records page state handling", () => {
     expect(source).toContain("function getVaccineDueStatus");
     expect(source).toContain("const recordsSettings = trpc.records.settings.useQuery");
     expect(source).toContain("const verifiedRecordsSettings =");
+    expect(source).toContain("const recordsTimeZone = verifiedRecordsSettings");
+    expect(source).toContain("? verifiedRecordsSettings.timezone");
     expect(source).toContain(
-      "const recordsTimeZone = verifiedRecordsSettings\n    ? verifiedRecordsSettings.timezone\n    : undefined"
+      'verifiedRecordsSettings?.name ?? t("clinicalRecords.veterinaryPractice")'
     );
-    expect(source).toContain(
-      'verifiedRecordsSettings?.name ?? "Veterinary Practice"'
-    );
-    expect(source).toContain(
-      "const recordsPracticePhone = verifiedRecordsSettings\n    ? verifiedRecordsSettings.phone\n    : undefined"
-    );
+    expect(source).toContain("const recordsPracticePhone = verifiedRecordsSettings");
+    expect(source).toContain("? verifiedRecordsSettings.phone");
     expect(source).toContain("const recordsSettingsError = recordsSettings.error");
     expect(source).toContain("const recordsSettingsLoading = recordsSettings.isLoading");
     expect(source).toContain(
@@ -572,15 +571,15 @@ describe("records page state handling", () => {
     expect(source).toContain("patientSearchError");
     expect(source).toContain("const patientSearchMissing =");
     expect(source).toContain("patientSearchError || patientSearchMissing");
-    expect(source).toContain("Unable to search patients. Please retry.");
+    expect(source).toContain('t("clinicalRecords.searchError")');
     expect(source).toContain("const recordsSettingsMissing =");
     expect(source).toContain("{recordsSettingsError || recordsSettingsMissing ? (");
     expect(source).toContain(
-      "Unable to load records settings. ${recordsSettingsError.message}"
+      't("clinicalRecords.loadError")'
     );
-    expect(source).toContain("Unable to load records settings. Please retry.");
+    expect(source).toContain('t("clinicalRecords.loadError")');
     expect(source).toContain(") : recordsSettingsLoading ? (");
-    expect(source).toContain('<RecordsLoadingPanel label="Loading records settings..." />');
+    expect(source).toContain('label={t("clinicalRecords.loadingSettings")}');
     expect(source).toContain("const soapNotesMissing =");
     expect(source).toContain("{soapNotesError || soapNotesMissing ? (");
     expect(source).toContain(") : isLoadingSoapNotes ? (");
@@ -595,13 +594,13 @@ describe("records page state handling", () => {
     expect(source).toContain("const proceduresMissing =");
     expect(source).toContain("{proceduresError || proceduresMissing ? (");
     expect(source.indexOf("soapNotesError || soapNotesMissing")).toBeLessThan(
-      source.indexOf("No SOAP notes yet")
+      source.indexOf('t("clinicalRecords.noSoap")')
     );
     expect(source.indexOf("labResultsError || labResultsMissing")).toBeLessThan(
-      source.indexOf("No lab results yet")
+      source.indexOf('t("clinicalRecords.noLabResults")')
     );
-    expect(source).toContain('title="No SOAP notes yet"');
-    expect(source).toContain('title="No lab results yet"');
+    expect(source).toContain('title={t("clinicalRecords.noSoap")}');
+    expect(source).toContain('title={t("clinicalRecords.noLabResults")}');
   });
 
   it("does not show restricted Records tabs as active content for front desk users", () => {
@@ -623,7 +622,7 @@ describe("records page state handling", () => {
     );
     expect(source).toContain("Resume draft");
     expect(source).toContain(
-      "SOAP notes are created from an active visit so documentation stays attached to the correct encounter."
+      't("clinicalRecords.soapCreateDescription")'
     );
     expect(source).toContain("const canPrescribe =");
     expect(source).toContain("const canCreateVaccinations =");
@@ -649,14 +648,14 @@ describe("records page state handling", () => {
 
     expect(source).toContain("errorMessage?: string");
     expect(source).toContain("if (errorMessage)");
-    expect(source).toContain("Unable to check prescription safety. {errorMessage}");
+    expect(source).toContain('t("clinicalRecords.prescriptionSafetyError")');
     expect(source).toContain("const prescriptionSafetyEnabled =");
     expect(source).toContain("const prescriptionSafetyMissing =");
     expect(source).toContain("const verifiedPrescriptionSafety =");
     expect(source).toContain("const prescriptionSafetyUnavailable =");
     expect(source).toContain("!prescriptionSafetyUnavailable");
     expect(source).toContain("prescriptionSafetyMissing");
-    expect(source).toContain("Please retry.");
+    expect(source).toContain('t("clinicalRecords.loadError")');
     expect(source).toContain("verifiedPrescriptionSafety?.warnings ?? []");
     expect(source).toContain("verifiedPrescriptionSafety?.requiresOverride");
     expect(source).not.toContain("prescriptionSafety.data?.warnings");

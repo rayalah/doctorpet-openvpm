@@ -8,7 +8,7 @@ describe("prescription lifecycle UI safety", () => {
       'disabled={rx.effectiveStatus !== "active"}',
     );
     expect(source).toContain(
-      "Only active prescriptions can print a dispensing label",
+      't("clinicalRecords.printLabelInactive")',
     );
   });
 
@@ -17,11 +17,22 @@ describe("prescription lifecycle UI safety", () => {
       "components/records/prescription-lifecycle-control.tsx",
       "utf8",
     );
-    expect(source).toContain("Authorize external-pharmacy refill");
-    expect(source).toContain("does not dispense stock or contact the pharmacy");
-    expect(source).toContain("creates an unbilled dispense in Billing");
-    expect(source).toContain("billing work created");
-    expect(source).toContain("Billing: {event.dispenseChargeStatus}");
+    expect(source).toContain('t("clinicalRecords.prescription.refillExternalTitle")');
+    expect(source).toContain('t("clinicalRecords.prescription.refillExternalHelp")');
+    expect(source).toContain('t("clinicalRecords.prescription.refillStockHelp")');
+    expect(source).toContain('t("clinicalRecords.prescription.refillStockSuccess")');
+    expect(source).toContain('t("clinicalRecords.prescription.billing")');
+  });
+
+  it("uses the practice language for lifecycle dates and UI copy", () => {
+    const source = readFileSync(
+      "components/records/prescription-lifecycle-control.tsx",
+      "utf8",
+    );
+    expect(source).toContain("dateLocaleForLanguage(useLanguage())");
+    expect(source).toContain("formatEventTime(event.createdAt, timeZone, dateLocale)");
+    expect(source).toContain('t("clinicalRecords.prescription.controlledDrugNotice")');
+    expect(source).toContain('t("clinicalRecords.prescription.invalidInventoryQuantity")');
   });
 
   it("gates only the foreign controlled-drug notice", () => {

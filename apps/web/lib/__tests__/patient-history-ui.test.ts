@@ -28,7 +28,7 @@ describe("patient history search UI", () => {
     expect(component).toContain("onSearchModeChange(true)");
     expect(component).toContain("onSearchModeChange(false)");
     expect(component).toContain(
-      "The complete SOAP\n          timeline remains below.",
+      't("clinicalRecords.findHistoryDescription")',
     );
   });
 
@@ -64,17 +64,17 @@ describe("patient history search UI", () => {
 
   it("provides responsive accessible filters, result states, counts, and paging", () => {
     for (const marker of [
-      'aria-label="Find in patient history"',
+      'aria-label={t("clinicalRecords.findPatientHistory")}',
       "aria-pressed={selected}",
       "aria-pressed={state === value}",
       'aria-live="polite"',
       "aria-busy={search.isFetching}",
       'role="alert"',
-      "No history matches these filters",
-      "Unable to search patient history",
-      "Clear filters",
-      "Previous",
-      "Next",
+      't("clinicalRecords.history.noMatchingRecords")',
+      't("clinicalRecords.history.searchError")',
+      't("clinicalRecords.history.clearFilters")',
+      't("clinicalRecords.history.previous")',
+      't("clinicalRecords.history.next")',
       "min-h-11",
       "sm:grid-cols-2",
     ]) {
@@ -88,15 +88,15 @@ describe("patient history search UI", () => {
 
   it("labels provenance and immutable correction/replacement semantics", () => {
     for (const label of [
-      "Imported",
-      "Corrected · retained",
-      "Current replacement",
-      "Original replaced",
-      "Private staff notes and worklists are never",
+      't("clinicalRecords.history.imported")',
+      't("clinicalRecords.history.correctedRetained")',
+      't("clinicalRecords.history.currentReplacement")',
+      't("clinicalRecords.history.originalReplaced")',
+      't("clinicalRecords.history.exactTextDescription")',
     ]) {
       expect(component).toContain(label);
     }
     expect(component).toContain("item.authorLabel");
-    expect(component).toContain("Finalized by ${item.finalizerName}");
+    expect(component).toContain('t("clinicalRecords.finalizedBy")');
   });
 });

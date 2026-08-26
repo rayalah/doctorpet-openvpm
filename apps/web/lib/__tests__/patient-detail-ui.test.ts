@@ -402,7 +402,7 @@ describe("patient detail UI states", () => {
     expect(source).toContain(
       'Reaction: {allergy.reaction || "Not documented"}',
     );
-    expect(source).toContain("Allergy correction history");
+    expect(source).toContain('t("clinicalRecords.allergyCorrectionHistory")');
     expect(source).toContain("Legacy removal retained.");
     expect(source).toContain("{canManagePatientDetail && !showAllergyForm ?");
     expect(source).toContain("allergen: allergyName.trim()");

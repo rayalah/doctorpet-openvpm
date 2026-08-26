@@ -414,7 +414,9 @@ describe("clinical correction consumers", () => {
       '(note) => note.status === "finalized" && !note.correctionId',
     );
     expect(recordsPage).toContain("<ClinicalCorrectionControl");
-    expect(recordsPage).toContain("Entered in error");
+    expect(recordsPage).toContain(
+      't("clinicalRecords.status.enteredInError")',
+    );
   });
 
   it("excludes corrected vitals from current trends and AI/agent context", () => {
@@ -447,11 +449,11 @@ describe("clinical correction consumers", () => {
     expect(backup).toContain("referencedSoapNoteIds");
     expect(backup).toContain("referencedVitalSignIds");
     expect(backup).toContain("referencedVaccinationRecordIds");
-    expect(backup).toContain(
-      'optionalRef(\n    "clinicalRecordCorrections",\n    "vaccinationRecordId",',
+    expect(backup).toMatch(
+      /optionalRef\(\s*"clinicalRecordCorrections",\s*"vaccinationRecordId",/,
     );
-    expect(backup).toContain(
-      'await restorePracticeRows(\n    "clinicalRecordCorrections"',
+    expect(backup).toMatch(
+      /await restorePracticeRows\(\s*"clinicalRecordCorrections"/,
     );
   });
 
@@ -514,7 +516,7 @@ describe("clinical correction consumers", () => {
         "allergy_correction.patient_allergy_id = ${patientAllergies.id}",
       );
     }
-    expect(patientPage).toContain("Allergy correction history");
+    expect(patientPage).toContain('t("clinicalRecords.allergyCorrectionHistory")');
     expect(patientPage).toContain(
       'triggerLabel="Mark allergy entered in error"',
     );
@@ -538,7 +540,7 @@ describe("clinical correction consumers", () => {
     expect(control).toContain("htmlFor={reasonId}");
     expect(control).toContain("id={reasonId}");
     expect(control).toContain("CLINICAL_CORRECTION_REASON_MAX_LENGTH");
-    expect(control).toContain("Confirm correction");
-    expect(control).toContain("The original record will remain visible");
+    expect(control).toContain('t("clinicalRecords.correction.confirm")');
+    expect(control).toContain('t("clinicalRecords.correction.description")');
   });
 });

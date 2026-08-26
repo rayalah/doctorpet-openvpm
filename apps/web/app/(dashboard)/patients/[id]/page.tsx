@@ -965,7 +965,7 @@ export default function PatientDetailPage() {
       ) ? (
         <details className="mt-3 rounded-lg border border-border bg-card px-4 py-3">
           <summary className="cursor-pointer text-sm font-medium">
-            Allergy correction history
+            {t("clinicalRecords.allergyCorrectionHistory")}
           </summary>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {patient.allergyHistory
@@ -1731,6 +1731,8 @@ function MedicalRecordsTab({
   canCorrectClinicalRecords: boolean;
   canSearchPatientHistory: boolean;
 }) {
+  const t = useTranslations();
+  const dateLocale = dateLocaleForLanguage(useLanguage());
   const [historySearchActive, setHistorySearchActive] = useState(false);
   const utils = trpc.useUtils();
   const {
@@ -1834,9 +1836,9 @@ function MedicalRecordsTab({
             </div>
             {note.status === "finalized" ? (
               <p className="mb-3 text-xs text-muted-foreground">
-                Finalized by {note.finalizerName ?? "Unknown clinician"}
+                {t("clinicalRecords.finalizedBy")} {note.finalizerName ?? t("clinicalRecords.unknownClinician")}
                 {note.finalizedAt
-                  ? ` on ${formatClinicalDateTime(note.finalizedAt, timeZone)}`
+                  ? ` ${t("clinicalRecords.on")} ${formatClinicalDateTime(note.finalizedAt, timeZone, "—", dateLocale)}`
                   : ""}
               </p>
             ) : note.appointmentId && canCorrectClinicalRecords ? (
@@ -1995,6 +1997,7 @@ function SoapAddendumControl({
   noteId: string;
   enabled: boolean;
 }) {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
@@ -2023,7 +2026,7 @@ function SoapAddendumControl({
         }}
       >
         <Plus className="mr-2 h-4 w-4" />
-        Add addendum
+        {t("clinicalRecords.addAddendum")}
       </Button>
     );
   }
