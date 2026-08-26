@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Activity, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
 import {
   VITALS_BODY_CONDITION_MAX,
   VITALS_BODY_CONDITION_MIN,
@@ -82,9 +83,10 @@ function optionalNumber(value: string): number | undefined {
 function formatRecordedAt(
   value: Date | string,
   timeZone?: string | null,
+  locale = "en-US",
 ): string {
   try {
-    return new Date(value).toLocaleString("en-US", {
+    return new Date(value).toLocaleString(locale, {
       month: "short",
       day: "numeric",
       hour: "numeric",
@@ -92,7 +94,7 @@ function formatRecordedAt(
       timeZone: timeZone ?? undefined,
     });
   } catch {
-    return new Date(value).toLocaleString("en-US", {
+    return new Date(value).toLocaleString(locale, {
       month: "short",
       day: "numeric",
       hour: "numeric",
@@ -128,6 +130,7 @@ function VitalNumberInput({
   valid: boolean;
   onChange: React.ChangeEventHandler<HTMLInputElement>;
 }) {
+  const t = useTranslations();
   return (
     <label className="space-y-1 text-xs font-medium text-muted-foreground">
       {label}
@@ -162,6 +165,8 @@ export function EncounterVitalsCard({
   visitOpen: boolean;
   timeZone?: string | null;
 }) {
+  const t = useTranslations();
+  const locale = useLanguage() === "es" ? "es-CR" : "en-US";
   const utils = trpc.useUtils();
   const isOnline = useOnlineStatus();
   const [form, setForm] = useState<VitalsFormState>(() => ({
@@ -173,7 +178,7 @@ export function EncounterVitalsCard({
   const recordVitals = trpc.vitals.record.useMutation({
     onSuccess: async () => {
       setForm({ ...EMPTY_VITALS_FORM });
-      toast.success("Visit vitals recorded");
+      toast.success(t("visit.vitalsRecorded"));
       await Promise.all([
         utils.vitals.listByAppointment.invalidate({ appointmentId }),
         utils.vitals.listByPatient.invalidate({ patientId }),
@@ -183,7 +188,7 @@ export function EncounterVitalsCard({
   });
   const correctVital = trpc.vitals.markEnteredInError.useMutation({
     onSuccess: async () => {
-      toast.success("Vital signs retained and marked entered in error");
+      toast.success(t("visit.vitalsMarkedInError"));
       await Promise.all([
         utils.vitals.listByAppointment.invalidate({ appointmentId }),
         utils.vitals.listByPatient.invalidate({ patientId }),
@@ -205,7 +210,7 @@ export function EncounterVitalsCard({
   );
   useUnsavedChangesGuard(
     hasContent,
-    "Vitals have not been recorded on the server. Leave and lose these values?",
+    t("visit.unsavedVitalsLeaveConfirm"),
   );
   const vitalsReady = Boolean(vitalsQuery.data) && !vitalsQuery.error;
   const canSubmit =
@@ -255,9 +260,9 @@ export function EncounterVitalsCard({
         <div className="flex items-start gap-3">
           <Activity className="mt-0.5 h-5 w-5 text-primary" />
           <div>
-            <CardTitle>Visit vitals</CardTitle>
+            <CardTitle>{t("visit.visitVitals")}</CardTitle>
             <CardDescription>
-              Measurements recorded here stay attached to this appointment.
+              {t("visit.vitalsDescription")}
             </CardDescription>
           </div>
         </div>
@@ -270,13 +275,12 @@ export function EncounterVitalsCard({
                 className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-950 dark:text-amber-100"
                 role="status"
               >
-                Offline — keep this page open. Vitals stay only in this form
-                until you reconnect and record them.
+                {t("visit.offlineVitals")}
               </div>
             ) : null}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <VitalNumberInput
-                label="Temp (C)"
+                label={t("visit.tempC")}
                 name="temperatureC"
                 min={VITALS_TEMPERATURE_MIN_C}
                 max={VITALS_TEMPERATURE_MAX_C}
@@ -286,7 +290,7 @@ export function EncounterVitalsCard({
                 onChange={updateField}
               />
               <VitalNumberInput
-                label="HR (bpm)"
+                label={t("visit.hrBpm")}
                 name="heartRateBpm"
                 min={VITALS_HEART_RATE_MIN_BPM}
                 max={VITALS_HEART_RATE_MAX_BPM}
@@ -296,7 +300,7 @@ export function EncounterVitalsCard({
                 onChange={updateField}
               />
               <VitalNumberInput
-                label="RR (bpm)"
+                label={t("visit.rrBpm")}
                 name="respiratoryRateBpm"
                 min={VITALS_RESPIRATORY_RATE_MIN_BPM}
                 max={VITALS_RESPIRATORY_RATE_MAX_BPM}
@@ -308,7 +312,7 @@ export function EncounterVitalsCard({
                 onChange={updateField}
               />
               <VitalNumberInput
-                label="Weight (kg)"
+                label={t("visit.weightKg")}
                 name="weightKg"
                 min={VITALS_WEIGHT_MIN_KG}
                 max={VITALS_WEIGHT_MAX_KG}
@@ -318,7 +322,7 @@ export function EncounterVitalsCard({
                 onChange={updateField}
               />
               <VitalNumberInput
-                label="BCS (1-9)"
+                label={t("visit.bcs")}
                 name="bodyConditionScore"
                 min={VITALS_BODY_CONDITION_MIN}
                 max={VITALS_BODY_CONDITION_MAX}
@@ -330,7 +334,7 @@ export function EncounterVitalsCard({
                 onChange={updateField}
               />
               <VitalNumberInput
-                label="Pain (0-10)"
+                label={t("visit.pain")}
                 name="painScore"
                 min={VITALS_PAIN_SCORE_MIN}
                 max={VITALS_PAIN_SCORE_MAX}
@@ -340,7 +344,7 @@ export function EncounterVitalsCard({
                 onChange={updateField}
               />
               <VitalNumberInput
-                label="CRT (sec)"
+                label={t("visit.crtSec")}
                 name="capillaryRefillSec"
                 min={VITALS_CAPILLARY_REFILL_MIN_SEC}
                 max={VITALS_CAPILLARY_REFILL_MAX_SEC}
@@ -352,24 +356,24 @@ export function EncounterVitalsCard({
                 onChange={updateField}
               />
               <label className="col-span-2 space-y-1 text-xs font-medium text-muted-foreground">
-                Mucous membrane
+                {t("visit.mucousMembrane")}
                 <Input
                   name="mucousMembrane"
                   value={form.mucousMembrane}
                   maxLength={VITALS_MUCOUS_MEMBRANE_MAX_LENGTH}
-                  placeholder="e.g. Pink and moist"
+                  placeholder={t("visit.mucousPlaceholder")}
                   onChange={updateField}
                 />
               </label>
             </div>
             <label className="block space-y-1 text-xs font-medium text-muted-foreground">
-              Notes
+              {t("visit.notes")}
               <Textarea
                 name="notes"
                 value={form.notes}
                 maxLength={VITALS_NOTES_MAX_LENGTH}
                 rows={2}
-                placeholder="Optional visit-vitals context"
+                placeholder={t("visit.vitalsNotesPlaceholder")}
                 onChange={updateField}
               />
             </label>
@@ -379,34 +383,34 @@ export function EncounterVitalsCard({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 {recordVitals.isPending
-                  ? "Recording..."
-                  : "Record visit vitals"}
+                  ? t("visit.recording")
+                  : t("visit.recordVisitVitals")}
               </Button>
             </div>
           </form>
         ) : (
           <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
             {!visitStateReady
-              ? "Checking whether this visit accepts new vitals..."
+              ? t("visit.checkingVitalsAccess")
               : visitOpen
-                ? "Only an administrator, veterinarian, or technician can record visit vitals."
-                : "This visit is closed to new vitals. Recorded values remain read-only."}
+                ? t("visit.vitalsRoleRestriction")
+                : t("visit.vitalsClosed")}
           </div>
         )}
 
         <div className="border-t border-border pt-4">
           {vitalsQuery.error || vitalsMissing ? (
             <div className="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
-              Unable to load visit vitals. Refresh before relying on this chart.
+              {t("visit.vitalsLoadError")}
             </div>
           ) : vitalsQuery.isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading visit vitals...
+              {t("visit.loadingVitals")}
             </div>
           ) : vitals.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No vitals recorded for this visit.
+              {t("visit.noVitals")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -419,11 +423,11 @@ export function EncounterVitalsCard({
                   )}
                 >
                   <p className="mb-2 text-xs font-medium text-muted-foreground">
-                    {formatRecordedAt(vital.recordedAt, timeZone)}
+                    {formatRecordedAt(vital.recordedAt, timeZone, locale)}
                   </p>
                   <dl className="grid grid-cols-3 gap-x-3 gap-y-2 text-sm sm:grid-cols-6">
                     <div>
-                      <dt className="text-xs text-muted-foreground">Temp</dt>
+                      <dt className="text-xs text-muted-foreground">{t("visit.temp")}</dt>
                       <dd>{displayMeasurement(vital.temperatureC, " C")}</dd>
                     </div>
                     <div>
@@ -437,7 +441,7 @@ export function EncounterVitalsCard({
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-muted-foreground">Weight</dt>
+                      <dt className="text-xs text-muted-foreground">{t("visit.weight")}</dt>
                       <dd>{displayMeasurement(vital.weightKg, " kg")}</dd>
                     </div>
                     <div>
@@ -445,7 +449,7 @@ export function EncounterVitalsCard({
                       <dd>{displayMeasurement(vital.bodyConditionScore)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-muted-foreground">Pain</dt>
+                      <dt className="text-xs text-muted-foreground">{t("visit.painShort")}</dt>
                       <dd>{displayMeasurement(vital.painScore)}</dd>
                     </div>
                   </dl>

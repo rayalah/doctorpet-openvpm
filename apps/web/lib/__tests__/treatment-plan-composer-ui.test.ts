@@ -46,8 +46,8 @@ describe("treatment-plan composer UI", () => {
     expect(composer).toContain('role="listbox"');
     expect(composer).toContain('role="option"');
     expect(composer).toContain('role="combobox"');
-    expect(composer).toContain("Move ${line.name} up");
-    expect(composer).toContain("Remove ${line.name}");
+    expect(composer).toContain('t("visit.moveUp")');
+    expect(composer).toContain('t("visit.remove")');
   });
 
   it("keeps retries idempotent and refreshes stale revisions", () => {
@@ -66,8 +66,6 @@ describe("treatment-plan composer UI", () => {
     expect(composer).not.toContain("trpc.billing");
     expect(composer).not.toContain("trpc.inventory");
     expect(composer).not.toContain("trpc.appointments.update");
-    expect(composer).toMatch(
-      /Saving this plan does not charge the client, adjust inventory, or\s+schedule care\./,
-    );
+    expect(composer).toContain('t("visit.treatmentPlanSaveDescription")');
   });
 });

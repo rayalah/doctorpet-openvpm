@@ -8,6 +8,7 @@ import { enClientMessages, esClientMessages } from "./messages/clients";
 import { enPatientMessages, esPatientMessages } from "./messages/patients";
 import { enAppointmentMessages, esAppointmentMessages } from "./messages/appointments";
 import { enClinicalRecordMessages, esClinicalRecordMessages } from "./messages/clinical-records";
+import { enVisitWorkspaceMessages, esVisitWorkspaceMessages } from "./messages/visit-workspace";
 
 export const enMessages = {
   ...enCommonMessages,
@@ -19,6 +20,7 @@ export const enMessages = {
   ...enPatientMessages,
   ...enAppointmentMessages,
   ...enClinicalRecordMessages,
+  ...enVisitWorkspaceMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -37,6 +39,7 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
     ...esPatientMessages,
     ...esAppointmentMessages,
     ...esClinicalRecordMessages,
+    ...esVisitWorkspaceMessages,
   },
 };
 

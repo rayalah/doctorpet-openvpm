@@ -35,6 +35,7 @@ import { formatCurrency } from "@/lib/locale/format";
 import { TEMPLATE_CATALOG_SEARCH_MAX_LENGTH } from "@/lib/templates/catalog-search";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n/client";
 
 type CatalogItem = {
   id: string;
@@ -70,6 +71,7 @@ function TreatmentPlanCatalogPicker({
   currency: string;
   onSelect: (item: CatalogItem) => void;
 }) {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [highlight, setHighlight] = useState(0);
@@ -154,7 +156,7 @@ function TreatmentPlanCatalogPicker({
         }}
       >
         <span className="inline-flex items-center gap-2">
-          <Search className="h-4 w-4" /> Add a service or product
+          <Search className="h-4 w-4" /> {t("visit.addServiceOrProduct")}
         </span>
         <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
       </Button>
@@ -166,7 +168,7 @@ function TreatmentPlanCatalogPicker({
             <input
               ref={inputRef}
               role="combobox"
-              aria-label="Search treatment plan catalog"
+              aria-label={t("visit.searchTreatmentCatalog")}
               aria-autocomplete="list"
               aria-expanded="true"
               aria-controls={listboxId}
@@ -177,7 +179,7 @@ function TreatmentPlanCatalogPicker({
               }
               maxLength={TEMPLATE_CATALOG_SEARCH_MAX_LENGTH}
               value={search}
-              placeholder="Search name, code, or category"
+              placeholder={t("visit.searchNameCodeCategory")}
               className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
               onChange={(event) => setSearch(event.target.value)}
               onKeyDown={handleKeyDown}
@@ -185,7 +187,7 @@ function TreatmentPlanCatalogPicker({
             {search ? (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={t("visit.clearSearch")}
                 className="rounded p-2 text-muted-foreground hover:bg-accent"
                 onClick={() => {
                   setSearch("");
@@ -200,21 +202,21 @@ function TreatmentPlanCatalogPicker({
             ref={listRef}
             id={listboxId}
             role="listbox"
-            aria-label="Available services and products"
+            aria-label={t("visit.availableServicesProducts")}
             aria-busy={queryIsStale || catalogQuery.isFetching}
             className="max-h-72 overflow-y-auto p-1"
           >
             {queryIsStale || catalogQuery.isFetching ? (
               <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Searching...
+                <Loader2 className="h-4 w-4 animate-spin" /> {t("visit.searching")}
               </div>
             ) : catalogQuery.error ? (
               <div role="alert" className="px-3 py-6 text-sm text-destructive">
-                Catalog search failed. Edit the search to retry.
+                {t("visit.catalogSearchFailed")}
               </div>
             ) : results.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                No active catalog items match.
+                {t("visit.noActiveCatalogMatch")}
               </p>
             ) : (
               results.map((item, index) => (
@@ -237,7 +239,7 @@ function TreatmentPlanCatalogPicker({
                       {item.name}
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">
-                      {item.itemType === "service" ? "Service" : "Product"}
+                      {item.itemType === "service" ? t("visit.service") : t("visit.product")}
                       {[item.code, item.category].filter(Boolean).length
                         ? ` · ${[item.code, item.category].filter(Boolean).join(" · ")}`
                         : ""}
@@ -267,6 +269,7 @@ export function TreatmentPlanComposer({
   patientId: string;
   patientName: string;
 }) {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const [lines, setLines] = useState<DraftLine[]>([]);
   const hydratedRevision = useRef<string | null>(null);
@@ -373,9 +376,9 @@ export function TreatmentPlanComposer({
       }
       operation.current = null;
       await utils.visitTreatmentPlans.getForAppointment.invalidate(context);
-      toast.success(plan ? "Treatment plan updated" : "Treatment plan saved");
+      toast.success(plan ? t("visit.treatmentPlanUpdated") : t("visit.treatmentPlanSaved"));
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Save failed";
+      const message = error instanceof Error ? error.message : t("visit.saveFailed");
       toast.error(message);
       if (/changed in another session/i.test(message)) {
         await planQuery.refetch();
@@ -390,10 +393,9 @@ export function TreatmentPlanComposer({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Treatment plan</CardTitle>
+          <CardTitle>{t("visit.treatmentPlan")}</CardTitle>
           <CardDescription>
-            Treatment plans are temporarily unavailable. Refresh before adding
-            one.
+            {t("visit.treatmentPlanUnavailable")}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -406,15 +408,15 @@ export function TreatmentPlanComposer({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-primary" /> Treatment plan
+              <ClipboardList className="h-5 w-5 text-primary" /> {t("visit.treatmentPlan")}
             </CardTitle>
             <CardDescription className="mt-1.5">
-              Build the plan you’ll review with the client.
+              {t("visit.treatmentPlanDescription")}
             </CardDescription>
           </div>
           {plan ? (
-            <Badge variant="secondary">
-              Revision {plan.revision.revisionNumber}
+              <Badge variant="secondary">
+              {t("visit.revision")} {plan.revision.revisionNumber}
             </Badge>
           ) : null}
         </div>
@@ -431,9 +433,9 @@ export function TreatmentPlanComposer({
 
         {lines.length === 0 ? (
           <div className="rounded-md border border-dashed border-border px-4 py-8 text-center">
-            <p className="text-sm font-medium">No items yet</p>
+            <p className="text-sm font-medium">{t("visit.noItemsYet")}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Search your existing catalog to start this treatment plan.
+              {t("visit.searchCatalogToStartPlan")}
             </p>
           </div>
         ) : (
@@ -448,7 +450,7 @@ export function TreatmentPlanComposer({
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{line.name}</p>
                     <p className="text-xs capitalize text-muted-foreground">
-                      {line.itemType}
+                      {line.itemType === "service" ? t("visit.service") : t("visit.product")}
                     </p>
                   </div>
                   <div>
@@ -456,11 +458,11 @@ export function TreatmentPlanComposer({
                       htmlFor={`treatment-plan-quantity-${line.itemType}-${line.id}`}
                       className="mb-1 block text-xs text-muted-foreground sm:sr-only"
                     >
-                      Quantity
+                      {t("visit.quantity")}
                     </label>
                     <Input
                       id={`treatment-plan-quantity-${line.itemType}-${line.id}`}
-                      aria-label={`Quantity for ${line.name}`}
+                      aria-label={`${t("visit.quantityFor")} ${line.name}`}
                       inputMode="decimal"
                       value={line.quantity}
                       aria-invalid={!validQuantity(line.quantity)}
@@ -490,7 +492,7 @@ export function TreatmentPlanComposer({
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9"
-                          aria-label={`Move ${line.name} up`}
+                          aria-label={`${t("visit.moveUp")} ${line.name}`}
                           disabled={index === 0}
                           onClick={() =>
                             setLines((current) => {
@@ -511,7 +513,7 @@ export function TreatmentPlanComposer({
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9"
-                          aria-label={`Move ${line.name} down`}
+                          aria-label={`${t("visit.moveDown")} ${line.name}`}
                           disabled={index === lines.length - 1}
                           onClick={() =>
                             setLines((current) => {
@@ -534,7 +536,7 @@ export function TreatmentPlanComposer({
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                      aria-label={`Remove ${line.name}`}
+                      aria-label={`${t("visit.remove")} ${line.name}`}
                       onClick={() =>
                         setLines((current) =>
                           current.filter((_, row) => row !== index),
@@ -565,9 +567,9 @@ export function TreatmentPlanComposer({
 
         <div className="flex flex-col gap-4 border-t border-border pt-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="grid grid-cols-3 gap-x-5 gap-y-1 text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="text-muted-foreground">Tax</span>
-            <span className="font-medium">Total</span>
+            <span className="text-muted-foreground">{t("visit.subtotal")}</span>
+            <span className="text-muted-foreground">{t("visit.tax")}</span>
+            <span className="font-medium">{t("visit.total")}</span>
             <span className="tabular-nums">
               {quote ? formatCurrency(quote.subtotal, currency) : "—"}
             </span>
@@ -595,12 +597,11 @@ export function TreatmentPlanComposer({
             ) : (
               <Check className="mr-2 h-4 w-4" />
             )}
-            {plan ? "Save new revision" : "Save treatment plan"}
+            {plan ? t("visit.saveNewRevision") : t("visit.saveTreatmentPlan")}
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Saving this plan does not charge the client, adjust inventory, or
-          schedule care.
+          {t("visit.treatmentPlanSaveDescription")}
         </p>
       </CardContent>
     </Card>

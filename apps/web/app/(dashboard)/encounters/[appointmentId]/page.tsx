@@ -39,6 +39,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/messages";
 import { formatCurrency } from "@/lib/locale/format";
 import {
   BILLING_INVOICE_MAX_ITEMS,
@@ -153,15 +155,20 @@ function clinicalDraftFingerprint(fields: ClinicalDraftFields): string {
   ]);
 }
 
-const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
-  scheduled: "Scheduled",
-  confirmed: "Confirmed",
-  checked_in: "Checked in",
-  in_exam: "In exam",
-  checked_out: "Checked out",
-  no_show: "No show",
-  cancelled: "Cancelled",
+const APPOINTMENT_STATUS_LABELS: Record<string, Parameters<Translator>[0]> = {
+  scheduled: "appointments.status.scheduled",
+  confirmed: "appointments.status.confirmed",
+  checked_in: "appointments.status.checked_in",
+  in_exam: "appointments.status.in_exam",
+  checked_out: "appointments.status.checked_out",
+  no_show: "appointments.status.no_show",
+  cancelled: "appointments.status.cancelled",
 };
+
+function appointmentStatusLabel(status: string, t: Translator): string {
+  const labelKey = APPOINTMENT_STATUS_LABELS[status];
+  return labelKey ? t(labelKey) : status;
+}
 
 function canManageVisit(role?: string | null): boolean {
   return (
@@ -193,16 +200,65 @@ function canManageBilling(role?: string | null): boolean {
 }
 
 function nextVisitAction(status: string): {
-  label: string;
+  label: Parameters<Translator>[0];
   status: "checked_in" | "in_exam";
 } | null {
   if (status === "scheduled" || status === "confirmed") {
-    return { label: "Check in", status: "checked_in" };
+    return { label: "visit.checkIn", status: "checked_in" };
   }
   if (status === "checked_in") {
-    return { label: "Start exam", status: "in_exam" };
+    return { label: "visit.startExam", status: "in_exam" };
   }
   return null;
+}
+
+function invoiceStatusLabel(status: string, t: Translator): string {
+  const keyByStatus: Record<string, Parameters<Translator>[0]> = {
+    draft: "visit.appointmentStatus.draft",
+    sent: "visit.appointmentStatus.sent",
+    paid: "visit.appointmentStatus.paid",
+    overdue: "visit.appointmentStatus.overdue",
+    void: "visit.appointmentStatus.void",
+    cancelled: "visit.appointmentStatus.cancelled",
+  };
+  const key = keyByStatus[status];
+  return key ? t(key) : status;
+}
+
+function visitSourceTypeLabel(sourceType: string, t: Translator): string {
+  if (sourceType === "prescription") return t("visit.sourceType.prescription");
+  if (sourceType === "vaccination") return t("visit.sourceType.vaccination");
+  if (sourceType === "procedure") return t("visit.sourceType.procedure");
+  if (sourceType === "lab") return t("visit.sourceType.lab");
+  return sourceType;
+}
+
+function roleLabel(role: string, t: Translator): string {
+  if (role === "admin") return t("visit.role.admin");
+  if (role === "veterinarian") return t("visit.role.veterinarian");
+  if (role === "technician") return t("visit.role.technician");
+  if (role === "front_desk") return t("visit.role.frontDesk");
+  return role.replace("_", " ");
+}
+
+function chargeDispositionLabel(
+  disposition: string | null | undefined,
+  t: Translator,
+): string {
+  if (disposition === "paid") return t("visit.paid");
+  if (disposition === "accounts_receivable") return t("visit.accountsReceivable");
+  if (disposition === "no_charge") return t("visit.noCharge");
+  return disposition?.replace("_", " ") ?? t("visit.notRecorded");
+}
+
+function handoffMethodLabel(
+  method: string | null | undefined,
+  t: Translator,
+): string {
+  if (method === "print") return t("visit.printedDownloaded");
+  if (method === "verbal") return t("visit.reviewedVerbally");
+  if (method === "declined") return t("visit.ownerDeclined");
+  return method?.replace("_", " ") ?? t("visit.notRecorded");
 }
 
 function PatientAssignmentPanel({
@@ -212,6 +268,7 @@ function PatientAssignmentPanel({
   appointmentId: string;
   clientName: string;
 }) {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const [search, setSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<{
@@ -231,7 +288,7 @@ function PatientAssignmentPanel({
   );
   const attachPatient = trpc.appointments.attachPatient.useMutation({
     onSuccess: async () => {
-      toast.success("Patient attached to visit");
+      toast.success(t("visit.patientAttached"));
       await Promise.all([
         utils.appointments.getById.invalidate({ id: appointmentId }),
         utils.appointments.list.invalidate(),
@@ -246,12 +303,12 @@ function PatientAssignmentPanel({
       <div className="flex items-start gap-3">
         <UserRound className="mt-0.5 h-5 w-5 shrink-0" />
         <div>
-          <p className="font-medium">Attach a patient before clinical care</p>
+          <p className="font-medium">{t("visit.attachBeforeCare")}</p>
           <p className="mt-1 text-sm">
             {clientName
-              ? "Choose a patient belonging to " + clientName + "."
-              : "Choose the patient and Doctor Pet will attach the matching client."}{" "}
-            The exam cannot start until both records are active and matched.
+              ? t("visit.choosePatientForClient").replace("{client}", clientName)
+              : t("visit.choosePatient")}{" "}
+            {t("visit.examRequiresMatch")}
           </p>
         </div>
       </div>
@@ -264,7 +321,7 @@ function PatientAssignmentPanel({
               <p className="text-xs text-muted-foreground">
                 {[selectedPatient.species, selectedPatient.breed]
                   .filter(Boolean)
-                  .join(" · ") || "Patient details unavailable"}
+                  .join(" · ") || t("visit.patientDetailsUnavailable")}
                 {selectedPatient.clientFirstName
                   ? " · " +
                     selectedPatient.clientFirstName +
@@ -281,7 +338,7 @@ function PatientAssignmentPanel({
                 disabled={attachPatient.isPending}
                 onClick={() => setSelectedPatient(null)}
               >
-                Change
+                {t("visit.change")}
               </Button>
               <Button
                 type="button"
@@ -297,7 +354,7 @@ function PatientAssignmentPanel({
                 {attachPatient.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                Attach patient
+                {t("visit.attachPatient")}
               </Button>
             </div>
           </div>
@@ -307,31 +364,31 @@ function PatientAssignmentPanel({
           <Input
             value={search}
             maxLength={APPOINTMENT_PATIENT_SEARCH_MAX_LENGTH}
-            aria-label="Search patient to attach"
+            aria-label={t("visit.searchPatientToAttach")}
             aria-invalid={!searchIsValid}
-            placeholder="Search patient, owner, or breed"
+            placeholder={t("visit.searchPatientOwnerBreed")}
             onChange={(event) => setSearch(event.target.value)}
           />
           {!searchIsValid ? (
             <p className="mt-2 text-xs text-destructive">
-              Patient search is too long.
+              {t("visit.patientSearchTooLong")}
             </p>
           ) : patientSearch.error ? (
             <p className="mt-2 text-xs text-destructive">
-              Patient search failed. Retry before attaching a record.
+              {t("visit.patientSearchFailed")}
             </p>
           ) : canSearch && patientSearch.isLoading ? (
             <p className="mt-2 inline-flex items-center gap-2 text-xs">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Searching patients...
+              {t("visit.searchingPatients")}
             </p>
           ) : canSearch && patientSearch.data?.length === 0 ? (
             <p className="mt-2 text-xs">
-              No active patient matched.{" "}
+              {t("visit.noActivePatient")} {" "}
               <Link className="font-medium underline" href="/patients/new">
-                Create the patient record
+                {t("visit.createPatientRecord")}
               </Link>{" "}
-              and then return to this visit.
+              {t("visit.returnToVisit")}
             </p>
           ) : patientSearch.data?.length ? (
             <div className="mt-2 overflow-hidden rounded-md border border-amber-300 bg-background text-foreground dark:border-amber-800">
@@ -353,7 +410,7 @@ function PatientAssignmentPanel({
                   <span className="text-xs text-muted-foreground">
                     {[patient.clientFirstName, patient.clientLastName]
                       .filter(Boolean)
-                      .join(" ") || "No active client"}
+                      .join(" ") || t("visit.noActiveClient")}
                   </span>
                 </button>
               ))}
@@ -368,9 +425,10 @@ function PatientAssignmentPanel({
 function formatAppointmentTime(
   value: Date | string,
   timeZone?: string | null,
+  locale = "en-US",
 ): string {
   try {
-    return new Date(value).toLocaleString("en-US", {
+    return new Date(value).toLocaleString(locale, {
       weekday: "short",
       month: "short",
       day: "numeric",
@@ -379,7 +437,7 @@ function formatAppointmentTime(
       timeZone: timeZone ?? undefined,
     });
   } catch {
-    return new Date(value).toLocaleString("en-US", {
+    return new Date(value).toLocaleString(locale, {
       weekday: "short",
       month: "short",
       day: "numeric",
@@ -407,10 +465,10 @@ function defaultPayLaterDueDate(timeZone?: string | null): string {
   return addDateInputDays(today, 30);
 }
 
-function formatClinicDate(value: string): string {
+function formatClinicDate(value: string, locale = "en-US"): string {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(Date.UTC(year!, month! - 1, day!)).toLocaleDateString(
-    "en-US",
+    locale,
     {
       year: "numeric",
       month: "long",
@@ -421,15 +479,19 @@ function formatClinicDate(value: string): string {
 }
 
 function EncounterLoading() {
+  const t = useTranslations();
   return (
     <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card p-12 text-sm text-muted-foreground">
       <Loader2 className="h-4 w-4 animate-spin" />
-      Loading visit workspace...
+      {t("visit.loading")}
     </div>
   );
 }
 
 export default function EncounterWorkspacePage() {
+  const t = useTranslations();
+  const language = useLanguage();
+  const locale = language === "es" ? "es-CR" : "en-US";
   const params = useParams<{ appointmentId: string }>();
   const { data: session, status: sessionStatus } = useSession();
   const appointmentId = params.appointmentId;
@@ -458,7 +520,7 @@ export default function EncounterWorkspacePage() {
 
   const updateStatus = trpc.appointments.updateStatus.useMutation({
     onSuccess: () => {
-      toast.success("Visit status updated");
+      toast.success(t("visit.visitStatusUpdated"));
       utils.appointments.getById.invalidate({ id: appointmentId });
       utils.appointments.list.invalidate();
     },
@@ -473,13 +535,13 @@ export default function EncounterWorkspacePage() {
     return (
       <EmptyState
         icon={AlertCircle}
-        title="Unable to load this visit"
+        title={t("visit.loadError")}
         description={
           appointmentQuery.error?.message ??
-          "The appointment may have been removed or belongs to another clinic."
+          t("visit.loadErrorDescription")
         }
         action={{
-          label: "Back to schedule",
+          label: t("visit.backToSchedule"),
           onClick: () => window.location.assign("/schedule"),
           icon: ArrowLeft,
         }}
@@ -513,7 +575,7 @@ export default function EncounterWorkspacePage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/schedule">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to schedule
+            {t("visit.backToSchedule")}
           </Link>
         </Button>
       </div>
@@ -526,30 +588,30 @@ export default function EncounterWorkspacePage() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="font-heading text-2xl font-semibold">
-                {appointment.patientName ?? "Unassigned visit"}
+                {appointment.patientName ?? t("visit.unassigned")}
               </h1>
               <Badge variant="outline">
-                {APPOINTMENT_STATUS_LABELS[appointment.status] ??
-                  appointment.status}
+                {appointmentStatusLabel(appointment.status, t)}
               </Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              {appointment.typeName ?? "Appointment"} ·{" "}
-              {clientName || "No client"}
+              {appointment.typeName ?? t("visit.appointment")} ·{" "}
+              {clientName || t("visit.noClient")}
             </p>
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <CalendarClock className="h-4 w-4" />
-                {formatAppointmentTime(
-                  appointment.startTime,
-                  taxConfigQuery.data?.timezone,
+                  {formatAppointmentTime(
+                    appointment.startTime,
+                    taxConfigQuery.data?.timezone,
+                    locale,
                 )}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <UserRound className="h-4 w-4" />
                 {appointment.doctorName
                   ? `Dr. ${appointment.doctorName}`
-                  : "Unassigned provider"}
+                  : t("visit.unassignedProvider")}
               </span>
               {appointment.locationName || appointment.roomName ? (
                 <span className="inline-flex items-center gap-1.5">
@@ -570,7 +632,7 @@ export default function EncounterWorkspacePage() {
             }
             title={
               nextAction.status === "in_exam" && missingClinicalTarget
-                ? "Attach a patient before starting the exam."
+                ? t("visit.attachPatientBeforeExam")
                 : undefined
             }
             onClick={() =>
@@ -585,7 +647,7 @@ export default function EncounterWorkspacePage() {
             ) : (
               <Check className="mr-2 h-4 w-4" />
             )}
-            {nextAction.label}
+            {t(nextAction.label)}
           </Button>
         ) : appointment.status === "in_exam" && canManageVisit(role) ? (
           <Button
@@ -596,7 +658,7 @@ export default function EncounterWorkspacePage() {
             }}
           >
             <ClipboardCheck className="mr-2 h-4 w-4" />
-            Review closeout
+            {t("visit.reviewCloseout")}
           </Button>
         ) : null}
       </header>
@@ -613,7 +675,7 @@ export default function EncounterWorkspacePage() {
 
       {appointment.notes ? (
         <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm">
-          <span className="font-medium">Visit note:</span> {appointment.notes}
+          <span className="font-medium">{t("visit.visitNote")}</span> {appointment.notes}
         </div>
       ) : null}
 
@@ -621,9 +683,9 @@ export default function EncounterWorkspacePage() {
         <div className="flex flex-col gap-6">
           <Card id="clinical-work" className="scroll-mt-4">
             <CardHeader>
-              <CardTitle>Clinical work</CardTitle>
+              <CardTitle>{t("visit.clinicalWork")}</CardTitle>
               <CardDescription>
-                Document and capture visit work without losing the appointment.
+                {t("visit.clinicalWorkDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -636,20 +698,20 @@ export default function EncounterWorkspacePage() {
                 ) : (
                   <EmptyState
                     icon={UserRound}
-                    title="Patient assignment required"
-                    description="A teammate with visit access must attach the active patient and matching client before clinical care begins."
+                    title={t("visit.patientAssignmentRequired")}
+                    description={t("visit.patientAssignmentDescription")}
                     className="p-8"
                   />
                 )
               ) : patientQuery.error ||
                 (!patientQuery.isLoading && !patient) ? (
                 <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-                  Unable to load the patient chart. Refresh before documenting.
+                  {t("visit.patientChartLoadError")}
                 </div>
               ) : patientQuery.isLoading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading patient context...
+                  {t("visit.loadingPatientContext")}
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -660,18 +722,18 @@ export default function EncounterWorkspacePage() {
                         <p className="text-sm capitalize text-muted-foreground">
                           {[patient?.species, patient?.breed]
                             .filter(Boolean)
-                            .join(" · ") || "Patient details unavailable"}
+                            .join(" · ") || t("visit.patientDetailsUnavailable")}
                         </p>
                       </div>
                       {!patient?.allergies.length ? (
-                        <Badge variant="secondary">No recorded allergies</Badge>
+                        <Badge variant="secondary">{t("visit.noRecordedAllergies")}</Badge>
                       ) : null}
                     </div>
                     {patient?.allergies.length ? (
                       <div
                         className="mt-3 grid gap-2"
                         role="alert"
-                        aria-label="Current allergy warnings"
+                        aria-label={t("visit.currentAllergyWarnings")}
                       >
                         {patient.allergies.map((allergy) => (
                           <div
@@ -687,7 +749,7 @@ export default function EncounterWorkspacePage() {
                               </span>
                             </div>
                             <p className="mt-1 text-xs text-foreground">
-                              Reaction: {allergy.reaction || "Not documented"}
+                              {t("visit.reaction")} {allergy.reaction || t("visit.notDocumented")}
                             </p>
                           </div>
                         ))}
@@ -705,7 +767,7 @@ export default function EncounterWorkspacePage() {
                           href={`/records/replace-soap/${appointment.patientId}?sourceNoteId=${closeoutQuery.data.missingSoapReplacement.sourceNoteId}&return=patient`}
                         >
                           <FileText className="mr-2 h-4 w-4" />
-                          Create missing SOAP replacement
+                          {t("visit.createMissingSoapReplacement")}
                         </Link>
                       </Button>
                     ) : null}
@@ -722,8 +784,8 @@ export default function EncounterWorkspacePage() {
                         >
                           <FileText className="mr-2 h-4 w-4" />
                           {closeoutQuery.data?.soapDraft
-                            ? "Resume SOAP draft"
-                            : "Write SOAP note"}
+                            ? t("visit.resumeSoapDraft")
+                            : t("visit.writeSoapNote")}
                         </a>
                       </Button>
                     ) : null}
@@ -733,7 +795,7 @@ export default function EncounterWorkspacePage() {
                           href={`/records?patientId=${appointment.patientId}&appointmentId=${appointmentId}&tab=prescriptions&new=1`}
                         >
                           <Pill className="mr-2 h-4 w-4" />
-                          Prescribe
+                          {t("visit.prescribe")}
                         </Link>
                       </Button>
                     ) : null}
@@ -744,7 +806,7 @@ export default function EncounterWorkspacePage() {
                             href={`/records?patientId=${appointment.patientId}&appointmentId=${appointmentId}&tab=vaccinations&new=1`}
                           >
                             <Syringe className="mr-2 h-4 w-4" />
-                            Vaccination
+                            {t("visit.vaccination")}
                           </Link>
                         </Button>
                         <Button size="sm" variant="outline" asChild>
@@ -752,7 +814,7 @@ export default function EncounterWorkspacePage() {
                             href={`/records?patientId=${appointment.patientId}&appointmentId=${appointmentId}&tab=labResults&new=1`}
                           >
                             <FlaskConical className="mr-2 h-4 w-4" />
-                            Lab result
+                            {t("visit.labResult")}
                           </Link>
                         </Button>
                       </>
@@ -763,14 +825,14 @@ export default function EncounterWorkspacePage() {
                           href={`/records?patientId=${appointment.patientId}&appointmentId=${appointmentId}&tab=procedures&new=1`}
                         >
                           <Scissors className="mr-2 h-4 w-4" />
-                          Procedure
+                          {t("visit.procedure")}
                         </Link>
                       </Button>
                     ) : null}
                     <Button size="sm" variant="outline" asChild>
                       <Link href={`/patients/${appointment.patientId}`}>
                         <ClipboardList className="mr-2 h-4 w-4" />
-                        Open patient chart
+                        {t("visit.openPatientChart")}
                       </Link>
                     </Button>
                     {canManageVisit(role) ? (
@@ -788,10 +850,7 @@ export default function EncounterWorkspacePage() {
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    Use these visit actions so SOAP notes, prescriptions,
-                    vaccinations, lab results, procedures, photos, and
-                    signatures stay linked to this appointment and its charge
-                    reconciliation.
+                    {t("visit.actionsDescription")}
                   </p>
                 </div>
               )}
@@ -817,7 +876,7 @@ export default function EncounterWorkspacePage() {
               appointmentId={appointment.id}
               clientId={appointment.clientId}
               patientId={appointment.patientId}
-              patientName={appointment.patientName ?? "Patient"}
+               patientName={appointment.patientName ?? t("visit.patient")}
             />
           ) : null}
 
@@ -899,6 +958,7 @@ function VisitCompletionGuide({
   invoicesQuery: InvoiceQueryState;
   hasActiveInvoice: boolean;
 }) {
+  const t = useTranslations();
   const reconciliation = trpc.encounters.getVisitReconciliation.useQuery(
     { appointmentId },
     { enabled: Boolean(appointmentId && patientId) },
@@ -936,11 +996,11 @@ function VisitCompletionGuide({
     canManageVisit: canManageVisit(role),
   });
   const steps = [
-    { label: "Clinical record", complete: clinicalRecordComplete },
-    { label: "Visit charges", complete: billingComplete },
-    { label: "Reconcile work", complete: reconciliationComplete },
-    { label: "Owner handoff", complete: handoffComplete },
-    { label: "Checkout", complete: completed },
+    { label: t("visit.clinicalRecord"), complete: clinicalRecordComplete },
+    { label: t("visit.visitCharges"), complete: billingComplete },
+    { label: t("visit.reconcileWork"), complete: reconciliationComplete },
+    { label: t("visit.ownerHandoff"), complete: handoffComplete },
+    { label: t("visit.checkout"), complete: completed },
   ];
   const actionHref =
     action.target === "patient"
@@ -958,20 +1018,73 @@ function VisitCompletionGuide({
                 : null;
   const actionLabel =
     action.target === "patient"
-      ? "Attach patient"
+      ? t("visit.attachPatientAction")
       : action.target === "soap"
-        ? "Write SOAP note"
+        ? t("visit.writeSoapNote")
         : action.target === "charge_capture"
-          ? "Capture charges"
+          ? t("visit.captureCharges")
           : action.target === "reconciliation"
-            ? "Reconcile work"
+            ? t("visit.reconcileWork")
             : action.target === "closeout"
               ? handoffComplete
-                ? "Complete checkout"
-                : "Finish owner handoff"
+                ? t("visit.completeCheckout")
+                : t("visit.finishOwnerHandoff")
               : action.target === "complete"
-                ? "Back to schedule"
+                ? t("visit.backToSchedule")
                 : null;
+
+  const actionTitle =
+    action.target === "complete"
+      ? t("visit.action.visitComplete")
+      : action.target === "patient"
+        ? t("visit.action.attachPatient")
+        : action.target === "loading"
+          ? t("visit.action.confirmingState")
+          : action.target === "soap"
+            ? t("visit.action.document")
+            : action.target === "charge_capture"
+              ? t("visit.action.captureCharges")
+              : action.target === "reconciliation"
+                ? t("visit.action.reconcile")
+                : action.target === "closeout"
+                  ? handoffComplete
+                    ? t("visit.action.completeCheckout")
+                    : t("visit.action.finalizeHandoff")
+                  : action.title === "Clinical documentation needs a veterinarian"
+                    ? t("visit.action.documentationNeedsVet")
+                    : action.title === "Billing needs the front desk"
+                      ? t("visit.action.billingNeedsFrontDesk")
+                      : action.title === "Performed work needs reconciliation"
+                        ? t("visit.action.reconcileNeedsTeammate")
+                        : action.title === "Owner handoff needs a clinical teammate"
+                          ? t("visit.action.handoffNeedsClinical")
+                          : t("visit.action.checkoutNeedsTeammate");
+  const actionDescription =
+    action.target === "complete"
+      ? t("visit.action.visitCompleteDescription")
+      : action.target === "patient"
+        ? t("visit.action.attachPatientDescription")
+        : action.target === "loading"
+          ? t("visit.action.confirmingStateDescription")
+          : action.target === "soap"
+            ? t("visit.action.documentDescription")
+            : action.target === "charge_capture"
+              ? t("visit.action.captureChargesDescription")
+              : action.target === "reconciliation"
+                ? t("visit.action.reconcileDescription")
+                : action.target === "closeout"
+                  ? handoffComplete
+                    ? t("visit.action.completeCheckoutDescription")
+                    : t("visit.action.finalizeHandoffDescription")
+                  : action.title === "Clinical documentation needs a veterinarian"
+                    ? t("visit.action.documentationNeedsVetDescription")
+                    : action.title === "Billing needs the front desk"
+                      ? t("visit.action.billingNeedsFrontDeskDescription")
+                      : action.title === "Performed work needs reconciliation"
+                        ? t("visit.action.reconcileNeedsTeammateDescription")
+                        : action.title === "Owner handoff needs a clinical teammate"
+                          ? t("visit.action.handoffNeedsClinicalDescription")
+                          : t("visit.action.checkoutNeedsTeammateDescription");
 
   return (
     <Card className="border-primary/30 bg-primary/[0.03]">
@@ -979,11 +1092,11 @@ function VisitCompletionGuide({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-              Finish this visit
+              {t("visit.finishThisVisit")}
             </p>
-            <CardTitle className="mt-1">{action.title}</CardTitle>
+            <CardTitle className="mt-1">{actionTitle}</CardTitle>
             <CardDescription className="mt-1 max-w-2xl">
-              {action.description}
+              {actionDescription}
             </CardDescription>
           </div>
           {actionHref && actionLabel ? (
@@ -996,34 +1109,31 @@ function VisitCompletionGuide({
               </Button>
               {action.target === "charge_capture" ? (
                 <Button variant="ghost" asChild>
-                  <a href="#visit-closeout">No charge? Continue handoff</a>
+                  <a href="#visit-closeout">{t("visit.noChargeContinueHandoff")}</a>
                 </Button>
               ) : null}
             </div>
           ) : action.target === "loading" ? (
             <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Checking visit
+              {t("visit.checkingVisit")}
             </div>
           ) : null}
         </div>
         {action.target === "soap" ? (
           <p className="text-xs text-muted-foreground">
-            Truly exempt visit? Use the documented SOAP exception in Visit
-            closeout instead.
+            {t("visit.soapExceptionHint")}
           </p>
         ) : action.target === "charge_capture" ? (
           <p className="text-xs text-muted-foreground">
-            Doctor Pet will not bill a suggestion automatically. A teammate must
-            add and save each charge, or document a no-charge disposition at
-            checkout.
+            {t("visit.chargeHint")}
           </p>
         ) : null}
       </CardHeader>
       <CardContent>
         <ol
           className="grid gap-2 sm:grid-cols-5"
-          aria-label="Visit completion progress"
+          aria-label={t("visit.completionProgress")}
         >
           {steps.map((step, index) => (
             <li
@@ -1084,8 +1194,14 @@ function VisitCloseout({
   closeoutQuery: CloseoutQueryState;
   invoicesQuery: InvoiceQueryState;
 }) {
+  const t = useTranslations();
+  const locale = useLanguage() === "es" ? "es-CR" : "en-US";
   const utils = trpc.useUtils();
   const isOnline = useOnlineStatus();
+  const clinicalProfileQuery = trpc.settings.getMyClinicalProfile.useQuery(
+    undefined,
+    { enabled: role === "admin" },
+  );
   const data = closeoutQuery.data;
   const closeout = data?.closeout ?? null;
   const activeInvoice = data?.invoices[0] ?? null;
@@ -1259,7 +1375,7 @@ function VisitCloseout({
       conflictRef.current = false;
       setConflictRevision(null);
       setDraftSaveState("saved");
-      toast.success("Clinical handoff finalized");
+      toast.success(t("visit.clinicalHandoffFinalizedToast"));
       await refresh();
     },
     onError: async (error) => {
@@ -1280,16 +1396,14 @@ function VisitCloseout({
   });
   const completeVisit = trpc.encounters.completeVisit.useMutation({
     onSuccess: async () => {
-      toast.success("Visit completed safely");
+      toast.success(t("visit.visitCompletedToast"));
       await refresh();
     },
     onError: (error) => toast.error(error.message),
   });
   const reopenClinical = trpc.encounters.reopenClinical.useMutation({
     onSuccess: async () => {
-      toast.success(
-        "Amendment draft started; the signed handoff remains active",
-      );
+      toast.success(t("visit.amendmentStartedToast"));
       setAmendmentReason("");
       await refresh();
     },
@@ -1298,7 +1412,7 @@ function VisitCloseout({
   const resolveNeededFollowUp =
     trpc.encounters.resolveNeededFollowUp.useMutation({
       onSuccess: async () => {
-        toast.success("Follow-up obligation resolved with attribution");
+        toast.success(t("visit.followUpResolvedToast"));
         setFollowUpResolution("");
         setResolutionAppointmentId("");
         setResolutionNotes("");
@@ -1312,8 +1426,10 @@ function VisitCloseout({
     role === "admin" || role === "veterinarian" || role === "technician";
   const canFinalizeClinical =
     role === "veterinarian" ||
-    (appointment.typeRequiresDoctor === 0 &&
-      (role === "admin" || role === "technician"));
+    (role === "admin" &&
+      (appointment.typeRequiresDoctor === 0 ||
+        clinicalProfileQuery.data?.isVeterinarian === true)) ||
+    (appointment.typeRequiresDoctor === 0 && role === "technician");
   const signedClinical =
     closeout?.status === "clinical_finalized" ||
     closeout?.status === "completed";
@@ -1378,14 +1494,14 @@ function VisitCloseout({
           }
           setDraftSaveState("conflict");
           toast.error(
-            "Closeout changed in another session. Your local work is still here.",
+            t("visit.closeoutChangedToast"),
           );
         } else {
           setDraftSaveState("error");
           toast.error(
             error instanceof Error
               ? error.message
-              : "Clinical closeout draft could not be saved",
+              : t("visit.closeoutDraftSaveError"),
           );
         }
         return null;
@@ -1448,7 +1564,7 @@ function VisitCloseout({
 
   useUnsavedChangesGuard(
     closeoutNeedsLeaveGuard(),
-    "This closeout has changes that are not saved on the server. Leave and lose those changes?",
+    t("visit.unsavedCloseoutLeaveConfirm"),
   );
 
   async function finalizeClinicalHandoff() {
@@ -1520,7 +1636,7 @@ function VisitCloseout({
 
   async function overwriteServerCloseoutDraft() {
     if (!window.navigator.onLine) {
-      toast.error("Reconnect before replacing the server closeout draft");
+      toast.error(t("visit.reconnectBeforeReplace"));
       return;
     }
     try {
@@ -1551,31 +1667,32 @@ function VisitCloseout({
     try {
       const { generateDischargeInstructions } = await import("@/lib/pdf");
       const followUpDate = closeout?.followUpScheduledAt
-        ? new Date(closeout.followUpScheduledAt).toLocaleDateString("en-US", {
+        ? new Date(closeout.followUpScheduledAt).toLocaleDateString(locale, {
             year: "numeric",
             month: "long",
             day: "numeric",
             timeZone: data.practice.timezone ?? undefined,
           })
         : closeout?.followUpDisposition === "needed" && closeout.followUpDueDate
-          ? `Needed by ${formatClinicDate(closeout.followUpDueDate)}`
+          ? `${t("visit.neededBy")} ${formatClinicDate(closeout.followUpDueDate, locale)}`
           : undefined;
       const instructions = closeout?.dischargeInstructions
         ? splitOwnerInstructions(closeout.dischargeInstructions)
         : closeout?.noInstructionsReason
           ? [
-              `No additional home-care instructions: ${closeout.noInstructionsReason}`,
+              `${t("visit.noAdditionalInstructions")} ${closeout.noInstructionsReason}`,
             ]
           : [];
       generateDischargeInstructions({
         practiceName: data.practice.name,
         practicePhone: data.practice.phone ?? undefined,
-        patientName: appointment.patientName ?? "Patient",
+        patientName: appointment.patientName ?? t("visit.patient"),
         species: appointment.patientSpecies ?? "",
-        clientName: clientName || "Owner",
+        clientName: clientName || t("visit.owner"),
         visitDate: formatAppointmentTime(
           appointment.startTime,
           data.practice.timezone,
+          locale,
         ),
         doctorName: closeout?.clinicalFinalizerName ?? undefined,
         diagnosis: closeout?.diagnosisSummary ?? undefined,
@@ -1592,9 +1709,9 @@ function VisitCloseout({
       }).save(
         `discharge_${(appointment.patientName ?? "patient").replace(/\s+/g, "_")}.pdf`,
       );
-      toast.success("Discharge instructions downloaded");
+      toast.success(t("visit.dischargeDownloaded"));
     } catch {
-      toast.error("Discharge instructions could not be generated");
+      toast.error(t("visit.dischargeGenerateError"));
     }
   }
 
@@ -1607,7 +1724,7 @@ function VisitCloseout({
     try {
       const { generateDischargeInstructions } = await import("@/lib/pdf");
       const followUpDate = amendment.followUpScheduledAt
-        ? new Date(amendment.followUpScheduledAt).toLocaleDateString("en-US", {
+        ? new Date(amendment.followUpScheduledAt).toLocaleDateString(locale, {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -1615,24 +1732,25 @@ function VisitCloseout({
           })
         : amendment.followUpDisposition === "needed" &&
             amendment.followUpDueDate
-          ? `Needed by ${formatClinicDate(amendment.followUpDueDate)}`
+          ? `${t("visit.neededBy")} ${formatClinicDate(amendment.followUpDueDate, locale)}`
           : undefined;
       const instructions = amendment.dischargeInstructions
         ? splitOwnerInstructions(amendment.dischargeInstructions)
         : amendment.noInstructionsReason
           ? [
-              `No additional home-care instructions: ${amendment.noInstructionsReason}`,
+              `${t("visit.noAdditionalInstructions")} ${amendment.noInstructionsReason}`,
             ]
           : [];
       generateDischargeInstructions({
         practiceName: data.practice.name,
         practicePhone: data.practice.phone ?? undefined,
-        patientName: appointment.patientName ?? "Patient",
+        patientName: appointment.patientName ?? t("visit.patient"),
         species: appointment.patientSpecies ?? "",
-        clientName: clientName || "Owner",
+        clientName: clientName || t("visit.owner"),
         visitDate: formatAppointmentTime(
           appointment.startTime,
           data.practice.timezone,
+          locale,
         ),
         doctorName: amendment.clinicalFinalizerName,
         diagnosis: amendment.diagnosisSummary ?? undefined,
@@ -1649,9 +1767,9 @@ function VisitCloseout({
       }).save(
         `discharge_${(appointment.patientName ?? "patient").replace(/\s+/g, "_")}_revision_${amendment.priorRevision}.pdf`,
       );
-      toast.success(`Discharge revision ${amendment.priorRevision} downloaded`);
+      toast.success(`${t("visit.dischargeRevisionDownloaded")} ${amendment.priorRevision}`);
     } catch {
-      toast.error("Prior discharge instructions could not be generated");
+      toast.error(t("visit.priorDischargeGenerateError"));
     }
   }
 
@@ -1660,7 +1778,7 @@ function VisitCloseout({
       <Card id="visit-closeout">
         <CardContent className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Loading closeout readiness...
+          {t("visit.loadingCloseout")}
         </CardContent>
       </Card>
     );
@@ -1669,10 +1787,10 @@ function VisitCloseout({
     return (
       <Card id="visit-closeout" className="border-destructive">
         <CardHeader>
-          <CardTitle>Visit closeout unavailable</CardTitle>
+          <CardTitle>{t("visit.closeoutUnavailable")}</CardTitle>
           <CardDescription className="text-destructive">
             {closeoutQuery.error?.message ??
-              "Readiness could not be verified. The visit cannot be checked out."}
+              t("visit.readinessError")}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -1684,57 +1802,56 @@ function VisitCloseout({
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle>Visit closeout</CardTitle>
+            <CardTitle>{t("visit.closeout")}</CardTitle>
             <CardDescription>
-              Finalize clinical instructions, then verify billing and owner
-              handoff before checkout.
+              {t("visit.closeoutDescription")}
             </CardDescription>
           </div>
           <Badge variant={isCompleted ? "success" : "outline"}>
             {amendingClinical
               ? isCompleted
-                ? "Completed · amendment draft"
-                : "Signed · amendment draft"
+                ? `${t("visit.completed")} · ${t("visit.amendmentDraft")}`
+                : `${t("clinicalRecords.status.finalized")} · ${t("visit.amendmentDraft")}`
               : isCompleted
-                ? "Completed"
+                ? t("visit.completed")
                 : clinicalLocked
-                  ? "Clinical handoff finalized"
+                  ? t("visit.clinicalHandoffFinalized")
                   : closeout
-                    ? "Draft saved"
-                    : "Not started"}
+                    ? t("clinicalRecords.status.draft")
+                    : t("visit.notStarted")}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-3">
           <ReadinessTile
-            label="Clinical note"
+            label={t("visit.clinicalNote")}
             value={
               data.soapDraft
-                ? `Draft in progress · revision ${data.soapDraft.revision}`
+                ? `${t("visit.draftInProgress")} · ${t("visit.revision")} ${data.soapDraft.revision}`
                 : data.linkedSoapCount > 0
-                  ? `${data.linkedSoapCount} linked SOAP note${data.linkedSoapCount === 1 ? "" : "s"}`
+                  ? `${data.linkedSoapCount} ${t("visit.linkedSoapNotes")}`
                   : closeout?.documentationExceptionReason
-                    ? "Documented exception"
+                    ? t("visit.documentedException")
                     : data.missingSoapReplacement
-                      ? "Replacement or exception needed"
-                      : "Missing"
+                      ? t("visit.replacementOrExceptionNeeded")
+                      : t("visit.missing")
             }
           />
           <ReadinessTile
-            label="Visit medications"
+            label={t("visit.visitMedications")}
             value={
               data.activeMedications.length > 0
-                ? `${data.activeMedications.length} active linked prescription${data.activeMedications.length === 1 ? "" : "s"}`
-                : "None linked"
+                ? `${data.activeMedications.length} ${t("visit.activeLinkedPrescriptions")}`
+                : t("visit.noneLinked")
             }
           />
           <ReadinessTile
-            label="Billing"
+            label={t("visit.billing")}
             value={
               activeInvoice
-                ? `${activeInvoice.status} · ${activeInvoice.itemCount} line${activeInvoice.itemCount === 1 ? "" : "s"}`
-                : "No active invoice"
+                ? `${invoiceStatusLabel(activeInvoice.status, t)} · ${activeInvoice.itemCount} ${t("visit.invoiceLines")}`
+                : t("visit.noActiveInvoice")
             }
           />
         </div>
@@ -1742,8 +1859,7 @@ function VisitCloseout({
         {!clinicalLocked ? (
           appointment.status !== "in_exam" && !amendingClinical ? (
             <div className="rounded-md border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-              Check the patient in and start the exam before preparing the
-              clinical closeout.
+              {t("visit.startBeforeCloseout")}
             </div>
           ) : canDraftClinical ? (
             <ClinicalCloseoutForm
@@ -1779,9 +1895,10 @@ function VisitCloseout({
               soapDraft={data.soapDraft}
               soapDraftHref={`/records/new-soap/${appointment.patientId}?appointmentId=${appointmentId}`}
               linkedMedicationCount={data.activeMedications.length}
-              followUpAppointments={data.followUpAppointments}
-              followUpAssignees={data.followUpAssignees}
-              timeZone={data.practice.timezone}
+               followUpAppointments={data.followUpAppointments}
+               followUpAssignees={data.followUpAssignees}
+               locale={locale}
+               timeZone={data.practice.timezone}
               isAmendment={amendingClinical}
               saveState={draftSaveState}
               lastSavedAt={lastDraftSavedAt}
@@ -1796,7 +1913,7 @@ function VisitCloseout({
             />
           ) : (
             <div className="rounded-md border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-              Your role cannot prepare clinical closeout instructions.
+              {t("visit.roleCannotPrepareCloseout")}
             </div>
           )
         ) : null}
@@ -1805,61 +1922,61 @@ function VisitCloseout({
           <div className="space-y-3 rounded-md border border-border bg-muted/20 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 className="font-medium">1. Clinical handoff finalized</h3>
+                <h3 className="font-medium">1. {t("visit.clinicalHandoffFinalized")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {closeout?.medicationSnapshot.length ?? 0} visit medication
-                  {closeout?.medicationSnapshot.length === 1 ? "" : "s"} ·{" "}
-                  {closeout?.followUpDisposition?.replace("_", " ")}
+                  {closeout?.medicationSnapshot.length ?? 0} {t("visit.visitMedications")} · {closeout?.followUpDisposition ? t("visit.followUp") : t("visit.noneNeeded")}
                 </p>
               </div>
               <Button variant="outline" size="sm" onClick={downloadDischarge}>
                 <Download className="mr-2 h-4 w-4" />
-                Download discharge
+                {t("visit.downloadDischarge")}
               </Button>
             </div>
             <dl className="grid gap-3 rounded-md border border-border bg-background p-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Finalized by
+                  {t("visit.finalizedBy")}
                 </dt>
                 <dd className="mt-1">
-                  {closeout?.clinicalFinalizerName ?? "Unknown clinician"}
+                  {closeout?.clinicalFinalizerName ?? t("visit.unknownClinician")}
                   {closeout?.clinicalFinalizedAt
                     ? ` · ${formatAppointmentTime(
                         closeout.clinicalFinalizedAt,
                         data.practice.timezone,
+                        locale,
                       )}`
                     : ""}
                 </dd>
               </div>
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Follow-up
+                  {t("visit.followUp")}
                 </dt>
                 <dd className="mt-1">
                   {closeout?.followUpDisposition === "scheduled" &&
                   closeout.followUpScheduledAt
-                    ? `Scheduled ${formatAppointmentTime(
+                    ? `${t("visit.scheduled")} ${formatAppointmentTime(
                         closeout.followUpScheduledAt,
                         data.practice.timezone,
+                        locale,
                       )}`
                     : closeout?.followUpDisposition === "needed" &&
                         closeout.followUpDueDate
-                      ? `Needed by ${formatClinicDate(closeout.followUpDueDate)} · Assigned to ${closeout.followUpAssigneeName ?? "clinic team"}`
-                      : "No follow-up needed"}
+                      ? `${t("visit.neededBy")} ${formatClinicDate(closeout.followUpDueDate, locale)} · ${t("visit.assignedTo")} ${closeout.followUpAssigneeName ?? t("visit.clinicTeam")}`
+                      : t("visit.noFollowUpNeeded")}
                 </dd>
               </div>
               <div className="sm:col-span-2">
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Diagnosis or visit summary
+                  {t("visit.diagnosisSummary")}
                 </dt>
                 <dd className="mt-1 whitespace-pre-wrap">
-                  {closeout?.diagnosisSummary || "Not recorded"}
+                  {closeout?.diagnosisSummary || t("visit.notRecorded")}
                 </dd>
               </div>
             </dl>
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">Medications</h4>
+              <h4 className="text-sm font-medium">{t("visit.medications")}</h4>
               {closeout?.medicationSnapshot.length ? (
                 <ul className="space-y-2">
                   {closeout.medicationSnapshot.map((medication) => (
@@ -1871,7 +1988,7 @@ function VisitCloseout({
                       <p className="text-muted-foreground">
                         {medication.dosage} · {medication.frequency}
                         {medication.quantity
-                          ? ` · Quantity ${medication.quantity}`
+                          ? ` · ${t("visit.quantity")} ${medication.quantity}`
                           : ""}
                       </p>
                       {medication.instructions ? (
@@ -1884,27 +2001,27 @@ function VisitCloseout({
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No visit medications.
+                  {t("visit.noVisitMedications")}
                 </p>
               )}
             </div>
             <div className="space-y-3 rounded-md border border-border bg-background p-3 text-sm">
               <div>
-                <h4 className="font-medium">Home care</h4>
+                <h4 className="font-medium">{t("visit.homeCare")}</h4>
                 {closeout?.dischargeInstructions ? (
                   <p className="mt-1 whitespace-pre-wrap">
                     {closeout.dischargeInstructions}
                   </p>
                 ) : (
                   <p className="mt-1 text-muted-foreground">
-                    No additional instructions: {closeout?.noInstructionsReason}
+                    {t("visit.noAdditionalInstructions")} {closeout?.noInstructionsReason}
                   </p>
                 )}
               </div>
               {closeout?.warningSigns ? (
                 <div>
                   <h4 className="font-medium">
-                    Warning signs and when to call
+                    {t("visit.warningSigns")}
                   </h4>
                   <p className="mt-1 whitespace-pre-wrap">
                     {closeout.warningSigns}
@@ -1913,7 +2030,7 @@ function VisitCloseout({
               ) : null}
               {closeout?.followUpNotes ? (
                 <div>
-                  <h4 className="font-medium">Follow-up notes</h4>
+                  <h4 className="font-medium">{t("visit.followUpNotes")}</h4>
                   <p className="mt-1 whitespace-pre-wrap">
                     {closeout.followUpNotes}
                   </p>
@@ -1923,7 +2040,7 @@ function VisitCloseout({
             {closeout?.amendmentHistory.length ? (
               <div className="space-y-2">
                 <p className="text-sm font-medium">
-                  Prior finalized versions ({closeout.amendmentHistory.length})
+                  {t("visit.priorFinalizedVersions").replace("{count}", String(closeout.amendmentHistory.length))}
                 </p>
                 {closeout.amendmentHistory.map((amendment) => (
                   <details
@@ -1931,19 +2048,21 @@ function VisitCloseout({
                     className="rounded-md border border-border bg-background p-3 text-sm"
                   >
                     <summary className="cursor-pointer font-medium">
-                      Revision {amendment.priorRevision} · {amendment.reason}
+                      {t("visit.revision")} {amendment.priorRevision} · {amendment.reason}
                     </summary>
                     <div className="mt-3 space-y-2 text-muted-foreground">
                       <p>
-                        Finalized by {amendment.clinicalFinalizerName} on{" "}
+                        {t("visit.finalizedBy")} {amendment.clinicalFinalizerName} ·{" "}
                         {formatAppointmentTime(
                           amendment.clinicalFinalizedAt,
                           data.practice.timezone,
+                          locale,
                         )}
-                        . Correction opened by {amendment.reopenedByName} on{" "}
+                        · {t("visit.correctionOpenedBy")} {amendment.reopenedByName} ·{" "}
                         {formatAppointmentTime(
                           amendment.reopenedAt,
                           data.practice.timezone,
+                          locale,
                         )}
                         .
                       </p>
@@ -1954,7 +2073,7 @@ function VisitCloseout({
                       {amendment.diagnosisSummary ? (
                         <p className="whitespace-pre-wrap">
                           <span className="font-medium text-foreground">
-                            {"Visit summary: "}
+                            {t("visit.visitSummary")}{" "}
                           </span>
                           {amendment.diagnosisSummary}
                         </p>
@@ -1962,14 +2081,14 @@ function VisitCloseout({
                       {amendment.warningSigns ? (
                         <p className="whitespace-pre-wrap">
                           <span className="font-medium text-foreground">
-                            {"Warning signs: "}
+                            {t("visit.warningSigns")}: {" "}
                           </span>
                           {amendment.warningSigns}
                         </p>
                       ) : null}
                       <p>
                         <span className="font-medium text-foreground">
-                          {"Follow-up: "}
+                          {t("visit.followUp")}: {" "}
                         </span>
                         {amendment.followUpDisposition === "scheduled" &&
                         amendment.followUpScheduledAt
@@ -1979,8 +2098,8 @@ function VisitCloseout({
                             )
                           : amendment.followUpDisposition === "needed" &&
                               amendment.followUpDueDate
-                            ? `Needed by ${formatClinicDate(amendment.followUpDueDate)} · Assigned to ${amendment.followUpAssigneeName ?? "clinic team"}`
-                            : "None needed"}
+                            ? `${t("visit.neededBy")} ${formatClinicDate(amendment.followUpDueDate, locale)} · ${t("visit.assignedTo")} ${amendment.followUpAssigneeName ?? t("visit.clinicTeam")}`
+                            : t("visit.noneNeeded")}
                         {amendment.followUpNotes
                           ? ` · ${amendment.followUpNotes}`
                           : ""}
@@ -2002,7 +2121,7 @@ function VisitCloseout({
                         onClick={() => downloadHistoricalDischarge(amendment)}
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        Download revision {amendment.priorRevision}
+                        {t("visit.downloadRevision")} {amendment.priorRevision}
                       </Button>
                     </div>
                   </details>
@@ -2016,13 +2135,13 @@ function VisitCloseout({
                   className="text-sm font-medium"
                   htmlFor="closeout-amendment-reason"
                 >
-                  Create an attributed correction
+                  {t("visit.createAttributedCorrection")}
                 </label>
                 <Input
                   id="closeout-amendment-reason"
                   value={amendmentReason}
                   onChange={(event) => setAmendmentReason(event.target.value)}
-                  placeholder="Reason this signed handoff needs correction"
+                  placeholder={t("visit.correctionReasonPlaceholder")}
                 />
                 <div className="flex justify-end">
                   <Button
@@ -2045,7 +2164,7 @@ function VisitCloseout({
                     ) : (
                       <Save className="mr-2 h-4 w-4" />
                     )}
-                    Start amendment
+                    {t("visit.startAmendment")}
                   </Button>
                 </div>
               </div>
@@ -2128,11 +2247,10 @@ function VisitCloseout({
         {isCompleted ? (
           <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm">
             <p className="font-medium">
-              Visit completed with a durable closeout.
+              {t("visit.visitCompleted")}
             </p>
             <p className="mt-1 text-muted-foreground">
-              Billing: {closeout?.chargeDisposition?.replace("_", " ")} · Owner
-              handoff: {closeout?.handoffMethod}
+              {t("visit.billingSummary")} {chargeDispositionLabel(closeout?.chargeDisposition, t)} · {t("visit.ownerHandoffSummary")} {handoffMethodLabel(closeout?.handoffMethod, t)}
             </p>
           </div>
         ) : null}
@@ -2192,6 +2310,7 @@ type ClinicalCloseoutFormProps = {
     email: string;
     role: string;
   }>;
+  locale: string;
   timeZone?: string | null;
   isAmendment: boolean;
   saveState: "idle" | "unsaved" | "saving" | "saved" | "error" | "conflict";
@@ -2207,34 +2326,35 @@ type ClinicalCloseoutFormProps = {
 };
 
 function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
+  const t = useTranslations();
   const finalizationIssues = [
     props.soapDraft
-      ? "Finalize or discard the SOAP draft before signing clinical closeout."
+      ? t("visit.finalizeOrDiscardSoap")
       : null,
     !props.dischargeInstructions.trim() && !props.noInstructionsReason.trim()
-      ? "Enter home-care instructions or a clinical reason why none are needed."
+      ? t("visit.enterHomeCareOrReason")
       : null,
     !props.prescriptionDisposition
-      ? "Confirm the prescription disposition."
+      ? t("visit.confirmPrescriptionDisposition")
       : props.linkedMedicationCount > 0 &&
           props.prescriptionDisposition !== "prescribed"
-        ? "Linked visit prescriptions must be included in the handoff."
+        ? t("visit.linkedPrescriptionsHandoff")
         : props.linkedMedicationCount === 0 &&
             props.prescriptionDisposition !== "not_needed"
-          ? "No active visit prescription is linked."
+          ? t("visit.noActivePrescription")
           : null,
     !props.followUpDisposition
-      ? "Choose a follow-up disposition."
+      ? t("visit.chooseFollowUpDisposition")
       : props.followUpDisposition === "scheduled" &&
           !props.followUpAppointmentId
-        ? "Choose the scheduled follow-up appointment."
+        ? t("visit.chooseScheduledAppointment")
         : props.followUpDisposition === "needed" && !props.followUpDueDate
-          ? "Set the date by which follow-up is needed."
+          ? t("visit.setFollowUpDate")
           : props.followUpDisposition === "needed" && !props.followUpAssignedTo
-            ? "Assign a staff member to own the follow-up."
+            ? t("visit.assignFollowUpOwner")
             : null,
     props.linkedSoapCount === 0 && !props.documentationExceptionReason.trim()
-      ? "Link a SOAP note or document why one is not required."
+      ? t("visit.linkSoapOrReason")
       : null,
   ].filter((issue): issue is string => Boolean(issue));
   const canFinalizeNow =
@@ -2244,36 +2364,36 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
     finalizationIssues.length === 0 &&
     !props.isSaving;
   const saveStatus = !props.isOnline
-    ? "Offline — changes are only on this device until you reconnect."
+    ? t("visit.changesOnlyDevice")
     : props.saveState === "saving"
-      ? "Saving closeout draft to the server..."
+      ? t("visit.savingCloseout")
       : props.saveState === "saved"
-        ? `Saved to the server${
+        ? `${t("visit.savedToServer")}${
             props.lastSavedAt
-              ? ` at ${props.lastSavedAt.toLocaleTimeString([], {
+               ? ` at ${props.lastSavedAt.toLocaleTimeString(props.locale, {
                   hour: "numeric",
                   minute: "2-digit",
                 })}`
               : ""
           }.`
         : props.saveState === "error"
-          ? "Draft save failed. Your changes remain on this device; retry before leaving."
+          ? t("visit.closeoutSaveFailed")
           : props.saveState === "conflict"
-            ? "Another session changed this closeout. Your local version remains visible."
+            ? t("visit.closeoutConflict")
             : props.saveState === "unsaved"
-              ? "Changes have not reached the server yet."
-              : "Server draft recovery is ready.";
+              ? t("visit.changesNotSaved")
+              : t("visit.serverDraftRecoveryReady");
 
   return (
     <div className="space-y-4 rounded-md border border-border p-4">
       <div>
         <h3 className="font-medium">
-          1. Clinical owner handoff{props.isAmendment ? " amendment" : ""}
+          1. {t("visit.clinicalOwnerHandoff")}{props.isAmendment ? ` ${t("visit.amendment")}` : ""}
         </h3>
         <p className="text-sm text-muted-foreground">
           {props.isAmendment
-            ? "The current signed discharge remains active until this attributed replacement is finalized."
-            : "Finalized content becomes the durable discharge record and cannot be silently edited."}
+            ? t("visit.currentSignedDischargeActive")
+            : t("visit.finalizedContentDurable")}
         </p>
       </div>
       <div
@@ -2291,10 +2411,9 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
       </div>
       {props.saveState === "conflict" ? (
         <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 p-3">
-          <p className="text-sm font-medium">Choose which closeout to keep</p>
+          <p className="text-sm font-medium">{t("visit.chooseCloseoutToKeep")}</p>
           <p className="text-xs text-muted-foreground">
-            Use the newest server version, or deliberately replace it with the
-            local fields still visible below. Nothing is overwritten silently.
+            {t("visit.closeoutConflictDescription")}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -2303,18 +2422,18 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
               variant="outline"
               onClick={props.onUseServer}
             >
-              Use server version
+              {t("visit.useServerVersion")}
             </Button>
             <Button type="button" size="sm" onClick={props.onOverwrite}>
-              Overwrite with local version
+              {t("visit.overwriteServerVersion")}
             </Button>
           </div>
         </div>
       ) : null}
       <div>
         <label className="text-sm font-medium" htmlFor="closeout-diagnosis">
-          Diagnosis or visit summary{" "}
-          <span className="text-muted-foreground">(optional)</span>
+          {t("visit.diagnosis")} {" "}
+          <span className="text-muted-foreground">{t("visit.optional")}</span>
         </label>
         <Textarea
           id="closeout-diagnosis"
@@ -2326,7 +2445,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
       </div>
       <div>
         <label className="text-sm font-medium" htmlFor="closeout-instructions">
-          Home-care instructions <span aria-hidden="true">*</span>
+          {t("visit.homeCareInstructions")} <span aria-hidden="true">*</span>
         </label>
         <Textarea
           id="closeout-instructions"
@@ -2337,7 +2456,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
           }}
           rows={5}
           className="mt-1"
-          placeholder="Medication administration, diet, activity, wound care, or monitoring instructions reviewed with the owner."
+          placeholder={t("visit.homeCarePlaceholder")}
         />
       </div>
       <div>
@@ -2345,7 +2464,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
           className="text-sm font-medium"
           htmlFor="closeout-no-instructions"
         >
-          If none, clinical reason <span aria-hidden="true">*</span>
+          {t("visit.noInstructionsReason")} <span aria-hidden="true">*</span>
         </label>
         <Input
           id="closeout-no-instructions"
@@ -2355,13 +2474,13 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
             if (event.target.value) props.setDischargeInstructions("");
           }}
           className="mt-1"
-          placeholder="Example: No additional home care needed for this technician visit"
+          placeholder={t("visit.noInstructionsPlaceholder")}
         />
       </div>
       <div>
         <label className="text-sm font-medium" htmlFor="closeout-warning-signs">
-          Warning signs and when to call{" "}
-          <span className="text-muted-foreground">(optional)</span>
+          {t("visit.warningSignsField")} {" "}
+          <span className="text-muted-foreground">{t("visit.optional")}</span>
         </label>
         <Textarea
           id="closeout-warning-signs"
@@ -2377,7 +2496,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
             className="text-sm font-medium"
             htmlFor="closeout-prescriptions"
           >
-            Prescriptions <span aria-hidden="true">*</span>
+            {t("visit.prescriptions")} <span aria-hidden="true">*</span>
           </label>
           <select
             id="closeout-prescriptions"
@@ -2389,24 +2508,24 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
             }
             className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Choose...</option>
+            <option value="">{t("visit.choose")}</option>
             <option
               value="prescribed"
               disabled={props.linkedMedicationCount === 0}
             >
-              Prescription created for this visit
+              {t("visit.prescriptionCreated")}
             </option>
             <option
               value="not_needed"
               disabled={props.linkedMedicationCount > 0}
             >
-              No prescription needed
+              {t("visit.noPrescriptionNeeded")}
             </option>
           </select>
         </div>
         <div>
           <label className="text-sm font-medium" htmlFor="closeout-follow-up">
-            Follow-up <span aria-hidden="true">*</span>
+            {t("visit.followUp")} <span aria-hidden="true">*</span>
           </label>
           <select
             id="closeout-follow-up"
@@ -2423,10 +2542,10 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
             }}
             className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Choose...</option>
-            <option value="none">No follow-up needed</option>
-            <option value="needed">Needed — not scheduled yet</option>
-            <option value="scheduled">Already scheduled</option>
+            <option value="">{t("visit.choose")}</option>
+            <option value="none">{t("visit.noFollowUp")}</option>
+            <option value="needed">{t("visit.followUpNeededNotScheduled")}</option>
+            <option value="scheduled">{t("visit.alreadyScheduled")}</option>
           </select>
         </div>
       </div>
@@ -2436,7 +2555,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
             className="text-sm font-medium"
             htmlFor="closeout-follow-up-appointment"
           >
-            Scheduled appointment
+            {t("visit.scheduledFollowUp")}
           </label>
           <select
             id="closeout-follow-up-appointment"
@@ -2446,17 +2565,16 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
             }
             className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Choose...</option>
+            <option value="">{t("visit.choose")}</option>
             {props.followUpAppointments.map((candidate) => (
               <option key={candidate.id} value={candidate.id}>
-                {formatAppointmentTime(candidate.startTime, props.timeZone)}
+                {formatAppointmentTime(candidate.startTime, props.timeZone, props.locale)}
               </option>
             ))}
           </select>
           {props.followUpAppointments.length === 0 ? (
             <p className="mt-1 text-xs text-muted-foreground">
-              No future appointment is scheduled. Save this draft, create the
-              follow-up from the schedule, then return to finalize.
+              {t("visit.noFutureAppointment")}
             </p>
           ) : null}
         </div>
@@ -2468,7 +2586,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
               className="text-sm font-medium"
               htmlFor="closeout-follow-up-due-date"
             >
-              Follow-up due date <span aria-hidden="true">*</span>
+              {t("visit.followUpDueDate")} <span aria-hidden="true">*</span>
             </label>
             <Input
               id="closeout-follow-up-due-date"
@@ -2483,7 +2601,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
               className="text-sm font-medium"
               htmlFor="closeout-follow-up-assignee"
             >
-              Accountable staff owner <span aria-hidden="true">*</span>
+              {t("visit.followUpOwner")} <span aria-hidden="true">*</span>
             </label>
             <select
               id="closeout-follow-up-assignee"
@@ -2493,11 +2611,11 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
               }
               className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">Choose...</option>
+              <option value="">{t("visit.choose")}</option>
               {props.followUpAssignees.map((assignee) => (
                 <option key={assignee.id} value={assignee.id}>
                   {assignee.name || assignee.email} ·{" "}
-                  {assignee.role.replace("_", " ")}
+                  {roleLabel(assignee.role, t)}
                 </option>
               ))}
             </select>
@@ -2510,8 +2628,8 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
             className="text-sm font-medium"
             htmlFor="closeout-follow-up-notes"
           >
-            Follow-up notes{" "}
-            <span className="text-muted-foreground">(optional)</span>
+            {t("visit.followUpNotes")} {" "}
+            <span className="text-muted-foreground">{t("visit.optional")}</span>
           </label>
           <Textarea
             id="closeout-follow-up-notes"
@@ -2524,58 +2642,53 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
       ) : null}
       {props.soapDraft ? (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
-          <p className="text-sm font-medium">SOAP draft in progress</p>
+          <p className="text-sm font-medium">{t("visit.soapDraftInProgress")}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Revision {props.soapDraft.revision} is not part of the signed chart.
-            Finalize or discard it before clinical closeout; a documentation
-            exception cannot leave an unfinished draft behind.
+            {t("visit.soapDraftDescription")} ({t("visit.revision")} {props.soapDraft.revision}).
           </p>
           <Button className="mt-3" size="sm" variant="outline" asChild>
             <a href={props.soapDraftHref}>
               <FileText className="mr-2 h-4 w-4" />
-              Resume SOAP draft
+              {t("visit.resumeSoapDraft")}
             </a>
           </Button>
         </div>
       ) : props.missingSoapReplacement ? (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
-          <p className="text-sm font-medium">The signed SOAP was voided</p>
+          <p className="text-sm font-medium">{t("visit.signedSoapVoided")}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Create an attributed replacement to keep current clinical
-            documentation linked to this visit. If a replacement is not
-            clinically appropriate—for example, the note belonged to another
-            encounter—document the reason below.
+            {t("visit.signedSoapVoidedDescription")}
           </p>
           <Button className="mt-3" size="sm" asChild>
             <Link href={props.soapReplacementHref ?? props.soapDraftHref}>
               <FileText className="mr-2 h-4 w-4" />
-              Create signed replacement
+              {t("visit.createReplacementSoap")}
             </Link>
           </Button>
           <Input
-            aria-label="SOAP documentation exception"
+            aria-label={t("visit.documentationException")}
             value={props.documentationExceptionReason}
             onChange={(event) =>
               props.setDocumentationExceptionReason(event.target.value)
             }
             className="mt-3"
-            placeholder="Why a replacement SOAP is not required"
+            placeholder={t("visit.replacementReasonPlaceholder")}
           />
         </div>
       ) : props.linkedSoapCount === 0 ? (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
-          <p className="text-sm font-medium">No SOAP note is linked</p>
+          <p className="text-sm font-medium">{t("visit.noSoapLinked")}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Link a SOAP note, or document the bounded exception below.
+            {t("visit.noSoapLinkedDescription")}
           </p>
           <Input
-            aria-label="SOAP documentation exception"
+            aria-label={t("visit.documentationException")}
             value={props.documentationExceptionReason}
             onChange={(event) =>
               props.setDocumentationExceptionReason(event.target.value)
             }
             className="mt-2"
-            placeholder="Why a SOAP note is not required"
+            placeholder={t("visit.soapNotRequiredPlaceholder")}
           />
         </div>
       ) : null}
@@ -2584,7 +2697,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
           className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3"
           role="status"
         >
-          <p className="text-sm font-medium">Before finalizing</p>
+          <p className="text-sm font-medium">{t("visit.beforeFinalizing")}</p>
           <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
             {finalizationIssues.map((issue) => (
               <li key={issue}>{issue}</li>
@@ -2601,7 +2714,7 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
           onClick={props.onSave}
         >
           <Save className="mr-2 h-4 w-4" />
-          Save draft
+          {t("visit.saveDraft")}
         </Button>
         <Button disabled={!canFinalizeNow} onClick={props.onFinalize}>
           {props.isFinalizing ? (
@@ -2609,12 +2722,12 @@ function ClinicalCloseoutForm(props: ClinicalCloseoutFormProps) {
           ) : (
             <ClipboardCheck className="mr-2 h-4 w-4" />
           )}
-          Finalize clinical handoff
+          {t("visit.finalizeHandoff")}
         </Button>
       </div>
       {!props.canFinalize ? (
         <p className="text-right text-xs text-muted-foreground">
-          A veterinarian must finalize doctor-required visit instructions.
+          {t("visit.vetRequiredForCloseout")}
         </p>
       ) : null}
     </div>
@@ -2662,6 +2775,8 @@ function FollowUpResolutionPanel({
   isPending: boolean;
   onResolve: () => void;
 }) {
+  const t = useTranslations();
+  const locale = useLanguage() === "es" ? "es-CR" : "en-US";
   const ready = Boolean(
     selectedResolution &&
     (selectedResolution === "scheduled"
@@ -2672,26 +2787,25 @@ function FollowUpResolutionPanel({
   return (
     <div className="space-y-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-4">
       <div>
-        <h3 className="font-medium">Follow-up obligation</h3>
+        <h3 className="font-medium">{t("visit.followUpObligation")}</h3>
         <p className="text-sm text-muted-foreground">
-          Due {dueDate ? formatClinicDate(dueDate) : "date unavailable"} ·
-          Assigned to {assigneeName ?? "clinic team"}. This queue state is
-          audited separately from the signed discharge.
+          {t("visit.due")} {dueDate ? formatClinicDate(dueDate, locale) : t("visit.dateUnavailable")} · {t("visit.assignedTo")} {assigneeName ?? t("visit.clinicTeam")}. {t("visit.followUpAuditDescription")}
         </p>
       </div>
       {resolvedAt && resolution ? (
         <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm">
           <p className="font-medium">
-            Resolved as {resolution.replace("_", " ")}
+            {t("visit.resolvedAs")} {resolution === "scheduled" ? t("visit.scheduled") : resolution === "completed" ? t("visit.completed") : t("visit.clinicallyNotNeeded")}
           </p>
           <p className="mt-1 text-muted-foreground">
-            {resolverName ?? "Clinic staff"} ·{" "}
-            {formatAppointmentTime(resolvedAt, timeZone)}
+            {resolverName ?? t("visit.clinicStaff")} ·{" "}
+            {formatAppointmentTime(resolvedAt, timeZone, locale)}
             {resolutionScheduledAt
-              ? ` · Scheduled ${formatAppointmentTime(
+              ? ` · ${t("visit.scheduledAt")} ${formatAppointmentTime(
                   resolutionScheduledAt,
                   timeZone,
-                )}`
+                  locale,
+                  )}`
               : ""}
           </p>
           {resolutionNotes ? (
@@ -2706,7 +2820,7 @@ function FollowUpResolutionPanel({
                 className="text-sm font-medium"
                 htmlFor="closeout-follow-up-resolution"
               >
-                Resolution
+                {t("visit.followUpResolution")}
               </label>
               <select
                 id="closeout-follow-up-resolution"
@@ -2718,12 +2832,12 @@ function FollowUpResolutionPanel({
                 }}
                 className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">Choose...</option>
-                <option value="scheduled">Follow-up scheduled</option>
+                <option value="">{t("visit.choose")}</option>
+                <option value="scheduled">{t("visit.followUpScheduled")}</option>
                 <option value="completed">
-                  Follow-up completed another way
+                  {t("visit.followUpCompletedAnotherWay")}
                 </option>
-                <option value="not_needed">Clinically no longer needed</option>
+                <option value="not_needed">{t("visit.clinicallyNotNeeded")}</option>
               </select>
             </div>
             {selectedResolution === "scheduled" ? (
@@ -2732,7 +2846,7 @@ function FollowUpResolutionPanel({
                   className="text-sm font-medium"
                   htmlFor="closeout-resolution-appointment"
                 >
-                  Scheduled appointment
+                  {t("visit.scheduledFollowUp")}
                 </label>
                 <select
                   id="closeout-resolution-appointment"
@@ -2742,10 +2856,10 @@ function FollowUpResolutionPanel({
                   }
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="">Choose...</option>
+                  <option value="">{t("visit.choose")}</option>
                   {followUpAppointments.map((appointment) => (
                     <option key={appointment.id} value={appointment.id}>
-                      {formatAppointmentTime(appointment.startTime, timeZone)}
+                      {formatAppointmentTime(appointment.startTime, timeZone, locale)}
                     </option>
                   ))}
                 </select>
@@ -2758,7 +2872,7 @@ function FollowUpResolutionPanel({
                 className="text-sm font-medium"
                 htmlFor="closeout-resolution-notes"
               >
-                Resolution notes
+                {t("visit.resolutionNotes")}
               </label>
               <Textarea
                 id="closeout-resolution-notes"
@@ -2766,7 +2880,7 @@ function FollowUpResolutionPanel({
                 onChange={(event) => setNotes(event.target.value)}
                 rows={2}
                 className="mt-1"
-                placeholder="Document the owner contact or clinical reason."
+                placeholder={t("visit.resolutionNotesPlaceholder")}
               />
             </div>
           ) : null}
@@ -2777,13 +2891,13 @@ function FollowUpResolutionPanel({
               ) : (
                 <Check className="mr-2 h-4 w-4" />
               )}
-              Resolve follow-up
+              {t("visit.resolveFollowUp")}
             </Button>
           </div>
         </>
       ) : (
         <p className="text-sm text-muted-foreground">
-          A clinic staff member must resolve this obligation from the visit.
+          {t("visit.staffMustResolveFollowUp")}
         </p>
       )}
     </div>
@@ -2827,6 +2941,7 @@ function OperationalCloseoutForm({
   onDownload: () => void;
   onComplete: () => void;
 }) {
+  const t = useTranslations();
   const paidReady = Boolean(
     activeInvoice &&
     activeInvoice.itemCount > 0 &&
@@ -2854,10 +2969,9 @@ function OperationalCloseoutForm({
   return (
     <div className="space-y-4 rounded-md border border-border p-4">
       <div>
-        <h3 className="font-medium">2. Billing and owner handoff</h3>
+        <h3 className="font-medium">2. {t("visit.billingAndHandoff")}</h3>
         <p className="text-sm text-muted-foreground">
-          Resolve payment or explicitly place the invoice in accounts receivable
-          before completing the visit.
+          {t("visit.billingHandoffDescription")}
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -2866,7 +2980,7 @@ function OperationalCloseoutForm({
             className="text-sm font-medium"
             htmlFor="closeout-charge-state"
           >
-            Billing disposition
+            {t("visit.billingDisposition")}
           </label>
           <select
             id="closeout-charge-state"
@@ -2878,24 +2992,24 @@ function OperationalCloseoutForm({
             }
             className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Choose...</option>
+            <option value="">{t("visit.choose")}</option>
             <option value="paid" disabled={!paidReady}>
-              Invoice fully paid{paidReady ? "" : " — not ready"}
+              {t("visit.invoiceFullyPaid")}{paidReady ? "" : ` — ${t("visit.notReady")}`}
             </option>
             <option
               value="accounts_receivable"
               disabled={!accountsReceivableReady}
             >
-              Pay later — present with due date
+              {t("visit.payLaterDueDate")}
             </option>
             <option value="no_charge" disabled={!noChargeReady}>
-              No charge for this visit{noChargeReady ? "" : " — invoice exists"}
+              {t("visit.noChargeForVisit")}{noChargeReady ? "" : ` — ${t("visit.invoiceExists")}`}
             </option>
           </select>
         </div>
         <div>
           <label className="text-sm font-medium" htmlFor="closeout-handoff">
-            Owner handoff
+            {t("visit.ownerHandoff")}
           </label>
           <select
             id="closeout-handoff"
@@ -2905,17 +3019,17 @@ function OperationalCloseoutForm({
             }
             className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Choose...</option>
-            <option value="print">Printed or downloaded for owner</option>
-            <option value="verbal">Reviewed verbally with owner</option>
-            <option value="declined">Owner declined instructions</option>
+            <option value="">{t("visit.choose")}</option>
+            <option value="print">{t("visit.printedDownloaded")}</option>
+            <option value="verbal">{t("visit.reviewedVerbally")}</option>
+            <option value="declined">{t("visit.ownerDeclined")}</option>
           </select>
         </div>
       </div>
       {chargeDisposition === "no_charge" ? (
         <div>
           <label className="text-sm font-medium" htmlFor="closeout-no-charge">
-            No-charge reason
+            {t("visit.noChargeReason")}
           </label>
           <Input
             id="closeout-no-charge"
@@ -2931,7 +3045,7 @@ function OperationalCloseoutForm({
             className="text-sm font-medium"
             htmlFor="closeout-invoice-due-date"
           >
-            Payment due date
+            {t("visit.paymentDueDate")}
           </label>
           <Input
             id="closeout-invoice-due-date"
@@ -2942,44 +3056,39 @@ function OperationalCloseoutForm({
             className="mt-1 max-w-xs"
           />
           <p className="mt-2 text-xs text-muted-foreground">
-            Completing the visit will present this invoice, preserve its open
-            balance, and place it in accounts receivable. This does not charge a
-            card or send an email automatically.
+            {t("visit.accountsReceivableDescription")}
           </p>
         </div>
       ) : null}
       {activeInvoice ? (
         <div className="rounded-md border border-border bg-muted/20 p-3 text-sm">
-          Invoice is <strong>{activeInvoice.status}</strong>, has{" "}
-          {activeInvoice.itemCount} line
-          {activeInvoice.itemCount === 1 ? "" : "s"}, and a balance of{" "}
+            {t("visit.invoiceIs")} <strong>{activeInvoice.status}</strong>, {t("visit.has")} {activeInvoice.itemCount} {t("visit.invoiceLines")}, {t("visit.balanceOf")}{" "}
           {formatCurrency(activeInvoice.balanceDueCents / 100)}.{" "}
           {paidReady
-            ? "Ready for paid checkout. "
+            ? `${t("visit.readyForPaidCheckout")} `
             : accountsReceivableReady
-              ? "Ready for accounts-receivable checkout. "
-              : "Save charges and choose a valid due date before checkout. "}
+              ? `${t("visit.readyForReceivableCheckout")} `
+              : `${t("visit.saveChargesValidDueDate")} `}
           <Button variant="link" size="sm" asChild className="h-auto p-0">
             <Link href={`/billing?expand=${activeInvoice.id}`}>
-              Open billing
+              {t("visit.openBilling")}
             </Link>
           </Button>
         </div>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
           <p>
-            No active invoice exists. Choose no charge with a reason, or save
-            visit charges first.
+            {t("visit.noActiveInvoiceExists")}
           </p>
           <Button variant="outline" size="sm" asChild>
-            <a href="#charge-capture">Capture visit charges</a>
+            <a href="#charge-capture">{t("visit.captureVisitCharges")}</a>
           </Button>
         </div>
       )}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" onClick={onDownload}>
           <Download className="mr-2 h-4 w-4" />
-          Download discharge
+          {t("visit.downloadDischarge")}
         </Button>
         <Button disabled={!canComplete} onClick={onComplete}>
           {isPending ? (
@@ -2987,7 +3096,7 @@ function OperationalCloseoutForm({
           ) : (
             <Check className="mr-2 h-4 w-4" />
           )}
-          Complete visit
+          {t("visit.completeVisit")}
         </Button>
       </div>
     </div>
@@ -3012,35 +3121,35 @@ function EncounterInvoices({
   }>;
   canManage: boolean;
 }) {
+  const t = useTranslations();
   const fmt = useCurrencyFormatterWithConfig();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invoice state</CardTitle>
+        <CardTitle>{t("visit.invoiceState")}</CardTitle>
         <CardDescription>
-          Charges and payment status linked directly to this visit.
+          {t("visit.invoiceDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {invoicesQuery.isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading visit invoices...
+            {t("visit.loadingInvoices")}
           </div>
         ) : invoicesQuery.error || !invoicesQuery.data ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Unable to load invoice state. Do not create duplicate charges until
-            this is resolved.
+            {t("visit.invoiceLoadError")}
           </div>
         ) : visitInvoices.length === 0 ? (
           <EmptyState
             icon={Receipt}
-            title="No active invoice for this visit"
+            title={t("visit.noActiveInvoiceForVisit")}
             description={
               canManage
-                ? "Add all known services and products in Charge capture to create a visit-linked draft."
-                : "An admin or front desk teammate can create this visit's charges."
+                ? t("visit.addKnownChargesDescription")
+                : t("visit.adminCanCreateCharges")
             }
             className="p-8"
           />
@@ -3061,23 +3170,23 @@ function EncounterInvoices({
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium">
-                        {invoice.isEstimate ? "Estimate" : "Invoice"}
+                        {invoice.isEstimate ? t("visit.estimate") : t("visit.invoice")}
                       </p>
                       <Badge
                         variant={
                           invoice.status === "paid" ? "success" : "outline"
                         }
                       >
-                        {invoice.status}
+                        {invoiceStatusLabel(invoice.status, t)}
                       </Badge>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Total {fmt(invoice.total)} · Balance {fmt(balance)}
+                      {t("visit.total")} {fmt(invoice.total)} · {t("visit.balance")} {fmt(balance)}
                     </p>
                   </div>
                   <Button size="sm" variant="outline" asChild>
                     <Link href={`/billing?expand=${invoice.id}`}>
-                      Open invoice
+                      {t("visit.openInvoice")}
                     </Link>
                   </Button>
                 </div>
@@ -3085,7 +3194,7 @@ function EncounterInvoices({
             })}
           </div>
         )}
-        <span className="sr-only">Appointment {appointmentId}</span>
+         <span className="sr-only">{t("visit.appointmentReference")} {appointmentId}</span>
       </CardContent>
     </Card>
   );
@@ -3114,6 +3223,7 @@ function VisitWorkReconciliation({
   canCorrect: boolean;
   canVoid: boolean;
 }) {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const fmt = useCurrencyFormatterWithConfig();
   const reconciliation = trpc.encounters.getVisitReconciliation.useQuery({
@@ -3125,14 +3235,14 @@ function VisitWorkReconciliation({
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const resolve = trpc.encounters.resolveVisitWork.useMutation({
     onSuccess: () => {
-      toast.success("Performed item reconciled");
+      toast.success(t("visit.performedItemReconciled"));
       utils.encounters.getVisitReconciliation.invalidate({ appointmentId });
     },
     onError: (error) => toast.error(error.message),
   });
   const reopen = trpc.encounters.reopenVisitWork.useMutation({
     onSuccess: () => {
-      toast.success("Reconciliation reopened for correction");
+      toast.success(t("visit.reconciliationReopened"));
       utils.encounters.getVisitReconciliation.invalidate({ appointmentId });
       utils.billing.listInvoices.invalidate({
         appointmentId,
@@ -3146,33 +3256,29 @@ function VisitWorkReconciliation({
   return (
     <Card id="visit-work-reconciliation" className="scroll-mt-4">
       <CardHeader>
-        <CardTitle>Performed work reconciliation</CardTitle>
+        <CardTitle>{t("visit.performedWorkReconciliation")}</CardTitle>
         <CardDescription>
-          Every vaccination, lab, procedure, and visit prescription must be
-          linked to a confirmed invoice line or given an attributable no-charge
-          or void/correction reason before checkout.
+          {t("visit.reconciliationDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {reconciliation.isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Checking performed work...
+            {t("visit.reconciliationLoading")}
           </div>
         ) : reconciliation.error || !reconciliation.data ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Reconciliation state is unavailable. Checkout remains blocked until
-            it can be verified.
+            {t("visit.reconciliationLoadError")}
           </div>
         ) : reconciliation.data.items.length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-            No visit-owned vaccinations, labs, procedures, or prescriptions have
-            been recorded.
+            {t("visit.noWorkItems")}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2 text-sm">
-              <span>Items requiring attention</span>
+              <span>{t("visit.itemsRequiringAttention")}</span>
               <Badge
                 variant={
                   reconciliation.data.unresolvedCount > 0
@@ -3203,7 +3309,7 @@ function VisitWorkReconciliation({
                     <div>
                       <p className="font-medium">{item.sourceLabel}</p>
                       <p className="text-xs capitalize text-muted-foreground">
-                        {item.sourceType}
+                         {visitSourceTypeLabel(item.sourceType, t)}
                       </p>
                     </div>
                     <Badge
@@ -3212,8 +3318,14 @@ function VisitWorkReconciliation({
                       }
                     >
                       {staleCharge
-                        ? "charge removed"
-                        : item.status.replace("_", " ")}
+                        ? t("visit.chargeRemoved")
+                        : item.status === "charged"
+                          ? t("visit.charged")
+                          : item.status === "no_charge"
+                            ? t("visit.noChargeShort")
+                            : item.status === "voided"
+                              ? t("visit.voided")
+                              : t("visit.unresolved")}
                     </Badge>
                   </div>
 
@@ -3221,15 +3333,15 @@ function VisitWorkReconciliation({
                     <div className="mt-4 flex flex-col gap-3">
                       <p className="text-xs text-muted-foreground">
                         {suggestedCatalog
-                          ? `Suggested catalog match: ${suggestedCatalog}. Add and save it in Charge capture, then link the saved invoice line here.`
-                          : "Add and save the appropriate service or product in Charge capture, then link the saved invoice line here. Doctor Pet never bills a suggestion automatically."}
+                          ? `${t("visit.suggestedCatalogMatch")} ${suggestedCatalog}. ${t("visit.addSaveLinkCharge")}`
+                          : t("visit.addSaveLinkChargeNoSuggestion")}
                       </p>
                       {unresolved && canManage ? (
                         <>
                           <div className="flex flex-col gap-2 sm:flex-row">
                             <select
                               className="h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
-                              aria-label={`Invoice charge for ${item.sourceLabel}`}
+                              aria-label={`${t("visit.invoiceChargeFor")} ${item.sourceLabel}`}
                               value={selectedCharge}
                               disabled={resolve.isPending || reopen.isPending}
                               onChange={(event) =>
@@ -3240,12 +3352,12 @@ function VisitWorkReconciliation({
                               }
                             >
                               <option value="">
-                                Choose saved invoice line
+                                {t("visit.chooseSavedInvoiceLine")}
                               </option>
                               {reconciliation.data.invoiceItemOptions.map(
                                 (charge) => (
                                   <option key={charge.id} value={charge.id}>
-                                    {charge.description} · qty {charge.quantity}{" "}
+                                    {charge.description} · {t("visit.qty")} {charge.quantity}{" "}
                                     · {fmt(charge.total)}
                                   </option>
                                 ),
@@ -3269,15 +3381,15 @@ function VisitWorkReconciliation({
                                 })
                               }
                             >
-                              Link confirmed charge
+                              {t("visit.linkConfirmedCharge")}
                             </Button>
                           </div>
                           <div className="flex flex-col gap-2 sm:flex-row">
                             <Input
                               value={reason}
                               maxLength={500}
-                              placeholder="Reason required for no charge or void/correction"
-                              aria-label={`Reconciliation reason for ${item.sourceLabel}`}
+                              placeholder={t("visit.reconciliationReason")}
+                              aria-label={`${t("visit.reconciliationReasonLabel")} ${item.sourceLabel}`}
                               disabled={resolve.isPending || reopen.isPending}
                               onChange={(event) =>
                                 setReasons((current) => ({
@@ -3304,7 +3416,7 @@ function VisitWorkReconciliation({
                                 })
                               }
                             >
-                              No charge
+                              {t("visit.noChargeShort")}
                             </Button>
                             {canVoid ? (
                               <Button
@@ -3325,32 +3437,28 @@ function VisitWorkReconciliation({
                                   })
                                 }
                               >
-                                Void/corrected
+                                {t("visit.voidCorrected")}
                               </Button>
                             ) : null}
                           </div>
                         </>
                       ) : staleCharge ? (
                         <p className="text-sm text-destructive">
-                          The linked invoice line is no longer active. Reopen
-                          this resolution with a correction reason, fix the
-                          invoice, and link the replacement line before
-                          checkout.
+                          {t("visit.staleChargeDescription")}
                         </p>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          A clinic teammate with visit access must reconcile
-                          this item.
+                          {t("visit.teammateMustReconcile")}
                         </p>
                       )}
                     </div>
                   ) : (
                     <p className="mt-2 text-xs text-muted-foreground">
                       {item.status === "charged"
-                        ? `Linked charge: ${item.invoiceItemDescription}`
+                        ? `${t("visit.linkedCharge")} ${item.invoiceItemDescription}`
                         : item.status === "no_charge"
-                          ? `No-charge reason: ${item.noChargeReason}`
-                          : `Void/correction reason: ${item.voidReason}`}
+                          ? `${t("visit.noChargeReasonLabel")} ${item.noChargeReason}`
+                          : `${t("visit.voidReasonLabel")} ${item.voidReason}`}
                       {item.resolvedByName ? ` · ${item.resolvedByName}` : ""}
                     </p>
                   )}
@@ -3360,8 +3468,8 @@ function VisitWorkReconciliation({
                       <Input
                         value={reason}
                         maxLength={500}
-                        placeholder="Why does this reconciliation need correction?"
-                        aria-label={`Correction reason for ${item.sourceLabel}`}
+                        placeholder={t("visit.reconciliationCorrectionPlaceholder")}
+                        aria-label={`${t("visit.correctionReasonLabel")} ${item.sourceLabel}`}
                         disabled={resolve.isPending || reopen.isPending}
                         onChange={(event) =>
                           setReasons((current) => ({
@@ -3385,7 +3493,7 @@ function VisitWorkReconciliation({
                           })
                         }
                       >
-                        Reopen for correction
+                        {t("visit.reopenForCorrection")}
                       </Button>
                     </div>
                   ) : null}
@@ -3430,6 +3538,7 @@ function ChargeCapture({
     dispenseChargeDescription: string | null;
   }>;
 }) {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const isOnline = useOnlineStatus();
   const [selectedCatalogId, setSelectedCatalogId] = useState("");
@@ -3513,7 +3622,7 @@ function ChargeCapture({
       itemType: "service" as const,
       name: service.name,
       code: service.code,
-      category: ["Service", service.category].filter(Boolean).join(" · "),
+      category: [t("visit.service"), service.category].filter(Boolean).join(" · "),
       defaultPrice: service.defaultPrice,
       taxable: service.taxable,
       inventoryTracked: null as boolean | null,
@@ -3553,7 +3662,7 @@ function ChargeCapture({
         itemId: prescription.productId!,
         itemType: "product" as const,
         name: prescription.dispenseChargeDescription!,
-        category: "Visit prescription · inventory already dispensed",
+        category: `${t("visit.visitPrescription")} · ${t("visit.inventoryAlreadyDispensed")}`,
         defaultPrice: prescription.productUnitPrice!,
         taxable: prescription.productTaxable ?? true,
         inventoryTracked: true as boolean | null,
@@ -3570,8 +3679,8 @@ function ChargeCapture({
         itemType: "product" as const,
         name: product.name,
         category: product.inventoryTracked
-          ? `Product · ${product.stockQuantity} in stock`
-          : "Product · stock not tracked",
+          ? `${t("visit.product")} · ${product.stockQuantity} ${t("visit.inStock")}`
+          : `${t("visit.product")} · ${t("visit.stockNotTracked")}`,
         defaultPrice: product.unitPrice,
         taxable: product.taxable,
         inventoryTracked: product.inventoryTracked,
@@ -3581,7 +3690,7 @@ function ChargeCapture({
         sourceDispenseChargeId: undefined as string | undefined,
       }));
     return [...prescriptionCharges, ...services, ...products];
-  }, [linkedPrescriptions, productsQuery.data, servicesQuery.data]);
+  }, [linkedPrescriptions, productsQuery.data, servicesQuery.data, t]);
 
   const selected = catalog.find((entry) => entry.id === selectedCatalogId);
   const readyVisitPrescriptionCharges = catalog.filter(
@@ -3646,7 +3755,7 @@ function ChargeCapture({
 
   const createInvoice = trpc.billing.createInvoice.useMutation({
     onSuccess: () => {
-      toast.success("Visit charges saved as a draft invoice");
+      toast.success(t("visit.visitChargesSaved"));
       setItems([]);
       lastSavedItemsFingerprintRef.current = chargeItemsFingerprint([]);
       setSelectedCatalogId("");
@@ -3662,7 +3771,7 @@ function ChargeCapture({
   });
   const updateInvoiceItems = trpc.billing.updateInvoiceItems.useMutation({
     onSuccess: () => {
-      toast.success("Visit invoice charges updated");
+      toast.success(t("visit.visitChargesUpdated"));
       lastSavedItemsFingerprintRef.current = chargeItemsFingerprint(items);
       utils.billing.listInvoices.invalidate({
         appointmentId,
@@ -3681,7 +3790,7 @@ function ChargeCapture({
     chargeItemsFingerprint(items) !== lastSavedItemsFingerprintRef.current;
   useUnsavedChangesGuard(
     hasUnsavedCharges,
-    "Visit charges have not been saved on the server. Leave and lose these changes?",
+    t("visit.unsavedChargesLeaveConfirm"),
   );
 
   function addCatalogItem(
@@ -3763,81 +3872,72 @@ function ChargeCapture({
   return (
     <Card className="h-fit lg:sticky lg:top-4">
       <CardHeader>
-        <CardTitle>Charge capture</CardTitle>
+        <CardTitle>{t("visit.chargeCapture")}</CardTitle>
         <CardDescription>
           {activeInvoiceIsDraft
-            ? "Correct or add services and products before this invoice is sent."
-            : "Add the services and products performed or dispensed during this visit."}
+            ? t("visit.correctOrAddCharges")
+            : t("visit.addPerformedCharges")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!canManage ? (
           <div className="rounded-md border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-            Charge capture is read-only for your role. An admin or front desk
-            teammate can create the invoice.
+            {t("visit.readOnlyChargeCapture")}
           </div>
         ) : invoiceStateLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Confirming visit invoice state...
+            {t("visit.confirmingInvoiceState")}
           </div>
         ) : !invoiceStateReady ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Charge capture is locked because invoice state could not be
-            confirmed. Refresh before creating charges.
+            {t("visit.invoiceStateLocked")}
           </div>
         ) : activeInvoice && !activeInvoiceIsDraft ? (
           <div className="rounded-md border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-            This visit invoice is already {activeInvoice.status}. Open it from
-            Invoice state to collect payment or review the balance. Only unpaid
-            draft charges can be edited.
+            {t("visit.invoiceAlreadyStatus")} {invoiceStatusLabel(activeInvoice.status, t)}. {t("visit.openInvoiceState")} {t("visit.invoiceDraftOnly")}
           </div>
         ) : activeInvoiceIsDraft && invoiceDetailQuery.isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading existing visit charges...
+            {t("visit.loadingVisitCharges")}
           </div>
         ) : activeInvoiceIsDraft &&
           (invoiceDetailQuery.error || !invoiceDetailQuery.data) ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Existing charges could not be loaded. Refresh before editing this
-            draft invoice.
+            {t("visit.visitChargesLoadError")}
           </div>
         ) : configQuery.isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading practice tax and currency settings...
+            {t("visit.loadingTaxCurrency")}
           </div>
         ) : !configReady ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Charge capture is locked because tax and currency settings could not
-            be confirmed. Refresh before creating charges.
+            {t("visit.taxCurrencyLocked")}
           </div>
         ) : !previewTotals ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Set the practice tax rate between 0 and 100% and keep the invoice
-            total within the supported currency range before saving charges.
+            {t("visit.taxCurrencyInvalid")}
           </div>
         ) : !clientId || !patientId ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Add both a client and patient to the appointment before capturing
-            charges.
+            {t("visit.clientPatientRequired")}
           </div>
         ) : servicesQuery.error || productsQuery.error ? (
           <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            Unable to load the charge catalog. Refresh before creating an
-            invoice.
+            {t("visit.catalogLoadError")}
           </div>
         ) : servicesQuery.isLoading || productsQuery.isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading services and products...
+            {t("visit.loadingCatalog")}
           </div>
         ) : catalog.length === 0 && items.length === 0 ? (
           <EmptyState
             icon={Package}
-            title="Charge catalog is empty"
-            description="Add services or inventory products before building a visit invoice."
+            title={t("visit.emptyCatalog")}
+            description={t("visit.emptyCatalogDescription")}
             className="p-8"
           />
         ) : (
@@ -3847,22 +3947,18 @@ function ChargeCapture({
                 className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-950 dark:text-amber-100"
                 role="status"
               >
-                Offline — charges stay only in this form. Reconnect before
-                creating or updating the visit invoice.
+                {t("visit.offlineCharges")}
               </div>
             ) : null}
             {readyVisitPrescriptionCharges.length > 0 ? (
               <div className="rounded-md border border-primary/30 bg-primary/[0.04] p-3">
-                <p className="text-sm font-medium">Ready from this visit</p>
+                <p className="text-sm font-medium">{t("visit.readyFromVisit")}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  These prescription charges are linked to medication already
-                  dispensed during this appointment. Quantity and price use the
-                  inventory item&apos;s individual dispensing unit. Confirm both
-                  before saving the invoice.
+                  {t("visit.prescriptionChargesDescription")}
                 </p>
                 <div
                   className="mt-3 flex flex-col gap-2"
-                  aria-label="Ready-to-add visit prescription charges"
+                  aria-label={t("visit.readyPrescriptionCharges")}
                 >
                   {readyVisitPrescriptionCharges.map((entry) => (
                     <Button
@@ -3871,7 +3967,7 @@ function ChargeCapture({
                       size="sm"
                       variant="outline"
                       className="h-auto justify-between gap-3 whitespace-normal py-2 text-left"
-                      aria-label={`Add visit charge ${entry.name}`}
+                       aria-label={`${t("visit.addVisitCharge")} ${entry.name}`}
                       disabled={
                         isSaving || items.length >= BILLING_INVOICE_MAX_ITEMS
                       }
@@ -3900,19 +3996,15 @@ function ChargeCapture({
                 role="alert"
               >
                 <p className="font-medium">
-                  Review medication unit before charging
+                  {t("visit.reviewMedicationUnit")}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Doctor Pet blocked a legacy package-priced dispense snapshot. Do
-                  not copy that package price into an invoice. Record an
-                  attributable exception for the legacy work item, then add the
-                  current inventory product using its verified per-unit price.
+                  {t("visit.legacyPackageWarning")}
                 </p>
                 <ul className="mt-2 space-y-1 text-xs">
                   {prescriptionChargesNeedingUnitReview.map((prescription) => (
                     <li key={prescription.id}>
-                      {prescription.dispenseChargeDescription} · quantity{" "}
-                      {prescription.quantity ?? "not recorded"}
+                      {prescription.dispenseChargeDescription} · {t("visit.quantity")} {prescription.quantity ?? t("visit.notRecorded")}
                     </li>
                   ))}
                 </ul>
@@ -3923,7 +4015,7 @@ function ChargeCapture({
                   variant="outline"
                   className="mt-3"
                 >
-                  <Link href="/inventory">Review inventory units</Link>
+                  <Link href="/inventory">{t("visit.reviewInventoryUnits")}</Link>
                 </Button>
               </div>
             ) : null}
@@ -3940,7 +4032,7 @@ function ChargeCapture({
                 min={1}
                 max={selected?.stockQuantity ?? undefined}
                 value={quantity}
-                aria-label="Charge quantity"
+                aria-label={t("visit.chargeQuantity")}
                 aria-invalid={!selectedHasStock}
                 onChange={(event) =>
                   setQuantity(Math.max(1, Number(event.target.value) || 1))
@@ -3953,19 +4045,19 @@ function ChargeCapture({
                 onClick={addSelectedItem}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Add
+                {t("visit.add")}
               </Button>
             </div>
 
             {!selectedHasStock ? (
               <p className="text-xs font-medium text-destructive">
-                Quantity exceeds available inventory.
+                {t("visit.inventoryExceeded")}
               </p>
             ) : null}
 
             {items.length === 0 ? (
               <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-                No charges added yet.
+                {t("visit.noChargesYet")}
               </p>
             ) : (
               <div className="flex flex-col gap-2">
@@ -3979,19 +4071,21 @@ function ChargeCapture({
                         {item.description}
                       </p>
                       <p className="text-xs capitalize text-muted-foreground">
-                        {item.itemType} ·{" "}
-                        {item.taxable ? "Taxable" : "Not taxable"}
+                        {item.itemType === "service"
+                          ? t("visit.service")
+                          : t("visit.product")} ·{" "}
+                        {item.taxable ? t("visit.taxable") : t("visit.notTaxable")}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                        Qty
+                        {t("visit.qty")}
                         <Input
                           type="number"
                           min={1}
                           max={10000}
                           value={item.quantity}
-                          aria-label={`${item.description} quantity`}
+                          aria-label={`${t("visit.quantityFor")} ${item.description}`}
                           className="w-20 text-foreground"
                           disabled={isSaving}
                           onChange={(event) =>
@@ -4012,13 +4106,13 @@ function ChargeCapture({
                         />
                       </label>
                       <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-                        Unit price
+                        {t("visit.unitPrice")}
                         <Input
                           type="number"
                           min={0}
                           step="0.01"
                           value={item.unitPrice}
-                          aria-label={`${item.description} unit price`}
+                          aria-label={`${t("visit.unitPriceFor")} ${item.description}`}
                           className="w-28 text-foreground"
                           disabled={isSaving}
                           onChange={(event) =>
@@ -4036,7 +4130,7 @@ function ChargeCapture({
                         />
                       </label>
                       <span className="flex w-24 flex-col gap-1 text-right text-xs text-muted-foreground">
-                        Line total
+                        {t("visit.lineTotal")}
                         <span className="text-sm font-medium text-foreground tabular-nums">
                           {fmt(item.quantity * Number(item.unitPrice || 0))}
                         </span>
@@ -4046,7 +4140,7 @@ function ChargeCapture({
                         variant="ghost"
                         size="icon"
                         className="self-end"
-                        aria-label={`Remove ${item.description}`}
+                        aria-label={`${t("visit.remove")} ${item.description}`}
                         disabled={isSaving}
                         onClick={() =>
                           setItems((current) =>
@@ -4067,17 +4161,17 @@ function ChargeCapture({
             {items.length > 0 ? (
               <div className="flex flex-col gap-1 rounded-md bg-muted/30 p-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("visit.subtotal")}</span>
                   <span>{fmt(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    Tax ({configQuery.data?.taxRatePercent ?? "0.00"}%)
+                    {t("visit.tax")} ({configQuery.data?.taxRatePercent ?? "0.00"}%)
                   </span>
                   <span>{fmt(tax)}</span>
                 </div>
                 <div className="mt-1 flex justify-between border-t border-border pt-2 font-semibold">
-                  <span>Draft total</span>
+                  <span>{t("visit.draftTotal")}</span>
                   <span>{fmt(total)}</span>
                 </div>
               </div>
@@ -4090,13 +4184,13 @@ function ChargeCapture({
                 <Receipt className="mr-2 h-4 w-4" />
               )}
               {activeInvoiceIsDraft
-                ? "Update visit invoice"
-                : "Create visit invoice"}
+                ? t("visit.updateInvoice")
+                : t("visit.createInvoice")}
             </Button>
             <p className="text-xs text-muted-foreground">
               {activeInvoiceIsDraft
-                ? "Unsourced product stock is restored and re-deducted atomically when draft charges change. Visit-prescription stock was already dispensed and is not moved twice."
-                : "This creates a draft linked to the appointment. Product stock is deducted atomically; visit prescriptions retain their original dispensation."}
+                ? t("visit.updateInvoiceStockDescription")
+                : t("visit.createInvoiceStockDescription")}
             </p>
           </div>
         )}
