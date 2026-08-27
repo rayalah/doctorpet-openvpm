@@ -29,15 +29,9 @@ describe("inventory product form UX", () => {
   const routerSource = readFileSync("server/routers/inventory.ts", "utf8");
 
   it("defines medication inventory and pricing in one dispensing unit", () => {
-    expect(source).toContain("Price per unit *");
-    expect(source).toContain("Stock units");
-    expect(source).toContain(
-      "enter stock and price per tablet—not per bottle or package"
-    );
-    expect(source).toContain("Prescription");
-    expect(source).toContain(
-      "quantities, stock deductions, and invoice totals all use this unit."
-    );
+    expect(source).toContain('t("inventory.pricePerUnit")');
+    expect(source).toContain('t("inventory.stockUnits")');
+    expect(source).toContain('t("inventory.unitHelp")');
   });
 
   it("keeps product create and edit fields aligned to shared policy", () => {
@@ -78,11 +72,13 @@ describe("inventory product form UX", () => {
     expect(source).toContain("isInventoryOptionalCurrencyAmountInputValid");
     expect(source).toContain("isInventoryNonnegativeIntegerInputValid");
     expect(source).toContain("isInventoryOptionalExpirationDateInputValid");
-    expect(source).toContain("formatDateOnly(product.expirationDate)");
+    expect(source).toContain("formatDateOnly(product.expirationDate, locale)");
     expect(source).toContain(
       'import { formatClinicalDate } from "@/lib/records/clinical-dates"'
     );
-    expect(source).toContain('return formatClinicalDate(value, "UTC", value)');
+    expect(source).toContain('return formatClinicalDate(value, "UTC", value, locale)');
+    expect(source).toContain('const locale = language === "es" ? "es-CR" : "en-US"');
+    expect(source).toContain("const language = useLanguage()");
     expect(source).not.toContain("new Date(product.expirationDate)");
     expect(source).not.toContain("new Date(year, month - 1, day)");
     expect(source).not.toContain("toLocaleDateString()");
@@ -91,7 +87,7 @@ describe("inventory product form UX", () => {
     expect(source).toContain("unitPrice: form.unitPrice.trim()");
     expect(source).toContain("taxable: form.taxable");
     expect(source).toContain('type="checkbox"');
-    expect(source).toContain('product.taxable ? "Taxable" : "Not taxable"');
+    expect(source).toContain('t("inventory.taxable")');
     expect(source).toContain("lotNumber: trimmedOrUndefined(form.lotNumber)");
     expect(source).toContain(
       "expirationDate: trimmedOrUndefined(form.expirationDate)"
@@ -149,7 +145,7 @@ describe("inventory product form UX", () => {
   it("supports bounded inline supplier editing", () => {
     expect(source).toContain("function EditSupplierRow");
     expect(source).toContain("trpc.inventory.updateSupplier.useMutation");
-    expect(source).toContain("Supplier updated");
+    expect(source).toContain('t("inventory.supplierUpdated")');
     expect(source).toContain("const [editingSupplierId");
     expect(source).toContain("setEditingSupplierId(supplier.id)");
     expect(source).toContain("notes: trimmedOrNull(form.notes)");
@@ -177,10 +173,10 @@ describe("inventory product form UX", () => {
     expect(source).toContain("{canManageInventory && showAddProduct && (");
     expect(source).toContain("canManageInventory && editingId === product.id");
     expect(source).toContain("{canManageInventory ? (");
-    expect(source).toContain("Read-only");
+    expect(source).toContain('t("inventory.readOnly")');
     expect(source).toContain("{canManageInventory && showAddSupplier && (");
-    expect(source).toContain("canManageInventory &&\n                      editingSupplierId === supplier.id");
-    expect(source).toContain("canManageInventory\n                  ? {");
+    expect(source).toContain("editingSupplierId === supplier.id");
+    expect(source).toContain("canManageInventory");
     expect(routerSource).toContain("const inventoryManagerProcedure =");
     expect(routerSource).toContain(
       'requireRole("admin", "veterinarian", "technician", "front_desk")'

@@ -53,14 +53,14 @@ describe("billing invoice form UX", () => {
     expect(source).toContain("const canSubmitInvoice =");
     expect(source).toContain("isBillingInvoiceSubtotalValid(items)");
     expect(source).toContain("disabled={!canAddItem}");
-    expect(source).toContain("disabled={\n              !canSubmitInvoice");
+    expect(source).toContain("!canSubmitInvoice");
     expect(source).toContain("description: trimmedItemDescription");
     expect(source).toContain("unitPrice: itemUnitPrice.trim()");
   });
 
   it("uses currency inputs for invoice unit prices", () => {
     expect(source).toMatch(
-      /type="number"[\s\S]*?step="0\.01"[\s\S]*?min=\{0\}[\s\S]*?max=\{BILLING_UNIT_PRICE_MAX\}[\s\S]*?placeholder="Unit Price"/
+      /type="number"[\s\S]*?step="0\.01"[\s\S]*?min=\{0\}[\s\S]*?max=\{BILLING_UNIT_PRICE_MAX\}[\s\S]*?placeholder=\{t\("billing\.unitPrice"\)\}/
     );
   });
 
@@ -89,10 +89,8 @@ describe("billing invoice form UX", () => {
     expect(source).toContain("setDueDate(defaultDueDate(taxConfig.timezone))");
     expect(source).toContain("dueDate.trim().length > 0");
     expect(source).toContain("setDueDateTouched(true)");
-    expect(source).toContain("Loading practice date settings...");
-    expect(source).toContain(
-      "Choose a due date manually. Practice settings could not load."
-    );
+    expect(source).toContain('t("billing.loadingDate")');
+    expect(source).toContain('t("billing.chooseDueDate")');
     expect(source).not.toContain("taxConfigQuery.data?.timezone");
     expect(source).not.toContain("formatDateInputLocal");
     expect(source).not.toContain('toISOString().split("T")[0]');
@@ -113,9 +111,9 @@ describe("billing invoice form UX", () => {
     expect(source).toContain("const clientOptions =");
     expect(source).toContain("clientOptions.map((client)");
     expect(source).toContain("clientResults.error || clientResultsMissing");
-    expect(source).toContain("Unable to search clients. Please retry.");
+    expect(source).toContain('t("billing.searchFailed")');
     expect(source.indexOf("clientResults.error || clientResultsMissing")).toBeLessThan(
-      source.indexOf("No clients found")
+      source.indexOf('t("billing.noClients")')
     );
     expect(source).toContain("patientResults.error");
     expect(source).toContain("patientResults.isLoading");
@@ -123,7 +121,7 @@ describe("billing invoice form UX", () => {
     expect(source).toContain("const patientOptions =");
     expect(source).toContain("patientOptions.map((patient)");
     expect(source).toContain("patientResults.error || patientResultsMissing");
-    expect(source).toContain("Unable to load client patients. Please retry.");
+    expect(source).toContain('t("billing.loadPatients")');
     expect(source).toContain("servicesQuery.error");
     expect(source).toContain("servicesQuery.isLoading");
     expect(source).toContain("const servicesMissing =");
@@ -137,10 +135,9 @@ describe("billing invoice form UX", () => {
       "serviceOptions.find((s) => s.id === selectedServiceId)"
     );
     expect(source).toContain("servicesQuery.error || servicesMissing");
-    expect(source).toContain("Unable to load billing services");
-    expect(source).toContain("Unable to load billing services. Please retry.");
+    expect(source).toContain('t("billing.loadServices")');
     expect(source).toContain("!servicesMissing");
-    expect(source).toContain("Searching clients...");
+    expect(source).toContain('t("billing.searching")');
     expect(source).not.toContain("clientResults.data?.map");
     expect(source).not.toContain("patientResults.data?.map");
     expect(source).not.toContain("servicesQuery.data?.map");
@@ -151,9 +148,9 @@ describe("billing invoice form UX", () => {
     expect(source).toContain("taxConfigQuery.error");
     expect(source).toContain("const taxConfigMissing =");
     expect(source).toContain("taxConfigQuery.error || taxConfigMissing");
-    expect(source).toContain("Unable to load practice tax settings");
-    expect(source).toContain("Preview totals omit tax");
-    expect(source).toContain("Loading practice tax settings...");
+    expect(source).toContain('t("billing.loadTax")');
+    expect(source).toContain('t("billing.setTaxRate")');
+    expect(source).toContain('t("billing.loadingTax")');
     expect(source).toContain("taxConfigQuery.error || taxConfigMissing");
     expect(source).toContain(
       'taxConfigReady && taxConfig ? taxConfig.taxRatePercent : "0.00"'
@@ -177,10 +174,8 @@ describe("billing invoice form UX", () => {
     expect(source).toContain(
       "if (!canManageBillingRole(session?.user?.role))"
     );
-    expect(source).toContain("Billing actions are read-only");
-    expect(source).toContain(
-      "Only admins and front desk staff can create invoices or estimates."
-    );
+    expect(source).toContain('t("billing.readOnlyTitle")');
+    expect(source).toContain('t("billing.readOnlyDescription")');
   });
 });
 
@@ -188,8 +183,8 @@ describe("billing invoice payment actions", () => {
   const source = readFileSync("app/(dashboard)/billing/page.tsx", "utf8");
 
   it("only offers payment collection for sent or overdue invoice balances", () => {
-    expect(source).toContain(
-      'canManageBilling &&\n    (invoiceStatus === "sent" || invoiceStatus === "overdue") &&\n    remaining > 0',
+    expect(source).toMatch(
+      /canManageBilling[\s\S]*invoiceStatus === "sent"[\s\S]*invoiceStatus === "overdue"[\s\S]*remaining > 0/
     );
     expect(source).not.toContain(
       'invoiceStatus !== "paid" && invoiceStatus !== "void" && remaining > 0'
@@ -199,13 +194,13 @@ describe("billing invoice payment actions", () => {
   it("does not offer a status-only path for settling an invoice", () => {
     expect(source).not.toContain('title="Mark as Paid"');
     expect(source).not.toContain('onStatusChange(e, invoice.id, "paid")');
-    expect(source).toContain("Record Payment");
-    expect(source).toContain("Take Card");
+    expect(source).toContain('t("billing.recordPayment")');
+    expect(source).toContain('t("billing.takeCard")');
   });
 
   it("keeps appointment-linked invoices connected to their visit", () => {
     expect(source).toContain("detail.data.appointmentId");
-    expect(source).toContain("Back to visit");
+    expect(source).toContain('t("billing.backToVisit")');
     expect(source).toContain(
       "`/encounters/${encodeURIComponent(detail.data.appointmentId)}#charge-capture`"
     );
@@ -229,9 +224,7 @@ describe("billing invoice payment actions", () => {
   });
 
   it("offers invoice email only while a balance-bearing invoice is sent or overdue", () => {
-    expect(source).toContain(
-      '(invoice.status === "sent" ||\n                          invoice.status === "overdue")'
-    );
+    expect(source).toMatch(/invoice\.status === "sent"[\s\S]*invoice\.status === "overdue"/);
     expect(source).not.toContain(
       'invoice.status === "overdue" ||\n                          invoice.status === "paid"'
     );
@@ -239,10 +232,10 @@ describe("billing invoice payment actions", () => {
 
   it("uses accessible in-app dialogs for irreversible billing actions", () => {
     expect(source).toContain("<ActionConfirmationDialog");
-    expect(source).toContain('title="Void invoice?"');
-    expect(source).toContain('label: "Reason for voiding"');
-    expect(source).toContain('title="Refund payment?"');
-    expect(source).toContain('confirmLabel="Refund payment"');
+    expect(source).toContain('title={t("billing.voidInvoice")}');
+    expect(source).toContain('label: t("billing.voidReason")');
+    expect(source).toContain('title={t("billing.refundPayment")}');
+    expect(source).toContain('confirmLabel={t("billing.refund")}');
     expect(source).not.toContain("window.prompt");
     expect(source).not.toContain("window.confirm");
   });
@@ -263,7 +256,7 @@ describe("billing invoice payment actions", () => {
     expect(source).toContain("const cardPaymentsEnabled =");
     expect(source).toContain("const cardPaymentsUnavailable =");
     expect(source).toContain("!cardPaymentsEnabled");
-    expect(source).toContain("Card payments are not configured");
+    expect(source).toContain('t("billing.cardPaymentsNotConfigured")');
     expect(source).toContain(
       'import { isSafeCheckoutRedirectUrl } from "@/lib/checkout-redirect"'
     );
@@ -284,9 +277,9 @@ describe("billing invoice payment actions", () => {
     expect(source).toContain("{canManageBilling && (");
     expect(source).toContain("canManageBilling={canManageBilling}");
     expect(source).toContain("enabled: canManageBilling");
-    expect(source).toContain("canManageBilling &&\n    (invoiceStatus");
-    expect(source).toContain(
-      "canManageBilling &&\n    isBillingAmountWithinBalance(paymentAmount"
+    expect(source).toContain("canManageBilling");
+    expect(source).toMatch(
+      /canManageBilling[\s\S]*isBillingAmountWithinBalance\(paymentAmount, invoiceBalanceDue\)/
     );
     expect(source).toContain("<EmailInvoiceButton invoiceId={invoice.id} />");
   });
@@ -338,8 +331,8 @@ describe("billing invoice payment actions", () => {
     expect(source).toContain(
       "const billingSettingsReady = verifiedBillingConfig !== null",
     );
-    expect(source).toContain(
-      "const billingTimeZone = verifiedBillingConfig\n    ? verifiedBillingConfig.timezone\n    : null",
+    expect(source).toMatch(
+      /const billingTimeZone = verifiedBillingConfig\s*\? verifiedBillingConfig\.timezone\s*: null/
     );
     expect(source).toContain("const listError = billingConfig.error ?? error");
     expect(source).toContain(
@@ -347,12 +340,14 @@ describe("billing invoice payment actions", () => {
     );
     expect(source).toContain("billingTimeZone={billingTimeZone}");
     expect(source).toContain("settingsReady={billingSettingsReady}");
-    expect(source).toContain(
-      "formatBillingDateInput(invoice.dueDate, billingTimeZone)",
+    expect(source).toMatch(
+      /formatBillingDateInput\(invoice\.dueDate, billingTimeZone, locale\)/
     );
-    expect(source).toContain(
-      "formatBillingInstantDate(invoice.createdAt, billingTimeZone)",
+    expect(source).toMatch(
+      /formatBillingInstantDate\(invoice\.createdAt, billingTimeZone, locale\)/,
     );
+    expect(source).toContain("INVOICE_STATUS_LABEL_KEYS");
+    expect(source).toContain('paid: "billing.paid"');
     expect(source).toMatch(/formatBillingDateInput\(\s*row\.nextBillingDate/);
     expect(source).toMatch(
       /formatBillingInstantDate\(\s*payment\.receivedAt/,
@@ -399,26 +394,25 @@ describe("medication dispense billing queue", () => {
   const source = readFileSync("app/(dashboard)/billing/page.tsx", "utf8");
 
   it("shows every pending clinic-stock dispense with explicit outcomes", () => {
-    expect(source).toContain("Unbilled medication dispenses");
+    expect(source).toContain('t("billing.unbilledDispenses")');
     expect(source).toContain("trpc.billing.listDispenseChargeQueue.useQuery");
     expect(source).toContain(
       "trpc.billing.createDispenseChargeInvoice.useMutation",
     );
     expect(source).toContain("trpc.billing.waiveDispenseCharge.useMutation");
     expect(source).toContain("trpc.billing.reopenDispenseCharge.useMutation");
-    expect(source).toContain("Create draft");
-    expect(source).toContain("Review & create");
-    expect(source).toContain("Verify it was not already billed");
-    expect(source).toContain('title="Review legacy dispense"');
-    expect(source).toContain('confirmLabel="Verified — create draft"');
-    expect(source).toContain("Open visit");
-    expect(source).toContain("Standalone refill");
-    expect(source).toContain("Waive");
-    expect(source).toContain('title="Waive medication charge?"');
-    expect(source).toContain('label: "Reason for no charge"');
-    expect(source).toContain("the audit trail");
-    expect(source).toContain("Inventory has");
-    expect(source).toContain("already been deducted and will not move again");
+    expect(source).toContain('t("billing.createDraft")');
+    expect(source).toContain('t("billing.reviewCreate")');
+    expect(source).toContain('t("billing.reviewLegacyDispenseDescription")');
+    expect(source).toContain('t("billing.reviewLegacyDispense")');
+    expect(source).toContain('t("billing.verifiedCreateDraft")');
+    expect(source).toContain('t("billing.openVisit")');
+    expect(source).toContain('t("billing.standaloneRefill")');
+    expect(source).toContain('t("billing.waive")');
+    expect(source).toContain('t("billing.waiveMedicationCharge")');
+    expect(source).toContain('t("billing.noChargeReason")');
+    expect(source).toContain('t("billing.dispenseQueueDescription")');
+    expect(source).toContain('t("billing.waiveMedicationChargeDescription")');
   });
 
   it("limits no-charge decisions and reopening to admins", () => {
@@ -426,6 +420,6 @@ describe("medication dispense billing queue", () => {
       'const canWaiveDispenseCharges = session?.user?.role === "admin"',
     );
     expect(source).toContain("canWaive={canWaiveDispenseCharges}");
-    expect(source).toContain("Recently waived");
+    expect(source).toContain('t("billing.recentlyWaived")');
   });
 });

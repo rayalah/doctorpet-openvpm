@@ -158,8 +158,8 @@ describe("inventory mutation safety", () => {
     expect(source).toContain("from ${practices}");
     expect(source).toContain("${practices.deletedAt} is null");
     expect(source).toContain('message: "Practice not found"');
-    expect(source).toContain(
-      "const todayYmd = formatDateInputForTimeZone(\n        new Date(),\n        await practiceTimeZone(ctx)\n      )"
+    expect(source).toMatch(
+      /const todayYmd = formatDateInputForTimeZone\(\s*new Date\(\),\s*await practiceTimeZone\(ctx\),?\s*\)/
     );
     expect(source).toContain("const soonYmd = addDaysYmd(todayYmd, 90)");
     expect(source).toContain("inventoryAlert(p, todayYmd)");

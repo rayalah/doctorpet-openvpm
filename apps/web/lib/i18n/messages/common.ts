@@ -11,6 +11,7 @@ export const enCommonMessages = {
   "common.collapseSidebar": "Collapse sidebar",
   "common.pleaseRetry": "Please retry.",
   "common.unreadInboxConversations": "unread inbox conversations",
+  "common.charactersMinimum": "characters minimum.",
 } as const;
 
 export const esCommonMessages = {
@@ -25,4 +26,5 @@ export const esCommonMessages = {
   "common.collapseSidebar": "Contraer barra lateral",
   "common.pleaseRetry": "Intentá de nuevo.",
   "common.unreadInboxConversations": "conversaciones sin leer en la bandeja",
+  "common.charactersMinimum": "caracteres como mínimo.",
 } as const;

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/common/empty-state";
 import { toast } from "sonner";
+import { useTranslations } from "@/lib/i18n/client";
 import { ServicePicker } from "@/components/billing/service-picker";
 import { formatDateInputForTimeZone } from "@/lib/date-input";
 import { formatCurrency } from "@/lib/locale/format";
@@ -86,12 +87,13 @@ function defaultDueDate(timeZone?: string | null): string {
 export default function NewInvoicePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const t = useTranslations();
 
   if (status === "loading") {
     return (
       <div className="mx-auto max-w-3xl">
         <InlineQueryMessage kind="loading">
-          Checking billing access...
+          {t("billing.checkingAccess")}
         </InlineQueryMessage>
       </div>
     );
@@ -107,14 +109,14 @@ export default function NewInvoicePage() {
           onClick={() => router.push("/billing")}
         >
           <ArrowLeft className="mr-1 h-4 w-4" />
-          Back to Billing
+          {t("billing.backToBilling")}
         </Button>
         <EmptyState
           icon={FileText}
-          title="Billing actions are read-only"
-          description="Only admins and front desk staff can create invoices or estimates."
+          title={t("billing.readOnlyTitle")}
+          description={t("billing.readOnlyDescription")}
           action={{
-            label: "Back to Billing",
+            label: t("billing.backToBilling"),
             onClick: () => router.push("/billing"),
           }}
         />
@@ -127,6 +129,7 @@ export default function NewInvoicePage() {
 
 function NewInvoiceForm() {
   const router = useRouter();
+  const t = useTranslations();
 
   // Client search
   const [clientSearch, setClientSearch] = useState("");
@@ -208,7 +211,7 @@ function NewInvoiceForm() {
   const utils = trpc.useUtils();
   const createInvoice = trpc.billing.createInvoice.useMutation({
     onSuccess: () => {
-      toast.success("Invoice created");
+      toast.success(t("billing.invoiceCreated"));
       utils.billing.listInvoices.invalidate();
       router.push("/billing");
     },
@@ -322,18 +325,18 @@ function NewInvoiceForm() {
         onClick={() => router.push("/billing")}
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
-        Back to Billing
+          {t("billing.backToBilling")}
       </Button>
 
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-heading text-xl font-semibold">
-            {isEstimate ? "New Estimate" : "New Invoice"}
+            {isEstimate ? t("billing.newEstimate") : t("billing.newInvoice")}
           </h2>
           <p className="text-sm text-muted-foreground">
             {isEstimate
-              ? "Create an estimate that can be converted to an invoice later."
-              : "Create a new invoice for a client."}
+              ? t("billing.newEstimateDescription")
+              : t("billing.newInvoiceDescription")}
           </p>
         </div>
         <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -343,14 +346,14 @@ function NewInvoiceForm() {
             onChange={(e) => setIsEstimate(e.target.checked)}
             className="rounded border-gray-300"
           />
-          <span className="font-medium">Estimate</span>
+          <span className="font-medium">{t("billing.estimate")}</span>
         </label>
       </div>
 
       {/* Client Search */}
       <div className="mt-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Client *</label>
+          <label className="block text-sm font-medium mb-1">{t("billing.clientRequired")}</label>
           {selectedClient ? (
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">
@@ -365,13 +368,13 @@ function NewInvoiceForm() {
                   setClientSearch("");
                 }}
               >
-                Change
+                {t("billing.change")}
               </Button>
             </div>
           ) : (
             <div className="relative">
               <Input
-                placeholder="Search clients..."
+                placeholder={t("billing.searchClients")}
                 value={clientSearch}
                 maxLength={CLIENT_SEARCH_MAX_LENGTH}
                 onChange={(e) => setClientSearch(e.target.value)}
@@ -385,16 +388,16 @@ function NewInvoiceForm() {
                   {clientResults.error || clientResultsMissing ? (
                     <div className="px-4 py-3 text-sm text-destructive">
                       {clientResults.error?.message ??
-                        "Unable to search clients. Please retry."}
+                        t("billing.searchFailed")}
                     </div>
                   ) : clientResults.isLoading ? (
                     <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Searching clients...
+                      {t("billing.searching")}
                     </div>
                   ) : clientOptions.length === 0 ? (
                     <div className="px-4 py-3 text-sm text-muted-foreground">
-                      No clients found
+                      {t("billing.noClients")}
                     </div>
                   ) : (
                     clientOptions.map((client) => (
@@ -432,14 +435,14 @@ function NewInvoiceForm() {
         {selectedClient && (
           <div>
             <label className="block text-sm font-medium mb-1">
-              Patient (optional)
+               {t("billing.patientOptional")}
             </label>
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={selectedPatientId}
               onChange={(e) => setSelectedPatientId(e.target.value)}
             >
-              <option value="">-- No patient --</option>
+                <option value="">{t("billing.noPatient")}</option>
               {patientOptions.map((patient) => (
                 <option key={patient.id} value={patient.id}>
                   {patient.name} ({patient.species})
@@ -449,13 +452,13 @@ function NewInvoiceForm() {
             {patientResults.error || patientResultsMissing ? (
               <InlineQueryMessage kind="error">
                 {patientResults.error
-                  ? `Unable to load client patients. ${patientResults.error.message}`
-                  : "Unable to load client patients. Please retry."}
+                  ? `${t("billing.loadPatientsPrefix")} ${patientResults.error.message}`
+                   : t("billing.loadPatients")}
               </InlineQueryMessage>
             ) : patientResults.isLoading ? (
               <div className="mt-2">
                 <InlineQueryMessage kind="loading">
-                  Loading client patients...
+                   {t("billing.loadingPatients")}
                 </InlineQueryMessage>
               </div>
             ) : null}
@@ -464,17 +467,17 @@ function NewInvoiceForm() {
 
         {/* Add Line Item */}
         <div>
-          <label className="block text-sm font-medium mb-1">Line Items</label>
+          <label className="block text-sm font-medium mb-1">{t("billing.lineItems")}</label>
           <div className="rounded-lg border border-border p-4 space-y-3">
             {servicesQuery.error || servicesMissing ? (
               <InlineQueryMessage kind="error">
                 {servicesQuery.error
-                  ? `Unable to load billing services. ${servicesQuery.error.message}`
-                  : "Unable to load billing services. Please retry."}
+                  ? `${t("billing.loadServicesPrefix")} ${servicesQuery.error.message}`
+                   : t("billing.loadServices")}
               </InlineQueryMessage>
             ) : servicesQuery.isLoading ? (
               <InlineQueryMessage kind="loading">
-                Loading billing services...
+                {t("billing.loadingServices")}
               </InlineQueryMessage>
             ) : null}
             <div className="grid grid-cols-12 gap-2">
@@ -483,6 +486,7 @@ function NewInvoiceForm() {
                   services={serviceOptions}
                   value={selectedServiceId}
                   onSelect={handleServiceSelect}
+                  formatPrice={fmt}
                   disabled={
                     servicesQuery.isLoading ||
                     !!servicesQuery.error ||
@@ -492,7 +496,7 @@ function NewInvoiceForm() {
               </div>
               <div className="col-span-3">
                 <Input
-                  placeholder="Description"
+                  placeholder={t("billing.description")}
                   value={itemDescription}
                   maxLength={BILLING_INVOICE_LINE_DESCRIPTION_MAX_LENGTH}
                   onChange={(e) => setItemDescription(e.target.value)}
@@ -504,7 +508,7 @@ function NewInvoiceForm() {
                   min={BILLING_INVOICE_LINE_QUANTITY_MIN}
                   max={BILLING_INVOICE_LINE_QUANTITY_MAX}
                   step={1}
-                  placeholder="Qty"
+                  placeholder={t("billing.quantity")}
                   value={itemQuantity}
                   onChange={(e) =>
                     setItemQuantity(Math.max(1, parseInt(e.target.value) || 1))
@@ -517,7 +521,7 @@ function NewInvoiceForm() {
                   step="0.01"
                   min={0}
                   max={BILLING_UNIT_PRICE_MAX}
-                  placeholder="Unit Price"
+                  placeholder={t("billing.unitPrice")}
                   value={itemUnitPrice}
                   onChange={(e) => setItemUnitPrice(e.target.value)}
                 />
@@ -531,7 +535,7 @@ function NewInvoiceForm() {
                   disabled={!canAddItem}
                 >
                   <Plus className="mr-1 h-4 w-4" />
-                  Add
+                  {t("billing.add")}
                 </Button>
               </div>
             </div>
@@ -543,16 +547,16 @@ function NewInvoiceForm() {
                   <thead>
                     <tr className="border-b border-border">
                       <th className="py-2 text-left font-medium text-muted-foreground">
-                        Description
+                        {t("billing.description")}
                       </th>
                       <th className="py-2 text-right font-medium text-muted-foreground">
-                        Qty
+                        {t("billing.qty")}
                       </th>
                       <th className="py-2 text-right font-medium text-muted-foreground">
-                        Unit Price
+                        {t("billing.unitPrice")}
                       </th>
                       <th className="py-2 text-right font-medium text-muted-foreground">
-                        Total
+                        {t("billing.total")}
                       </th>
                       <th className="py-2 w-10" />
                     </tr>
@@ -566,7 +570,7 @@ function NewInvoiceForm() {
                         <td className="py-2">
                           {item.description}
                           <span className="ml-2 text-xs text-muted-foreground">
-                            {item.taxable ? "Taxable" : "Not taxable"}
+                            {item.taxable ? t("billing.taxable") : t("billing.notTaxable")}
                           </span>
                         </td>
                         <td className="py-2 text-right tabular-nums">
@@ -582,6 +586,8 @@ function NewInvoiceForm() {
                           <button
                             type="button"
                             className="text-muted-foreground hover:text-destructive transition-colors"
+                            title={t("billing.removeLineItem")}
+                            aria-label={t("billing.removeLineItem")}
                             onClick={() => handleRemoveItem(item.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -602,35 +608,32 @@ function NewInvoiceForm() {
             {!previewTotals && taxConfigReady ? (
               <div className="mb-3">
                 <InlineQueryMessage kind="error">
-                  Set the practice tax rate between 0 and 100% and keep the
-                  invoice total within the supported currency range before
-                  creating this invoice.
+                  {t("billing.setTaxRate")}
                 </InlineQueryMessage>
               </div>
             ) : taxConfigQuery.error || taxConfigMissing ? (
               <div className="mb-3">
                 <InlineQueryMessage kind="error">
-                  Unable to load practice tax settings. Preview totals omit tax
-                  until settings load.
+                  {t("billing.loadTax")}
                 </InlineQueryMessage>
               </div>
             ) : taxConfigQuery.isLoading ? (
               <div className="mb-3">
                 <InlineQueryMessage kind="loading">
-                  Loading practice tax settings...
+                  {t("billing.loadingTax")}
                 </InlineQueryMessage>
               </div>
             ) : null}
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
+          <span className="text-muted-foreground">{t("billing.subtotal")}</span>
               <span className="tabular-nums">{fmt(subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax ({taxPercent}%)</span>
+              <span className="text-muted-foreground">{t("billing.tax")} ({taxPercent}%)</span>
               <span className="tabular-nums">{fmt(tax)}</span>
             </div>
             <div className="flex justify-between font-semibold border-t border-border pt-1">
-              <span>Total</span>
+          <span>{t("billing.total")}</span>
               <span className="tabular-nums">{fmt(total)}</span>
             </div>
           </div>
@@ -638,7 +641,7 @@ function NewInvoiceForm() {
 
         {/* Due Date */}
         <div>
-          <label className="block text-sm font-medium mb-1">Due Date</label>
+          <label className="block text-sm font-medium mb-1">{t("billing.dueDate")}</label>
           <Input
             type="date"
             value={dueDate}
@@ -649,12 +652,12 @@ function NewInvoiceForm() {
           />
           {!dueDate && taxConfigQuery.isLoading ? (
             <p className="mt-1 text-xs text-muted-foreground">
-              Loading practice date settings...
+              {t("billing.loadingDate")}
             </p>
           ) : null}
           {!dueDate && (taxConfigQuery.error || taxConfigMissing) ? (
             <p className="mt-1 text-xs text-destructive">
-              Choose a due date manually. Practice settings could not load.
+              {t("billing.chooseDueDate")}
             </p>
           ) : null}
         </div>
@@ -668,13 +671,13 @@ function NewInvoiceForm() {
             }
           >
             {createInvoice.isPending
-              ? "Creating..."
+              ? t("billing.creating")
               : isEstimate
-              ? "Create Estimate"
-              : "Create Invoice"}
+              ? t("billing.createEstimate")
+              : t("billing.createInvoice")}
           </Button>
           <Button variant="outline" onClick={() => router.push("/billing")}>
-            Cancel
+            {t("billing.cancel")}
           </Button>
         </div>
 

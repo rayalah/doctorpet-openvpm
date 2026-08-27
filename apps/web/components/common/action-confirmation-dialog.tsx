@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from "@/lib/i18n/client";
 
 type ReasonInput = {
   label: string;
@@ -43,6 +44,7 @@ export function ActionConfirmationDialog({
   const reasonId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const reasonRef = useRef<HTMLTextAreaElement>(null);
+  const t = useTranslations();
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef(onCancel);
   const pendingRef = useRef(isPending);
@@ -137,7 +139,7 @@ export function ActionConfirmationDialog({
             />
             <p className="mt-1 text-xs text-muted-foreground">
               {reason.minLength
-                ? `${reason.minLength} characters minimum. `
+                ? `${reason.minLength} ${t("common.charactersMinimum")} `
                 : null}
               {reason.maxLength
                 ? `${reason.value.length}/${reason.maxLength}`
@@ -150,7 +152,7 @@ export function ActionConfirmationDialog({
 
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="outline" disabled={isPending} onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             ref={confirmRef}
