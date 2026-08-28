@@ -2,7 +2,6 @@
 
 import { X } from "lucide-react";
 import { PlatformLogo } from "@/components/brand/platform-logo";
-import { platformBrand } from "@/lib/brand/platform-brand";
 import type { GuideContext } from "@/components/tour/guide-recipes";
 import type { WelcomeCardId } from "@/lib/welcome/cards";
 import { getWelcomeCopy } from "./welcome-copy";
@@ -51,12 +50,13 @@ export function WelcomeSurface({
   onSkip: () => void;
   onSetupInstead: () => void;
 }) {
-  const welcomeCopy = getWelcomeCopy(useTranslations());
+  const t = useTranslations();
+  const welcomeCopy = getWelcomeCopy(t);
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Welcome to ${platformBrand.productName}`}
+      aria-label={t("guides.welcome.surfaceAria")}
       className="fixed inset-0 z-[80] overflow-y-auto"
       style={{
         background:
@@ -66,7 +66,7 @@ export function WelcomeSurface({
       <button
         type="button"
         onClick={onSkip}
-        aria-label="Skip the welcome"
+        aria-label={t("guides.welcome.skipAria")}
         className="absolute right-4 top-4 rounded-full p-2 text-slate-500 transition-colors hover:bg-white/70 hover:text-slate-800"
       >
         <X className="h-5 w-5" />

@@ -11,6 +11,11 @@ import { enClinicalRecordMessages, esClinicalRecordMessages } from "./messages/c
 import { enVisitWorkspaceMessages, esVisitWorkspaceMessages } from "./messages/visit-workspace";
 import { enBillingMessages, esBillingMessages } from "./messages/billing";
 import { enInventoryMessages, esInventoryMessages } from "./messages/inventory";
+import { enReportsMessages, esReportsMessages } from "./messages/reports";
+import { enDocumentMessages, esDocumentMessages } from "./messages/documents";
+import { enPdfMessages, esPdfMessages } from "./messages/pdf";
+import { enBrandingMessages, esBrandingMessages } from "./messages/branding";
+import { enGuidesMessages, esGuidesMessages } from "./messages/guides";
 
 export const enMessages = {
   ...enCommonMessages,
@@ -25,6 +30,11 @@ export const enMessages = {
   ...enVisitWorkspaceMessages,
   ...enBillingMessages,
   ...enInventoryMessages,
+  ...enReportsMessages,
+  ...enDocumentMessages,
+  ...enPdfMessages,
+  ...enBrandingMessages,
+  ...enGuidesMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -46,6 +56,11 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
     ...esVisitWorkspaceMessages,
     ...esBillingMessages,
     ...esInventoryMessages,
+    ...esReportsMessages,
+    ...esDocumentMessages,
+    ...esPdfMessages,
+    ...esBrandingMessages,
+    ...esGuidesMessages,
   },
 };
 

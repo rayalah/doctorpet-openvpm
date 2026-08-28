@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { generateMedicalSummaryPdf } from "../pdf";
+import { generateInvoicePdf, generateMedicalSummaryPdf, generateReportPdf } from "../pdf";
 
 describe("medical summary header", () => {
   const source = readFileSync("lib/pdf.ts", "utf8");
@@ -8,11 +8,11 @@ describe("medical summary header", () => {
   it("stacks logo, clinic name, then the title so long names cannot collide", () => {
     const headerSection = source.slice(
       source.indexOf("export function generateMedicalSummaryPdf"),
-      source.indexOf('sectionHeading("Patient Information")')
+      source.indexOf('sectionHeading(t("documents.patientInformation"))')
     );
     const logoAt = headerSection.indexOf("drawPawMark");
     const nameAt = headerSection.indexOf("splitTextToSize(data.practiceName");
-    const titleAt = headerSection.indexOf('"MEDICAL RECORD SUMMARY"');
+    const titleAt = headerSection.indexOf('t("documents.medicalRecordSummary")');
     expect(logoAt).toBeGreaterThan(-1);
     expect(nameAt).toBeGreaterThan(logoAt);
     expect(titleAt).toBeGreaterThan(nameAt);
@@ -91,14 +91,14 @@ describe("pdf generation date labels", () => {
 
   it("uses caller-provided generated dates for medical summaries", () => {
     expect(source).toContain("generatedDate?: string;");
-    expect(source).toContain("function formatGeneratedDateUtc()");
+    expect(source).toContain("function formatGeneratedDateUtc(language: SupportedLanguage = \"en\")");
     expect(source).toContain(
-      'return new Date().toLocaleDateString("en-US", { timeZone: "UTC" })'
+      'language === "es" ? "es-CR" : "en-US"'
     );
     expect(source).toContain(
       "const generatedDate = data.generatedDate ?? formatGeneratedDateUtc()"
     );
-    expect(source).toContain("`Generated on ${generatedDate}");
+    expect(source).toContain('t("documents.generatedOn")');
     expect(source).not.toContain("const today = new Date().toLocaleDateString()");
   });
 
@@ -112,7 +112,7 @@ describe("pdf generation date labels", () => {
     expect(source).toContain("[\"Manufacturer\", data.manufacturer]");
     expect(source).toContain("[\"Lot number\", data.lotNumber]");
     expect(source).toContain(
-      "const generatedDate = data.generatedDate ?? formatGeneratedDateUtc()"
+      "const generatedDate = data.generatedDate ?? formatGeneratedDateUtc(language)"
     );
   });
 
@@ -124,9 +124,9 @@ describe("pdf generation date labels", () => {
     );
     expect(source).toContain("data.columns.forEach((column, index) =>");
     expect(source).toContain(
-      'doc.text(data.emptyMessage ?? "No report data available.", margin, y)'
+      'doc.text(data.emptyMessage ?? t("pdf.noData"), margin, y)'
     );
-    expect(source).toContain("doc.text(`Page ${i} of ${pageCount}`");
+    expect(source).toContain('t("documents.pageOf")');
   });
 });
 
@@ -136,6 +136,109 @@ describe("PDF branding compatibility", () => {
   it("keeps tenant branding optional and adds a discrete platform footer", () => {
     expect(source).toContain("export type PdfBranding");
     expect(source).toContain("tenantLogoDataUrl?: string;");
-    expect(source).toContain("Powered by ${platformBrand.displayName}");
+    expect(source).toContain('"branding.documentPlatform"');
+  });
+});
+
+describe("localized financial and report PDFs", () => {
+  it("localizes invoice labels and status while preserving the CRC amount input", () => {
+    const doc = generateInvoicePdf({
+      language: "es",
+      practiceName: "Agroveterinaria Dr. Cubillo",
+      clientName: "Jordan Avery",
+      patientName: "Biscuit",
+      invoiceDate: "31/12/2026",
+      status: "paid",
+      items: [{ description: "Consulta", quantity: 1, unitPrice: "₡3 000,00", total: "₡3 000,00" }],
+      subtotal: "₡3 000,00",
+      tax: "₡0,00",
+      total: "₡3 000,00",
+      paidAmount: "₡3 000,00",
+      balanceDue: "₡0,00",
+    });
+    const output = doc.output();
+    expect(output).toContain("FACTURA");
+    expect(output).toContain("PAGADA");
+    expect(output).toContain("Descripción");
+    expect(output).not.toContain("¡3 000");
+  });
+
+  it("localizes tabular report PDFs and preserves English fallback", () => {
+    const es = generateReportPdf({
+      language: "es",
+      title: "Reporte de ingresos",
+      columns: ["Sección", "Total"],
+      rows: [["Total del período", "₡3 000,00"]],
+      generatedDate: "31/12/2026",
+    }).output();
+    const en = generateReportPdf({
+      language: "en",
+      title: "Revenue Report",
+      columns: ["Section", "Total"],
+      rows: [["Selected period", "$100.00"]],
+      generatedDate: "12/31/2026",
+    }).output();
+    expect(es).toContain("Generado el");
+    expect(es).not.toContain("¡3 000");
+    expect(en).toContain("Generated on");
+  });
+
+  it("localizes medical summary structure without translating clinical content", () => {
+    const output = generateMedicalSummaryPdf({
+      language: "es",
+      practiceName: "Agroveterinaria Dr. Cubillo",
+      patientName: "Biscuit",
+      species: "Canine",
+      clientName: "Jordan Avery",
+      allergies: [],
+      problems: [],
+      vaccinations: [],
+      recentNotes: [
+        {
+          date: "31 dic 2026",
+          subjective: "Owner reports improved appetite.",
+          authorName: "Dr. Rivera",
+          finalizerName: "Dr. Rivera",
+          finalizedAt: "31 dic 2026, 10:30",
+        },
+      ],
+      prescriptions: [],
+      generatedDate: "31 dic 2026",
+    }).output();
+
+    expect(output).toContain("RESUMEN DEL EXPEDIENTE CLÍNICO");
+    expect(output).toContain("Información del paciente");
+    expect(output).toContain("finalizada por");
+    expect(output).not.toContain("MEDICAL RECORD SUMMARY");
+    expect(output).not.toContain("Finalized by");
+    expect(output).not.toContain(" on 31 dic 2026");
+    expect(output).toContain("Owner reports improved appetite.");
+  });
+
+  it("scales the shared CRC vector glyph across amounts and report pages", () => {
+    const source = readFileSync("lib/pdf.ts", "utf8");
+    expect(source).toContain(
+      "const fontSizeMm = doc.getFontSize() / doc.internal.scaleFactor",
+    );
+    expect(source).toContain("const height = fontSizeMm * 0.82");
+    expect(source).toContain("doc.setLineCap(\"round\")");
+    expect(source).toContain("doc.setLineJoin(\"round\")");
+
+    const doc = generateReportPdf({
+      language: "es",
+      title: "Reporte de ingresos",
+      columns: ["Monto"],
+      rows: [
+        ["₡0,00"],
+        ["₡390,00"],
+        ["₡3 390,00"],
+        ["₡112 571,58"],
+        ...Array.from({ length: 36 }, (_, index) => [`₡${index + 1},00`]),
+      ],
+      generatedDate: "31/12/2026",
+    });
+
+    expect(doc.getNumberOfPages()).toBeGreaterThan(1);
+    expect(doc.output()).not.toContain("¡");
   });
 });

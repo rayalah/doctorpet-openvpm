@@ -26,6 +26,7 @@ import {
 } from "./guide-signals";
 import { findTourAnchor, useAnchorRect } from "./use-tour-anchor";
 import { Coachmark } from "./coachmark";
+import { useTranslations } from "@/lib/i18n/client";
 
 /**
  * Walk from `from` in direction `dir`, passing over steps whose required
@@ -74,6 +75,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const t = useTranslations();
   const isAdmin = status === "authenticated" && session?.user?.role === "admin";
   const userId = session?.user?.id ?? null;
 
@@ -160,18 +162,18 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
           agentConfigured:
             ctx.agentConfigured ??
             Boolean(agentStatus.data?.configured && agentStatus.data?.canUseAi),
-        });
+        }, t);
         prefetchSteps(steps);
         setRun({ recipe, steps, index: 0 });
         persist("in_progress", steps[0]!.id);
         return;
       }
-      const steps = buildGuideSteps(recipe, ctx);
+      const steps = buildGuideSteps(recipe, ctx, t);
       if (steps.length === 0) return;
       prefetchSteps(steps);
       setRun({ recipe, steps, index: 0 });
     },
-    [isAdmin, persist, prefetchSteps, welcomeCtx.data, agentStatus.data],
+    [isAdmin, persist, prefetchSteps, welcomeCtx.data, agentStatus.data, t],
   );
 
   // Start ONLY on an explicit ?tour=start deep-link. Onboarding is opt-in: a

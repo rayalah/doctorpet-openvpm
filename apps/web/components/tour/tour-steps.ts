@@ -11,6 +11,7 @@
  * are built in.
  */
 import { GUIDE_SIGNALS } from "./guide-signals";
+import { createTranslator, type Translator } from "@/lib/i18n/messages";
 
 export interface TourStep {
   id: string;
@@ -42,25 +43,36 @@ export interface TourContext {
   agentConfigured?: boolean;
 }
 
-export function buildTourSteps(ctx: TourContext = {}): TourStep[] {
+function interpolate(value: string, replacements: Record<string, string>) {
+  return Object.entries(replacements).reduce(
+    (result, [key, replacement]) => result.replace(`{${key}}`, replacement),
+    value,
+  );
+}
+
+export function buildTourSteps(
+  ctx: TourContext = {},
+  t: Translator = createTranslator("en"),
+): TourStep[] {
   const patientName = ctx.demoPatientName ?? null;
   const agentReady = ctx.agentConfigured ?? false;
+  const agentQuestion = t("guides.prompt.vaccinesOverdue");
 
   const steps: TourStep[] = [
     {
       id: "welcome",
       route: "/",
-      title: "Welcome to Doctor Pet",
-      body: "This is your practice. We added a few sample pets so it feels real while you look around.",
+      title: t("guides.tour.welcome.title"),
+      body: t("guides.tour.welcome.body"),
     },
     {
       id: "schedule",
       route: "/schedule",
       anchor: "schedule-calendar",
-      title: "Your day, at a glance",
+      title: t("guides.tour.schedule.title"),
       body: patientName
-        ? `Every visit lives here. ${patientName} is already booked, so you can see a real day. Click any open slot to book a visit.`
-        : "Book visits and check pets in from one simple calendar. Click any open slot to book a visit.",
+        ? interpolate(t("guides.tour.schedule.withPatient"), { patient: patientName })
+        : t("guides.tour.schedule.empty"),
     },
   ];
 
@@ -68,16 +80,18 @@ export function buildTourSteps(ctx: TourContext = {}): TourStep[] {
     steps.push({
       id: "patient-chart",
       route: `/patients/${ctx.demoPatientId}`,
-      title: "Every pet's full story",
-      body: `This is ${patientName ?? "a sample pet"}'s chart. Notes, shots, meds, and labs all live on one page. The tabs go deeper when you need them.`,
+      title: t("guides.tour.records.title"),
+      body: interpolate(t("guides.tour.records.withPatient"), {
+        patient: patientName ?? "a sample pet",
+      }),
     });
   } else {
     steps.push({
       id: "records",
       route: "/records",
       anchor: "nav-/records",
-      title: "Every pet's full story",
-      body: "Notes, shots, meds, and labs all live in one place.",
+      title: t("guides.tour.records.title"),
+      body: t("guides.tour.records.empty"),
     });
   }
 
@@ -86,16 +100,16 @@ export function buildTourSteps(ctx: TourContext = {}): TourStep[] {
       id: "invoice",
       route: `/billing?expand=${ctx.demoInvoiceId}`,
       anchor: "invoice-detail",
-      title: "Bill in one click",
-      body: "Here is a real bill, already itemized. A visit becomes a bill in one click, and clients can pay online.",
+      title: t("guides.tour.billing.title"),
+      body: t("guides.tour.billing.withInvoice"),
     });
   } else {
     steps.push({
       id: "billing",
       route: "/billing",
       anchor: "nav-/billing",
-      title: "Bill in one click",
-      body: "Turn a visit into a bill and take payment online.",
+      title: t("guides.tour.billing.title"),
+      body: t("guides.tour.billing.empty"),
     });
   }
 
@@ -103,18 +117,18 @@ export function buildTourSteps(ctx: TourContext = {}): TourStep[] {
     id: "inbox",
     route: "/inbox",
     anchor: "inbox-list",
-    title: "Talk to clients, all in one place",
-    body: "Text clients from your own number, or send and receive email, right here. We added a few messages so you can see how it feels.",
+    title: t("guides.tour.inbox.title"),
+    body: t("guides.tour.inbox.body"),
   });
 
   steps.push({
     id: "agent",
-    route: `/agent?ask=${encodeURIComponent(AGENT_TOUR_QUESTION)}`,
+    route: `/agent?ask=${encodeURIComponent(agentQuestion)}`,
     anchor: "agent-input",
-    title: "Now meet your AI helper",
+    title: t("guides.tour.agent.title"),
     body: agentReady
-      ? "We typed a real question for you. Press send and watch it check every chart in seconds."
-      : "Ask about your pets and your data in plain words, right here. Your AI helper turns on once your workspace key is set.",
+      ? t("guides.tour.agent.ready")
+      : t("guides.tour.agent.notReady"),
     advanceOn: agentReady ? GUIDE_SIGNALS.agentRunSucceeded : undefined,
   });
 
@@ -126,16 +140,16 @@ export function buildTourSteps(ctx: TourContext = {}): TourStep[] {
       id: "agent-reply",
       anchor: "agent-reply",
       requiresAnchor: true,
-      title: "There is your answer",
-      body: "The AI read your charts and answered in plain words. Take a moment and read it. You can ask anything like this, any time.",
+      title: t("guides.tour.agentReply.title"),
+      body: t("guides.tour.agentReply.body"),
     });
   }
 
   steps.push({
     id: "finish",
     route: "/",
-    title: "You're all set",
-    body: "That was your clinic: the day sheet, the charts, the bills, and your AI helper. Your data is always yours. Export it any time.",
+    title: t("guides.tour.finish.title"),
+    body: t("guides.tour.finish.body"),
   });
 
   return steps;

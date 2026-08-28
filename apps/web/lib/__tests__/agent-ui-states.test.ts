@@ -41,21 +41,19 @@ describe("agent UI states", () => {
   });
 
   it("makes clinical write mode explicit and one-run only", () => {
-    expect(source).toContain("Allow writes: appointments and patient vitals");
-    expect(source).toContain("Write mode can create appointments");
-    expect(source).toContain("record patient vitals");
+    expect(source).toContain('t("guides.agent.allowWrites")');
+    expect(source).toContain('t("guides.agent.writeMode")');
     expect(source).not.toContain("save SOAP");
-    expect(source).toContain("turns off automatically after this run");
     expect(source).not.toContain("Allow writes (e.g. booking appointments)");
   });
 
   it("surfaces agent status loading and error states", () => {
-    expect(source).toContain("Checking agent configuration");
-    expect(source).toContain("Could not check agent status");
-    expect(source).toContain("Agent status is unavailable");
+    expect(source).toContain('t("guides.agent.checkingStatus")');
+    expect(source).toContain('t("guides.agent.statusError")');
+    expect(source).toContain('t("guides.agent.statusUnavailable")');
     expect(source).toContain("onClick={() => void status.refetch()}");
-    expect(source).toContain("status.error.message");
-    expect(source).toContain("The agent is not available right now.");
+    expect(source).toContain('t("guides.agent.statusErrorBody")');
+    expect(source).toContain('t("guides.agent.hostedUnavailable")');
     // Hosted clinics must never see raw env-var instructions; self-host
     // admins keep them because they can actually act on them.
     expect(source).toContain("verifiedAgentStatus?.hosted ? (");
@@ -69,7 +67,7 @@ describe("agent UI states", () => {
       source.indexOf(": !configured ? ("),
     );
     expect(source).toContain(": !configured ? (");
-    expect(source).toContain("Add a card to try AI");
+    expect(source).toContain('t("guides.agent.addCardTitle")');
     expect(source).toContain('router.push("/settings?tab=billing")');
     expect(source.indexOf(": needsBillingSetup ? (")).toBeLessThan(
       source.indexOf(": !configured ? ("),
@@ -108,12 +106,12 @@ describe("agent UI states", () => {
     expect(source).toContain("const { data: session, status } = useSession()");
     expect(source).toContain('if (status === "loading")');
     expect(source).toContain("if (!canRunAgentRole(session?.user?.role))");
-    expect(source).toContain("Agent access is restricted");
+    expect(source).toContain('t("guides.agent.restricted.title")');
     expect(source).toContain(
-      'return <AgentRunner isAdmin={session?.user?.role === "admin"} />',
+      'return <AgentRunner isAdmin={session?.user?.role === "admin"} t={t} />',
     );
-    expect(source).toContain("function AgentRunner({ isAdmin }");
-    expect(source.indexOf("function AgentRunner({ isAdmin }")).toBeLessThan(
+    expect(source).toContain("function AgentRunner({");
+    expect(source.indexOf("function AgentRunner({")).toBeLessThan(
       source.indexOf("trpc.agent.status.useQuery"),
     );
     expect(routerSource).toContain('requireRole("admin", "veterinarian")');

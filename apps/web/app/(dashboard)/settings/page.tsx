@@ -68,6 +68,7 @@ import {
   type ClinicRegionCode,
 } from "@/lib/locale/clinic-regions";
 import { useCurrencyFormatter } from "@/lib/locale/useCurrency";
+import { useTranslations } from "@/lib/i18n/client";
 import { formatDateInputForTimeZone } from "@/lib/date-input";
 import { isSafeCheckoutRedirectUrl } from "@/lib/checkout-redirect";
 import { trialCalendarDaysLeft } from "@/lib/billing/trial-days";
@@ -316,6 +317,7 @@ export default function SettingsPage() {
 }
 
 function SettingsPageInner() {
+  const t = useTranslations();
   const { data: session, status } = useSession();
   const { openWelcome } = useWelcome();
   const searchParams = useSearchParams();
@@ -361,7 +363,7 @@ function SettingsPageInner() {
           onClick={openWelcome}
         >
           <Compass className="mr-2 h-4 w-4" />
-          Guides
+          {t("guides.button")}
         </Button>
       </div>
 

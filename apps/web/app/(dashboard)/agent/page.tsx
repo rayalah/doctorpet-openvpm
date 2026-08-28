@@ -26,14 +26,15 @@ import {
   AGENT_INSTRUCTION_MAX_LENGTH,
   isAgentInstructionValid,
 } from "@/lib/agent/policy";
-import { platformBrand } from "@/lib/brand/platform-brand";
+import { useTranslations } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/messages";
 
-const SUGGESTIONS = [
-  "Which patients are overdue for vaccinations?",
-  "Summarize today's appointments.",
-  "What's the carprofen dose for a 12 kg dog?",
-  "Pull a clinical summary for the next patient checked in.",
-];
+const SUGGESTION_KEYS = [
+  "guides.prompt.vaccinesOverdue",
+  "guides.prompt.appointmentsSummary",
+  "guides.prompt.carprofenDose",
+  "guides.prompt.nextPatientSummary",
+] as const;
 
 type ToolCall = { name: string; input: unknown; error?: string | null };
 type ChatMessage = {
@@ -49,6 +50,7 @@ function canRunAgentRole(role?: string | null): boolean {
 }
 
 export default function AgentPage() {
+  const t = useTranslations();
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -57,7 +59,7 @@ export default function AgentPage() {
       <div className="mx-auto max-w-3xl rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Checking agent access...
+          {t("guides.agent.checkingAccess")}
         </div>
       </div>
     );
@@ -68,10 +70,10 @@ export default function AgentPage() {
       <div className="mx-auto max-w-3xl">
         <EmptyState
           icon={Bot}
-          title="Agent access is restricted"
-          description={`Only administrators and veterinarians can run the ${platformBrand.productName} Agent.`}
+          title={t("guides.agent.restricted.title")}
+          description={t("guides.agent.restricted.description")}
           action={{
-            label: "Back to dashboard",
+            label: t("guides.agent.backDashboard"),
             onClick: () => router.push("/"),
           }}
         />
@@ -79,10 +81,16 @@ export default function AgentPage() {
     );
   }
 
-  return <AgentRunner isAdmin={session?.user?.role === "admin"} />;
+  return <AgentRunner isAdmin={session?.user?.role === "admin"} t={t} />;
 }
 
-function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
+function AgentRunner({
+  isAdmin,
+  t,
+}: {
+  isAdmin: boolean;
+  t: Translator;
+}) {
   const router = useRouter();
   const status = trpc.agent.status.useQuery();
   const run = trpc.agent.run.useMutation();
@@ -124,6 +132,7 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
   const lastReplyId = [...messages]
     .reverse()
     .find((m) => m.role === "assistant" && !m.isError)?.id;
+  const suggestions = SUGGESTION_KEYS.map((key) => t(key));
 
   // Signal the tour AFTER the reply is committed to the DOM so its next step
   // can spotlight the answer. Firing from onSuccess ran before render, and
@@ -211,21 +220,21 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
   const statusBanner = status.isLoading ? (
     <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
       <Loader2 className="h-4 w-4 animate-spin" />
-      Checking agent configuration…
+      {t("guides.agent.checkingStatus")}
     </div>
   ) : status.error ? (
     <div className="mb-4 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <div>
-        <p className="font-medium">Could not check agent status</p>
-        <p className="mt-1">{status.error.message}</p>
+        <p className="font-medium">{t("guides.agent.statusError")}</p>
+        <p className="mt-1">{t("guides.agent.statusErrorBody")}</p>
         <Button
           variant="outline"
           size="sm"
           className="mt-3"
           onClick={() => void status.refetch()}
         >
-          Retry
+          {t("guides.agent.retry")}
         </Button>
       </div>
     </div>
@@ -233,9 +242,9 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
     <div className="mb-4 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <div>
-        <p className="font-medium">Agent status is unavailable</p>
+        <p className="font-medium">{t("guides.agent.statusUnavailable")}</p>
         <p className="mt-1">
-          We could not confirm the agent is ready. Retry before running.
+          {t("guides.agent.statusUnavailableBody")}
         </p>
         <Button
           variant="outline"
@@ -243,7 +252,7 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
           className="mt-3"
           onClick={() => void status.refetch()}
         >
-          Retry
+          {t("guides.agent.retry")}
         </Button>
       </div>
     </div>
@@ -251,9 +260,9 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
     <div className="mb-4 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
       <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
       <div>
-        <p className="font-medium">Add a card to try AI</p>
+        <p className="font-medium">{t("guides.agent.addCardTitle")}</p>
         <p className="mt-1 text-muted-foreground">
-          {verifiedAgentStatus?.accessMessage}
+          {t("guides.agent.addCardBody")}
         </p>
         {isAdmin ? (
           <Button
@@ -261,11 +270,11 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
             className="mt-3"
             onClick={() => router.push("/settings?tab=billing")}
           >
-            Add a card
+            {t("guides.agent.addCard")}
           </Button>
         ) : (
           <p className="mt-2 text-muted-foreground">
-            Ask a practice administrator to add the card.
+            {t("guides.agent.askAdmin")}
           </p>
         )}
       </div>
@@ -274,8 +283,7 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
     <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <p>
-        {verifiedAgentStatus?.accessMessage ??
-          `${platformBrand.productName} AI is not available for this workspace.`}
+        {t("guides.agent.notAvailable")}
       </p>
     </div>
   ) : !configured ? (
@@ -285,17 +293,16 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
         // Hosted clinics can't fix a platform key. Keep it human; ops sees
         // the missing config through /api/health checks.
         <p>
-          The agent is not available right now. We are on it. Please check back
-          soon.
+          {t("guides.agent.hostedUnavailable")}
         </p>
       ) : (
         <p>
-          Configure Google Vertex AI with{" "}
+          {t("guides.agent.configure")} {" "}
           <code className="break-all font-mono">GOOGLE_VERTEX_PROJECT</code>,{" "}
           <code className="break-all font-mono">GOOGLE_VERTEX_LOCATION</code>,{" "}
-          and service-account credentials for Gemini, or set{" "}
-          <code className="break-all font-mono">ANTHROPIC_API_KEY</code> for an
-          explicit Claude model.
+          {t("guides.agent.vertexCredentials")}, {t("guides.agent.orSet")} {" "}
+          <code className="break-all font-mono">ANTHROPIC_API_KEY</code>{" "}
+          {t("guides.agent.forClaude")}
         </p>
       )}
     </div>
@@ -309,10 +316,9 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
           <Bot className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="font-heading text-2xl font-semibold">{platformBrand.productName} Agent</h1>
+          <h1 className="font-heading text-2xl font-semibold">{t("guides.agent.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Ask about your clinic. It can look things up and, with your okay, do
-            the work.
+            {t("guides.agent.subtitle")}
           </p>
         </div>
       </div>
@@ -327,14 +333,13 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
               <Sparkles className="h-6 w-6" />
             </div>
             <h2 className="mt-4 font-heading text-xl font-semibold">
-              What can I help you with?
+              {t("guides.agent.emptyTitle")}
             </h2>
             <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              AI is built into {platformBrand.productName}. Ask a question in plain words, or start
-              with one of these.
+              {t("guides.agent.emptyDescription")}
             </p>
             <div className="mt-6 grid w-full max-w-xl gap-2 sm:grid-cols-2">
-              {SUGGESTIONS.map((s) => (
+              {suggestions.map((s) => (
                 <button
                   key={s}
                   type="button"
@@ -353,10 +358,10 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
               m.id === lastReplyId ? (
                 // The tour's reply beat spotlights the newest good answer.
                 <div key={m.id} data-tour="agent-reply">
-                  <MessageBubble message={m} />
+                <MessageBubble message={m} t={t} />
                 </div>
               ) : (
-                <MessageBubble key={m.id} message={m} />
+                <MessageBubble key={m.id} message={m} t={t} />
               ),
             )}
             {run.isPending ? <TypingIndicator /> : null}
@@ -391,10 +396,10 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
             disabled={!canRun || run.isPending}
             placeholder={
               canRun
-                ? "Ask the agent anything…  (Enter to send, Shift+Enter for a new line)"
+                ? t("guides.agent.placeholderAsk")
                 : needsBillingSetup
-                  ? "Add a card to try AI."
-                  : "The agent is not available right now."
+                  ? t("guides.agent.placeholderCard")
+                  : t("guides.agent.placeholderUnavailable")
             }
             className="max-h-40 w-full resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
           />
@@ -407,14 +412,14 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
                 disabled={!canRun || run.isPending}
                 className="h-3.5 w-3.5 rounded border-border"
               />
-              Allow writes: appointments and patient vitals
+              {t("guides.agent.allowWrites")}
             </label>
             <Button
               type="button"
               size="icon"
               onClick={submit}
               disabled={submitDisabled}
-              aria-label="Send"
+              aria-label={t("guides.agent.send")}
               className="h-8 w-8 rounded-full"
             >
               {run.isPending ? (
@@ -429,8 +434,7 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
           <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <p>
-              Write mode can create appointments or record patient vitals. It
-              turns off automatically after this run.
+              {t("guides.agent.writeMode")}
             </p>
           </div>
         ) : null}
@@ -439,7 +443,13 @@ function AgentRunner({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  t,
+}: {
+  message: ChatMessage;
+  t: Translator;
+}) {
   const [traceOpen, setTraceOpen] = useState(false);
   const isUser = message.role === "user";
 
@@ -470,8 +480,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                 <ChevronRight className="h-3.5 w-3.5" />
               )}
               <Wrench className="h-3.5 w-3.5" />
-              {message.toolCalls.length} tool call
-              {message.toolCalls.length === 1 ? "" : "s"}
+              {message.toolCalls.length}{" "}
+              {message.toolCalls.length === 1
+                ? t("guides.agent.toolCall")
+                : t("guides.agent.toolCalls")}
             </button>
             {traceOpen ? (
               <ul className="mt-2 space-y-2">

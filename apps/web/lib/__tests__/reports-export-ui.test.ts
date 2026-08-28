@@ -13,20 +13,20 @@ describe("reports export UI", () => {
 
     expect(servicesBlock).toContain("if (data.items.length === 0)");
     expect(servicesBlock).toContain("onCsv={exportServices}");
-    expect(source).toContain("Export CSV");
-    expect(servicesBlock).toContain("No service data available");
+    expect(source).toContain('t("reports.exportCsv")');
+    expect(servicesBlock).toContain('t("reports.noServiceData")');
   });
 
   it("exports every reports tab to CSV and PDF without loading jsPDF upfront", () => {
     expect(source).toContain("function ReportExportButtons");
     expect(source).toContain('import("@/lib/pdf")');
     expect(source).toContain("generateReportPdf");
-    expect(source).toContain('Export CSV');
-    expect(source).toContain('Export PDF');
-    expect(source).toContain('title: "Revenue Report"');
-    expect(source).toContain('title: "Appointments Report"');
-    expect(source).toContain('title: "Services Report"');
-    expect(source).toContain('title: "Inventory Alerts Report"');
+    expect(source).toContain('t("reports.exportCsv")');
+    expect(source).toContain('t("reports.exportPdf")');
+    expect(source).toContain('title: t("reports.revenueReport")');
+    expect(source).toContain('title: t("reports.appointmentsReport")');
+    expect(source).toContain('title: t("reports.servicesReport")');
+    expect(source).toContain('title: t("reports.inventoryAlertsReport")');
     expect(source).toContain('filename: reportFilename("revenue", data.range, "pdf")');
     expect(source).toContain(
       'filename: reportFilename("appointments", data.range, "pdf")'
@@ -74,13 +74,11 @@ describe("reports export UI", () => {
     );
     expect(source).toContain('id="reports-date-range-error"');
     expect(source).toContain("function ReportDateRangeInvalid");
-    expect(source).toContain("Choose a valid report date range");
+    expect(source).toContain('t("reports.chooseValidRange")');
     expect(source).toContain(
       "activeTab === \"revenue\" && hasValidDateRange && dateRange"
     );
-    expect(source).toContain(
-      "hasValidDateRange && dateRange ? (\n            <AppointmentsTab dateRange={dateRange} />"
-    );
+    expect(source).toContain("<AppointmentsTab dateRange={dateRange} />");
     expect(source).toContain(
       "activeTab === \"services\" && hasValidDateRange && dateRange"
     );
@@ -101,9 +99,9 @@ describe("reports export UI", () => {
     );
 
     expect(source).toContain('import { EmptyState } from "@/components/common/empty-state"');
-    expect(revenueBlock).toContain('title="No revenue data for this period"');
-    expect(appointmentsBlock).toContain('title="No doctor breakdown available"');
-    expect(inventoryBlock).toContain('title="All stock levels OK"');
+    expect(revenueBlock).toContain('title={t("reports.noRevenue")}');
+    expect(appointmentsBlock).toContain('title={t("reports.noDoctorBreakdown")}');
+    expect(inventoryBlock).toContain('title={t("reports.allStockOk")}');
   });
 
   it("does not leave report tabs loading forever when payloads are missing", () => {
@@ -127,13 +125,11 @@ describe("reports export UI", () => {
     ];
 
     expect(source).toContain("function ReportMissingData");
-    expect(source).toContain('title="Could not load report data"');
+    expect(source).toContain('title={t("reports.couldNotLoadData")}');
     expect(source).not.toContain("isLoading || !data");
     expect(source).toContain("const settingsMissingData =");
     expect(source).toContain("reportSettings === undefined");
-    expect(source).toContain(
-      "settingsMissingData ? (\n          <ReportMissingData onRetry={() => settingsQuery.refetch()} />"
-    );
+    expect(source).toContain("<ReportMissingData onRetry={() => settingsQuery.refetch()} />");
 
     for (const block of reportBlocks) {
       expect(block).toContain("if (isLoading) return <LoadingSkeleton />");
@@ -172,7 +168,7 @@ describe("reports export UI", () => {
     expect(source).toContain("const { data: session, status } = useSession()");
     expect(source).toContain('if (status === "loading")');
     expect(source).toContain("if (!canViewReportsRole(session?.user?.role))");
-    expect(source).toContain("Reports are restricted");
+    expect(source).toContain('title={t("reports.restricted")}');
     expect(source).toContain("return <ReportsDashboard />");
     expect(source).toContain("function ReportsDashboard()");
     expect(source.indexOf("function ReportsDashboard()")).toBeLessThan(

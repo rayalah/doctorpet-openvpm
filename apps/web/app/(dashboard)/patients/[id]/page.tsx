@@ -255,7 +255,8 @@ function PatientDetailLoadingPanel({ label }: { label: string }) {
 
 export default function PatientDetailPage() {
   const t = useTranslations();
-  const dateLocale = dateLocaleForLanguage(useLanguage());
+  const language = useLanguage();
+  const dateLocale = dateLocaleForLanguage(language);
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: session } = useSession();
@@ -510,8 +511,9 @@ export default function PatientDetailPage() {
 
   const patientData = patient;
   const recordsTimeZone = verifiedRecordsSettings.timezone;
+  const documentLocale = language === "es" ? "es-CR" : "en-US";
   const recordsPracticeName =
-    verifiedRecordsSettings.name ?? "Veterinary Practice";
+    verifiedRecordsSettings.name ?? t("documents.defaultPracticeName");
   const recordsPracticePhone = verifiedRecordsSettings.phone;
 
   async function handleDownloadSummary() {
@@ -542,9 +544,7 @@ export default function PatientDetailPage() {
         !soapNotesResult.data ||
         !prescriptionsResult.data
       ) {
-        throw new Error(
-          "Unable to load complete medical summary data. Please retry.",
-        );
+        throw new Error(t("documents.summaryDataUnavailable"));
       }
 
       const problems = problemsResult.data;
@@ -554,10 +554,11 @@ export default function PatientDetailPage() {
       const { generateMedicalSummaryPdf } = await import("@/lib/pdf");
 
       generateMedicalSummaryPdf({
+        language,
         practiceName: recordsPracticeName,
         practicePhone: recordsPracticePhone ?? undefined,
         patientName: patientData.name,
-        species: patientData.species ?? "Unknown",
+        species: patientData.species ?? t("documents.unknown"),
         breed: patientData.breed ?? undefined,
         sex: patientData.sex ?? undefined,
         dob: patientData.dob ?? undefined,
@@ -581,10 +582,10 @@ export default function PatientDetailPage() {
           .map((v) => ({
             name: v.vaccineName,
             date: v.administeredAt
-              ? formatClinicalDate(v.administeredAt, recordsTimeZone, "Unknown")
-              : "Unknown",
+              ? formatClinicalDate(v.administeredAt, recordsTimeZone, t("documents.unknown"), documentLocale)
+              : t("documents.unknown"),
             nextDue: v.nextDueDate
-              ? formatClinicalDate(v.nextDueDate, recordsTimeZone)
+              ? formatClinicalDate(v.nextDueDate, recordsTimeZone, "--", documentLocale)
               : undefined,
           })),
         recentNotes: soapNotes
@@ -592,8 +593,8 @@ export default function PatientDetailPage() {
           .slice(0, 5)
           .map((n) => ({
             date: n.createdAt
-              ? formatClinicalDate(n.createdAt, recordsTimeZone, "Unknown")
-              : "Unknown",
+              ? formatClinicalDate(n.createdAt, recordsTimeZone, t("documents.unknown"), documentLocale)
+              : t("documents.unknown"),
             subjective: n.subjective ?? undefined,
             objective: n.objective ?? undefined,
             assessment: n.assessment ?? undefined,
@@ -602,15 +603,16 @@ export default function PatientDetailPage() {
             authorName: n.authorName,
             finalizerName: n.finalizerName ?? undefined,
             finalizedAt: n.finalizedAt
-              ? formatClinicalDateTime(n.finalizedAt, recordsTimeZone)
+              ? formatClinicalDateTime(n.finalizedAt, recordsTimeZone, "--", documentLocale)
               : undefined,
             replacementForLabel: n.replacesSoapNoteId
-              ? `SOAP note dated ${formatClinicalDate(
+              ? t("documents.soapNoteDated").replace("{date}", formatClinicalDate(
                   soapNotes.find((source) => source.id === n.replacesSoapNoteId)
                     ?.createdAt,
                   recordsTimeZone,
-                  "unknown date",
-                )}`
+                  t("documents.unknownDate"),
+                  documentLocale,
+                ))
               : undefined,
             addenda: n.addenda.map((addendum) => ({
               content: soapSectionText(addendum.content),
@@ -618,6 +620,8 @@ export default function PatientDetailPage() {
               createdAt: formatClinicalDateTime(
                 addendum.createdAt,
                 recordsTimeZone,
+                "--",
+                documentLocale,
               ),
             })),
           })),
@@ -630,16 +634,19 @@ export default function PatientDetailPage() {
                 Boolean(allergy.correctedAt),
             )
             .map((allergy) => ({
-              recordLabel: `Allergy “${allergy.allergen}” recorded ${formatClinicalDate(
-                allergy.notedAt,
-                recordsTimeZone,
-                "Unknown date",
-              )}`,
-              reason: allergy.correctionReason ?? "Reason unavailable",
-              correctedByName: allergy.correctedByName ?? "Unknown clinician",
+              recordLabel: t("documents.allergyRecorded")
+                .replace("{allergen}", allergy.allergen)
+                .replace("{date}", formatClinicalDate(
+                  allergy.notedAt,
+                  recordsTimeZone,
+                  t("documents.unknownDate"),
+                  documentLocale,
+                )),
+              reason: allergy.correctionReason ?? t("documents.reasonUnavailable"),
+              correctedByName: allergy.correctedByName ?? t("documents.unknownClinician"),
               correctedAt: allergy.correctedAt
-                ? formatClinicalDateTime(allergy.correctedAt, recordsTimeZone)
-                : "Unknown time",
+                ? formatClinicalDateTime(allergy.correctedAt, recordsTimeZone, t("documents.unknownTime"), documentLocale)
+                : t("documents.unknownTime"),
             })),
           ...soapNotes
             .filter(
@@ -647,16 +654,17 @@ export default function PatientDetailPage() {
                 note.status === "finalized" && Boolean(note.correctionId),
             )
             .map((note) => ({
-              recordLabel: `SOAP note dated ${formatClinicalDate(
+              recordLabel: t("documents.soapNoteDated").replace("{date}", formatClinicalDate(
                 note.createdAt,
                 recordsTimeZone,
-                "Unknown date",
-              )}`,
-              reason: note.correctionReason ?? "Reason unavailable",
-              correctedByName: note.correctedByName ?? "Unknown clinician",
+                t("documents.unknownDate"),
+                documentLocale,
+              )),
+              reason: note.correctionReason ?? t("documents.reasonUnavailable"),
+              correctedByName: note.correctedByName ?? t("documents.unknownClinician"),
               correctedAt: note.correctedAt
-                ? formatClinicalDateTime(note.correctedAt, recordsTimeZone)
-                : "Unknown time",
+                ? formatClinicalDateTime(note.correctedAt, recordsTimeZone, t("documents.unknownTime"), documentLocale)
+                : t("documents.unknownTime"),
               replacementLabel: note.replacementSoapNoteId
                 ? (() => {
                     const replacement = soapNotes.find(
@@ -664,12 +672,13 @@ export default function PatientDetailPage() {
                         candidate.id === note.replacementSoapNoteId,
                     );
                     return replacement
-                      ? `SOAP note dated ${formatClinicalDate(
+                      ? `${t("documents.soapNoteDated").replace("{date}", formatClinicalDate(
                           replacement.createdAt,
                           recordsTimeZone,
-                          "unknown date",
-                        )}, finalized by ${replacement.finalizerName ?? "Unknown clinician"}`
-                      : "Replacement SOAP retained in chart";
+                          t("documents.unknownDate"),
+                          documentLocale,
+                        ))}, ${t("documents.finalizedBy")} ${replacement.finalizerName ?? t("documents.unknownClinician")}`
+                      : t("documents.replacementRetained");
                   })()
                 : undefined,
             })),
@@ -680,16 +689,13 @@ export default function PatientDetailPage() {
           frequency: rx.frequency ?? "",
           status: rx.effectiveStatus ?? "active",
         })),
-        generatedDate: formatClinicalDate(new Date(), recordsTimeZone),
+        generatedDate: formatClinicalDate(new Date(), recordsTimeZone, "--", documentLocale),
       }).save(`${patientData.name.replace(/\s+/g, "_")}_medical_summary.pdf`);
 
-      toast.success("Medical summary downloaded");
+      toast.success(t("documents.summaryDownloaded"));
     } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Failed to generate medical summary",
-      );
+      console.error("Medical summary generation failed", err);
+      toast.error(t("documents.summaryDownloadFailed"));
     }
   }
 

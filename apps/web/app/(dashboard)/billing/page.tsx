@@ -164,7 +164,8 @@ export default function BillingPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const t = useTranslations();
-  const locale = useLanguage() === "es" ? "es-CR" : "en-US";
+  const language = useLanguage();
+  const locale = language === "es" ? "es-CR" : "en-US";
   const formatCurrency = useCurrencyFormatter();
   const canManageBilling = canManageBillingRole(session?.user?.role);
   const canWaiveDispenseCharges = session?.user?.role === "admin";
@@ -440,6 +441,7 @@ export default function BillingPage() {
                     onConvertEstimate={handleConvertEstimate}
                     onVoidInvoice={handleVoidInvoice}
                     practiceName={verifiedBillingConfig.practiceName}
+                    language={language}
                     billingTimeZone={billingTimeZone}
                     canManageBilling={canManageBilling}
                     isMutating={
@@ -987,6 +989,7 @@ function InvoiceRow({
   onConvertEstimate,
   onVoidInvoice,
   practiceName,
+  language,
   billingTimeZone,
   canManageBilling,
   isMutating,
@@ -1017,6 +1020,7 @@ function InvoiceRow({
   onConvertEstimate: (e: React.MouseEvent, id: string) => void;
   onVoidInvoice: (e: React.MouseEvent, id: string) => void;
   practiceName: string;
+  language: "en" | "es";
   billingTimeZone?: string | null;
   canManageBilling: boolean;
   isMutating: boolean;
@@ -1180,6 +1184,7 @@ function InvoiceRow({
                           const { generateInvoicePdf } = await import("@/lib/pdf");
                           generateInvoicePdf({
                             practiceName,
+                            language,
                             clientName,
                             clientEmail: d.clientEmail ?? undefined,
                             patientName: d.patientName ?? undefined,
@@ -1371,6 +1376,7 @@ function InvoiceRow({
                           const { generateInvoicePdf } = await import("@/lib/pdf");
                           generateInvoicePdf({
                             practiceName,
+                            language,
                             clientName,
                             clientEmail: d.clientEmail ?? undefined,
                             patientName: d.patientName ?? undefined,

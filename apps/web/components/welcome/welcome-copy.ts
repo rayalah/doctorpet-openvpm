@@ -5,24 +5,23 @@
  */
 
 import type { WelcomeCardId } from "@/lib/welcome/cards";
-import { platformBrand } from "@/lib/brand/platform-brand";
 import type { Translator } from "@/lib/i18n";
 
 export function getWelcomeCopy(t: Translator) {
   return {
     headlineAdmin: (practiceName: string) =>
-      `${t("welcome.headline.admin")} ${platformBrand.productName}, ${practiceName}!`,
+      `${t("welcome.headline.admin")} ${t("branding.documentPlatform")}, ${practiceName}!`,
     headlineStaff: (firstName: string) =>
       `${t("welcome.headline.staff")} ${firstName}!`,
-    headlineFallback: `${t("welcome.headline.admin")} ${platformBrand.productName}!`,
-    subline: `${t("welcome.subline.before")} ${platformBrand.productName} ${t("welcome.subline.after")}`,
+    headlineFallback: `${t("welcome.headline.admin")} ${t("branding.documentPlatform")}!`,
+    subline: `${t("welcome.subline.before")} ${t("branding.documentPlatform")} ${t("welcome.subline.after")}`,
     skip: t("welcome.skip"),
     reopenHint: t("welcome.reopenHint"),
     setupInstead: t("welcome.setupInstead"),
     doneBadge: t("welcome.done"),
     allDone: {
       title: t("welcome.allDone.title"),
-      body: `${t("welcome.allDone.bodyBefore")} ${platformBrand.productName} ${t("welcome.allDone.bodyAfter")}`,
+      body: `${t("welcome.allDone.bodyBefore")} ${t("branding.documentPlatform")} ${t("welcome.allDone.bodyAfter")}`,
       accept: t("welcome.allDone.accept"),
       later: t("welcome.allDone.later"),
     },

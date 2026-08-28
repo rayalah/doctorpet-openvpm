@@ -25,9 +25,13 @@ type ServiceCountPoint = {
 export function RevenueLineChart({
   daily,
   formatCurrency,
+  formatDate,
+  revenueLabel,
 }: {
   daily: RevenueDailyPoint[];
   formatCurrency: (value: number) => string;
+  formatDate: (value: string) => string;
+  revenueLabel: string;
 }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -35,16 +39,17 @@ export function RevenueLineChart({
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis
           dataKey="date"
+          tickFormatter={formatDate}
           tick={{ fontSize: 12 }}
           className="text-muted-foreground"
         />
         <YAxis
           tick={{ fontSize: 12 }}
           className="text-muted-foreground"
-          tickFormatter={(value) => `$${value}`}
+          tickFormatter={(value) => formatCurrency(Number(value))}
         />
         <Tooltip
-          formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+          formatter={(value: number) => [formatCurrency(value), revenueLabel]}
           contentStyle={{
             backgroundColor: "hsl(var(--card))",
             border: "1px solid hsl(var(--border))",

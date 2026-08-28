@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { soapSectionText } from "@/lib/records/soap-content";
-import { platformBrand } from "@/lib/brand/platform-brand";
+import { createTranslator } from "@/lib/i18n/messages";
+import type { SupportedLanguage } from "@/lib/i18n/language";
 
 // ---------------------------------------------------------------------------
 // Shared constants
@@ -31,6 +32,9 @@ function hexToRgb(hex: string): [number, number, number] {
 function setColor(doc: jsPDF, hex: string) {
   const [r, g, b] = hexToRgb(hex);
   doc.setTextColor(r, g, b);
+  // Currency glyphs are drawn as vector lines, so keep their stroke color in
+  // lockstep with the text color instead of inheriting a previous table rule.
+  doc.setDrawColor(r, g, b);
 }
 
 function drawLine(doc: jsPDF, y: number) {
@@ -53,8 +57,107 @@ function ensureSpace(doc: jsPDF, y: number, needed: number): number {
   return y;
 }
 
-function formatGeneratedDateUtc(): string {
-  return new Date().toLocaleDateString("en-US", { timeZone: "UTC" });
+function formatGeneratedDateUtc(language: SupportedLanguage = "en"): string {
+  return new Date().toLocaleDateString(language === "es" ? "es-CR" : "en-US", {
+    timeZone: "UTC",
+  });
+}
+
+/**
+ * jsPDF's built-in Helvetica uses WinAnsi and has no U+20A1 glyph. In that
+ * font the CRC sign can be substituted with a misleading character (notably
+ * `¡`). Draw the small currency glyph as vector geometry while keeping the
+ * numeric text in the selected PDF font. This keeps all existing PDF inputs
+ * and currency calculations unchanged and works in every supported renderer.
+ */
+function crcGlyphMetrics(doc: jsPDF) {
+  // jsPDF reports font size in points while the document coordinates are mm.
+  // Derive every dimension from the active font so the glyph remains legible
+  // when a table or total changes font size.
+  const fontSizeMm = doc.getFontSize() / doc.internal.scaleFactor;
+  const height = fontSizeMm * 0.82;
+  const width = fontSizeMm * 0.62;
+  return {
+    height,
+    width,
+    advance: width + fontSizeMm * 0.14,
+    stroke: Math.max(0.24, fontSizeMm * 0.12),
+  };
+}
+
+function drawCrcGlyph(doc: jsPDF, centerX: number, baselineY: number) {
+  const { height, width, stroke } = crcGlyphMetrics(doc);
+  const centerY = baselineY - height * 0.49;
+  const radiusX = width * 0.5;
+  const radiusY = height * 0.43;
+  const startAngle = -Math.PI / 4;
+  const sweep = (3 * Math.PI) / 2;
+  const startX = centerX + radiusX * Math.cos(startAngle);
+  const startY = centerY + radiusY * Math.sin(startAngle);
+
+  doc.setLineWidth(stroke);
+  doc.setLineCap("round");
+  doc.setLineJoin("round");
+
+  // Approximate the open-right C with short straight segments. The arc and
+  // bars scale with the active font and share the text baseline.
+  const arcPoints = 12;
+  let previousX = startX;
+  let previousY = startY;
+  for (let index = 1; index <= arcPoints; index++) {
+    const angle = startAngle - (sweep * index) / arcPoints;
+    const nextX = centerX + radiusX * Math.cos(angle);
+    const nextY = centerY + radiusY * Math.sin(angle);
+    doc.line(previousX, previousY, nextX, nextY);
+    previousX = nextX;
+    previousY = nextY;
+  }
+
+  // The Costa Rican colón is a C with a vertical stroke, not a pair of
+  // horizontal currency bars (which would make the mark look like €).
+  doc.line(
+    centerX + width * 0.04,
+    baselineY - height * 0.9,
+    centerX + width * 0.04,
+    baselineY + height * 0.04,
+  );
+
+  // Do not leak the rounded cap/join style into subsequent document lines.
+  doc.setLineCap("butt");
+  doc.setLineJoin("miter");
+}
+
+function drawPdfText(
+  doc: jsPDF,
+  value: string,
+  x: number,
+  y: number,
+  options?: { align?: "left" | "center" | "right" },
+) {
+  if (!value.includes("₡")) {
+    doc.text(value, x, y, options);
+    return;
+  }
+
+  const align = options?.align ?? "left";
+  const parts = value.split("₡");
+  const { advance } = crcGlyphMetrics(doc);
+  const totalWidth = parts.reduce(
+    (width, part) => width + doc.getTextWidth(part),
+    advance * (parts.length - 1),
+  );
+  const startX = align === "right" ? x - totalWidth : align === "center" ? x - totalWidth / 2 : x;
+  let cursorX = startX;
+  parts.forEach((part, index) => {
+    if (part) {
+      doc.text(part, cursorX, y);
+      cursorX += doc.getTextWidth(part);
+    }
+    if (index < parts.length - 1) {
+      drawCrcGlyph(doc, cursorX + advance / 2, y);
+      cursorX += advance;
+    }
+  });
 }
 
 /** Optional in-memory tenant logo. Callers remain compatible when omitted. */
@@ -71,13 +174,21 @@ function drawOptionalTenantLogo(doc: jsPDF, branding?: PdfBranding) {
   }
 }
 
-function drawPlatformFooter(doc: jsPDF, y: number, align: "center" | "left" = "center") {
+function drawPlatformFooter(
+  doc: jsPDF,
+  y: number,
+  align: "center" | "left" = "center",
+  language: SupportedLanguage = "en",
+) {
   doc.setFont(FONT, "normal");
   doc.setFontSize(7);
   setColor(doc, COLOR_GRAY);
-  doc.text(`Powered by ${platformBrand.displayName}`, align === "center" ? PAGE_WIDTH / 2 : PAGE_MARGIN, y, {
-    align,
-  });
+  doc.text(
+    createTranslator(language)("branding.documentPlatform"),
+    align === "center" ? PAGE_WIDTH / 2 : PAGE_MARGIN,
+    y,
+    { align },
+  );
 }
 
 /**
@@ -106,6 +217,7 @@ function drawPawMark(doc: jsPDF, x: number, y: number, size: number) {
 // ---------------------------------------------------------------------------
 
 export interface InvoiceData {
+  language?: SupportedLanguage;
   branding?: PdfBranding;
   practiceName: string;
   practiceAddress?: string;
@@ -134,6 +246,8 @@ export interface InvoiceData {
 
 export function generateInvoicePdf(data: InvoiceData): jsPDF {
   const doc = new jsPDF();
+  const language = data.language ?? "en";
+  const t = createTranslator(language);
   let y = PAGE_MARGIN;
   drawOptionalTenantLogo(doc, data.branding);
 
@@ -164,13 +278,21 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   doc.setFont(FONT, "bold");
   doc.setFontSize(28);
   setColor(doc, COLOR_DARK);
-  doc.text("INVOICE", PAGE_WIDTH - PAGE_MARGIN, PAGE_MARGIN, {
+  doc.text(t("documents.invoice"), PAGE_WIDTH - PAGE_MARGIN, PAGE_MARGIN, {
     align: "right",
   });
 
   // Status badge
   doc.setFontSize(10);
-  const statusLabel = data.status.toUpperCase();
+  const statusLabels: Record<string, Parameters<typeof t>[0]> = {
+    draft: "billing.draft",
+    sent: "billing.sent",
+    paid: "billing.paid",
+    overdue: "billing.overdue",
+    void: "billing.void",
+    estimate: "billing.estimate",
+  };
+  const statusLabel = t(statusLabels[data.status] ?? "billing.unknownStatus").toUpperCase();
   const statusWidth = doc.getTextWidth(statusLabel) + 8;
   const statusX = PAGE_WIDTH - PAGE_MARGIN - statusWidth;
   const statusY = PAGE_MARGIN + 6;
@@ -187,12 +309,12 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   doc.setFont(FONT, "normal");
   doc.setFontSize(9);
   let dateY = statusY + 12;
-  doc.text(`Date: ${data.invoiceDate}`, PAGE_WIDTH - PAGE_MARGIN, dateY, {
+  doc.text(`${t("documents.date")}: ${data.invoiceDate}`, PAGE_WIDTH - PAGE_MARGIN, dateY, {
     align: "right",
   });
   if (data.dueDate) {
     dateY += 4;
-    doc.text(`Due: ${data.dueDate}`, PAGE_WIDTH - PAGE_MARGIN, dateY, {
+    doc.text(`${t("documents.due")}: ${data.dueDate}`, PAGE_WIDTH - PAGE_MARGIN, dateY, {
       align: "right",
     });
   }
@@ -205,7 +327,7 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   doc.setFont(FONT, "bold");
   doc.setFontSize(10);
   setColor(doc, COLOR_DARK);
-  doc.text("BILL TO", PAGE_MARGIN, y);
+  doc.text(t("documents.billTo"), PAGE_MARGIN, y);
   y += 5;
 
   doc.setFont(FONT, "normal");
@@ -225,7 +347,7 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
     y += 2;
     doc.setFont(FONT, "italic");
     setColor(doc, COLOR_DARK);
-    doc.text(`Patient: ${data.patientName}`, PAGE_MARGIN, y);
+    doc.text(`${t("documents.patient")}: ${data.patientName}`, PAGE_MARGIN, y);
     y += 5;
   }
 
@@ -246,10 +368,10 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   doc.setFont(FONT, "bold");
   doc.setFontSize(9);
   setColor(doc, COLOR_DARK);
-  doc.text("Description", colX.desc + 2, y);
-  doc.text("Qty", colX.qty, y, { align: "center" });
-  doc.text("Unit Price", colX.unit, y, { align: "center" });
-  doc.text("Total", colX.total - 2, y, { align: "right" });
+  doc.text(t("documents.description"), colX.desc + 2, y);
+  doc.text(t("documents.quantity"), colX.qty, y, { align: "center" });
+  doc.text(t("documents.unitPrice"), colX.unit, y, { align: "center" });
+  doc.text(t("documents.total"), colX.total - 2, y, { align: "right" });
   y += 8;
 
   // Table rows
@@ -260,8 +382,8 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
     y = ensureSpace(doc, y, 8);
     doc.text(item.description, colX.desc + 2, y);
     doc.text(String(item.quantity), colX.qty, y, { align: "center" });
-    doc.text(item.unitPrice, colX.unit, y, { align: "center" });
-    doc.text(item.total, colX.total - 2, y, { align: "right" });
+    drawPdfText(doc, item.unitPrice, colX.unit, y, { align: "center" });
+    drawPdfText(doc, item.total, colX.total - 2, y, { align: "right" });
     y += 6;
   }
 
@@ -277,12 +399,12 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   doc.setFontSize(10);
   setColor(doc, COLOR_GRAY);
 
-  doc.text("Subtotal:", totalsX, y);
-  doc.text(data.subtotal, totalsValX, y, { align: "right" });
+  doc.text(`${t("documents.subtotal")}:`, totalsX, y);
+  drawPdfText(doc, data.subtotal, totalsValX, y, { align: "right" });
   y += 6;
 
-  doc.text("Tax:", totalsX, y);
-  doc.text(data.tax, totalsValX, y, { align: "right" });
+  doc.text(`${t("documents.tax")}:`, totalsX, y);
+  drawPdfText(doc, data.tax, totalsValX, y, { align: "right" });
   y += 6;
 
   drawLine(doc, y);
@@ -291,15 +413,15 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   doc.setFont(FONT, "bold");
   doc.setFontSize(12);
   setColor(doc, COLOR_DARK);
-  doc.text("Total:", totalsX, y);
-  doc.text(data.total, totalsValX, y, { align: "right" });
+  doc.text(`${t("documents.total")}:`, totalsX, y);
+  drawPdfText(doc, data.total, totalsValX, y, { align: "right" });
   y += 7;
 
   doc.setFont(FONT, "normal");
   doc.setFontSize(10);
   setColor(doc, COLOR_GRAY);
-  doc.text("Paid:", totalsX, y);
-  doc.text(data.paidAmount, totalsValX, y, { align: "right" });
+  doc.text(`${t("documents.paidAmount")}:`, totalsX, y);
+  drawPdfText(doc, data.paidAmount, totalsValX, y, { align: "right" });
   y += 6;
 
   // Balance due — prefer the caller's region-formatted value; otherwise derive
@@ -307,12 +429,13 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   const balanceParts = [data.total, data.paidAmount].map((v) =>
     parseFloat(v.replace(/[^0-9.-]/g, ""))
   );
+  const currencyPrefix = data.total.match(/^[^0-9-]*/)?.[0] || "$";
   const balance =
-    data.balanceDue ?? `$${(balanceParts[0]! - balanceParts[1]!).toFixed(2)}`;
+    data.balanceDue ?? `${currencyPrefix}${(balanceParts[0]! - balanceParts[1]!).toFixed(2)}`;
   doc.setFont(FONT, "bold");
   setColor(doc, COLOR_TEAL);
-  doc.text("Balance Due:", totalsX, y);
-  doc.text(balance, totalsValX, y, { align: "right" });
+  doc.text(`${t("documents.balanceDue")}:`, totalsX, y);
+  drawPdfText(doc, balance, totalsValX, y, { align: "right" });
 
   // --- Footer ----------------------------------------------------------------
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -320,12 +443,12 @@ export function generateInvoicePdf(data: InvoiceData): jsPDF {
   doc.setFontSize(9);
   setColor(doc, COLOR_GRAY);
   doc.text(
-    "Thank you for trusting us with your pet's care",
+    t("documents.thankYou"),
     PAGE_WIDTH / 2,
     pageHeight - 15,
     { align: "center" }
   );
-  drawPlatformFooter(doc, pageHeight - 10);
+  drawPlatformFooter(doc, pageHeight - 10, "center", language);
 
   return doc;
 }
@@ -441,6 +564,7 @@ export function generatePrescriptionLabelPdf(
 // ---------------------------------------------------------------------------
 
 export interface MedicalSummaryData {
+  language?: SupportedLanguage;
   practiceName: string;
   practiceAddress?: string;
   practicePhone?: string;
@@ -492,6 +616,8 @@ export interface MedicalSummaryData {
 
 export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
   const doc = new jsPDF();
+  const language = data.language ?? "en";
+  const t = createTranslator(language);
   let y = PAGE_MARGIN;
 
   function writeWrappedText(
@@ -554,27 +680,27 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
   doc.setFont(FONT, "bold");
   doc.setFontSize(16);
   setColor(doc, COLOR_DARK);
-  doc.text("MEDICAL RECORD SUMMARY", PAGE_MARGIN, y);
+  doc.text(t("documents.medicalRecordSummary"), PAGE_MARGIN, y);
 
   y += 3;
   drawLine(doc, y);
   y += 8;
 
   // ---- Patient Info ---------------------------------------------------------
-  sectionHeading("Patient Information");
+  sectionHeading(t("documents.patientInformation"));
 
   doc.setFont(FONT, "normal");
   doc.setFontSize(10);
   setColor(doc, COLOR_DARK);
 
   const patientFields: [string, string | undefined][] = [
-    ["Name", data.patientName],
-    ["Species", data.species],
-    ["Breed", data.breed],
-    ["Sex", data.sex],
-    ["Date of Birth", data.dob],
-    ["Color", data.color],
-    ["Microchip", data.microchip],
+    [t("documents.name"), data.patientName],
+    [t("documents.species"), data.species],
+    [t("documents.breed"), data.breed],
+    [t("documents.sex"), data.sex],
+    [t("documents.dateOfBirth"), data.dob],
+    [t("documents.color"), data.color],
+    [t("documents.microchip"), data.microchip],
   ];
 
   const colMid = PAGE_MARGIN + CONTENT_WIDTH / 2;
@@ -596,36 +722,36 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
   if (col !== 0) y += 6;
 
   // ---- Owner Info -----------------------------------------------------------
-  sectionHeading("Owner Information");
+  sectionHeading(t("documents.ownerInformation"));
 
   doc.setFont(FONT, "normal");
   doc.setFontSize(10);
   setColor(doc, COLOR_DARK);
 
   doc.setFont(FONT, "bold");
-  doc.text("Name: ", PAGE_MARGIN, y);
+  doc.text(`${t("documents.name")}: `, PAGE_MARGIN, y);
   doc.setFont(FONT, "normal");
-  doc.text(data.clientName, PAGE_MARGIN + doc.getTextWidth("Name: "), y);
+  doc.text(data.clientName, PAGE_MARGIN + doc.getTextWidth(`${t("documents.name")}: `), y);
   y += 6;
 
   if (data.clientPhone) {
     doc.setFont(FONT, "bold");
-    doc.text("Phone: ", PAGE_MARGIN, y);
+    doc.text(`${t("documents.phone")}: `, PAGE_MARGIN, y);
     doc.setFont(FONT, "normal");
     doc.text(
       data.clientPhone,
-      PAGE_MARGIN + doc.getTextWidth("Phone: "),
+      PAGE_MARGIN + doc.getTextWidth(`${t("documents.phone")}: `),
       y
     );
     y += 6;
   }
   if (data.clientEmail) {
     doc.setFont(FONT, "bold");
-    doc.text("Email: ", PAGE_MARGIN, y);
+    doc.text(`${t("documents.email")}: `, PAGE_MARGIN, y);
     doc.setFont(FONT, "normal");
     doc.text(
       data.clientEmail,
-      PAGE_MARGIN + doc.getTextWidth("Email: "),
+      PAGE_MARGIN + doc.getTextWidth(`${t("documents.email")}: `),
       y
     );
     y += 6;
@@ -633,7 +759,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
 
   // ---- Allergies ------------------------------------------------------------
   if (data.allergies.length > 0) {
-    sectionHeading("Allergies");
+    sectionHeading(t("documents.allergies"));
 
     doc.setFontSize(10);
     for (const allergy of data.allergies) {
@@ -653,7 +779,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
       if (allergy.reaction) {
         doc.setFontSize(8);
         writeWrappedText(
-          `Reaction: ${allergy.reaction}`,
+          `${t("documents.reaction")}: ${allergy.reaction}`,
           PAGE_MARGIN + 2,
           CONTENT_WIDTH - 4,
           3.5,
@@ -666,7 +792,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
 
   // ---- Active Problems ------------------------------------------------------
   if (data.problems.length > 0) {
-    sectionHeading("Active Problems");
+    sectionHeading(t("documents.activeProblems"));
 
     doc.setFontSize(10);
     for (const problem of data.problems) {
@@ -674,7 +800,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
       doc.setFont(FONT, "normal");
       setColor(doc, COLOR_DARK);
       let text = `• ${problem.description}`;
-      if (problem.onsetDate) text += ` (onset: ${problem.onsetDate})`;
+      if (problem.onsetDate) text += ` (${t("documents.onset")}: ${problem.onsetDate})`;
       doc.text(text, PAGE_MARGIN + 2, y);
       doc.setFont(FONT, "italic");
       setColor(doc, COLOR_GRAY);
@@ -687,7 +813,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
 
   // ---- Vaccination History --------------------------------------------------
   if (data.vaccinations.length > 0) {
-    sectionHeading("Vaccination History");
+    sectionHeading(t("documents.vaccinationHistory"));
 
     // Table header
     const vColName = PAGE_MARGIN;
@@ -700,9 +826,9 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
     doc.setFont(FONT, "bold");
     doc.setFontSize(9);
     setColor(doc, COLOR_DARK);
-    doc.text("Vaccine", vColName + 2, y);
-    doc.text("Date Given", vColDate, y);
-    doc.text("Next Due", vColNext - 2, y, { align: "right" });
+    doc.text(t("documents.vaccine"), vColName + 2, y);
+    doc.text(t("documents.dateGiven"), vColDate, y);
+    doc.text(t("documents.nextDue"), vColNext - 2, y, { align: "right" });
     y += 8;
 
     doc.setFont(FONT, "normal");
@@ -719,7 +845,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
 
   // ---- Recent SOAP Notes ----------------------------------------------------
   if (data.recentNotes.length > 0) {
-    sectionHeading("Recent SOAP Notes");
+    sectionHeading(t("documents.recentSoapNotes"));
 
     const notesToShow = data.recentNotes.slice(0, 5);
     for (const note of notesToShow) {
@@ -730,8 +856,8 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
       setColor(doc, COLOR_DARK);
       doc.text(
         note.imported
-          ? `${note.date}  (Finalized imported record)`
-          : `${note.date}  (Finalized)`,
+          ? `${note.date}  (${t("documents.finalizedImportedRecord")})`
+          : `${note.date}  (${t("documents.finalized")})`,
         PAGE_MARGIN,
         y
       );
@@ -741,15 +867,15 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
       doc.setFontSize(8);
       setColor(doc, COLOR_GRAY);
       const attribution = note.imported
-        ? `Imported by ${note.authorName ?? "Unknown clinician"}`
-        : `Authored by ${note.authorName ?? "Unknown clinician"}; finalized by ${note.finalizerName ?? "Unknown clinician"}${note.finalizedAt ? ` on ${note.finalizedAt}` : ""}`;
+        ? `${t("documents.importedBy")} ${note.authorName ?? t("documents.unknownClinician")}`
+        : `${t("documents.authoredBy")} ${note.authorName ?? t("documents.unknownClinician")}; ${t("documents.finalizedBy")} ${note.finalizerName ?? t("documents.unknownClinician")}${note.finalizedAt ? ` ${t("documents.on")} ${note.finalizedAt}` : ""}`;
       writeWrappedText(attribution, PAGE_MARGIN, CONTENT_WIDTH);
       y += 2;
       if (note.replacementForLabel) {
         doc.setFont(FONT, "bold");
         setColor(doc, COLOR_TEAL);
         writeWrappedText(
-          `Signed replacement for retained ${note.replacementForLabel}`,
+          `${t("documents.signedReplacementFor")} ${note.replacementForLabel}`,
           PAGE_MARGIN,
           CONTENT_WIDTH,
         );
@@ -781,7 +907,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
         doc.setFont(FONT, "bold");
         setColor(doc, COLOR_TEAL);
         writeWrappedText(
-          `Addendum - ${addendum.authorName}, ${addendum.createdAt}`,
+          `${t("documents.addendum")} - ${addendum.authorName}, ${addendum.createdAt}`,
           PAGE_MARGIN + 4,
           CONTENT_WIDTH - 8,
           5,
@@ -805,7 +931,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
   // Invalidated clinical content stays excluded, while its durable correction
   // evidence remains visible to a downstream clinician reviewing the summary.
   if ((data.recordCorrections?.length ?? 0) > 0) {
-    sectionHeading("Record Corrections");
+    sectionHeading(t("documents.recordCorrections"));
     for (const correction of data.recordCorrections ?? []) {
       y = ensureSpace(doc, y, 18);
       doc.setFont(FONT, "bold");
@@ -819,13 +945,13 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
       doc.setFont(FONT, "normal");
       setColor(doc, COLOR_GRAY);
       writeWrappedText(
-        `Entered in error by ${correction.correctedByName} on ${correction.correctedAt}`,
+        `${t("documents.enteredInErrorBy")} ${correction.correctedByName} ${t("documents.on")} ${correction.correctedAt}`,
         PAGE_MARGIN + 4,
         CONTENT_WIDTH - 8,
       );
       setColor(doc, COLOR_DARK);
       writeWrappedText(
-        `Reason: ${soapSectionText(correction.reason)}`,
+        `${t("documents.reason")}: ${soapSectionText(correction.reason)}`,
         PAGE_MARGIN + 4,
         CONTENT_WIDTH - 8,
       );
@@ -833,7 +959,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
         doc.setFont(FONT, "bold");
         setColor(doc, COLOR_TEAL);
         writeWrappedText(
-          `Signed replacement: ${correction.replacementLabel}`,
+          `${t("documents.signedReplacement")}: ${correction.replacementLabel}`,
           PAGE_MARGIN + 4,
           CONTENT_WIDTH - 8,
         );
@@ -844,7 +970,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
 
   // ---- Current Prescriptions ------------------------------------------------
   if (data.prescriptions.length > 0) {
-    sectionHeading("Current Prescriptions");
+    sectionHeading(t("documents.currentPrescriptions"));
 
     // Table header
     const pColMed = PAGE_MARGIN;
@@ -858,10 +984,10 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
     doc.setFont(FONT, "bold");
     doc.setFontSize(9);
     setColor(doc, COLOR_DARK);
-    doc.text("Medication", pColMed + 2, y);
-    doc.text("Dosage", pColDose, y);
-    doc.text("Frequency", pColFreq, y);
-    doc.text("Status", pColStat - 2, y, { align: "right" });
+    doc.text(t("documents.medication"), pColMed + 2, y);
+    doc.text(t("documents.dosage"), pColDose, y);
+    doc.text(t("documents.frequency"), pColFreq, y);
+    doc.text(t("documents.status"), pColStat - 2, y, { align: "right" });
     y += 8;
 
     doc.setFont(FONT, "normal");
@@ -879,7 +1005,7 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
 
   // ---- Footer ---------------------------------------------------------------
   const pageCount = doc.getNumberOfPages();
-  const generatedDate = data.generatedDate ?? formatGeneratedDateUtc();
+  const generatedDate = data.generatedDate ?? formatGeneratedDateUtc(language);
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -887,14 +1013,18 @@ export function generateMedicalSummaryPdf(data: MedicalSummaryData): jsPDF {
     doc.setFontSize(8);
     setColor(doc, COLOR_GRAY);
     doc.text(
-      `Generated on ${generatedDate} — This document is for reference only`,
+      `${t("documents.generatedOn")} ${generatedDate} — ${t("documents.referenceOnly")}`,
       PAGE_WIDTH / 2,
       pageHeight - 10,
       { align: "center" }
     );
-    doc.text(`Page ${i} of ${pageCount}`, PAGE_WIDTH - PAGE_MARGIN, pageHeight - 10, {
-      align: "right",
-    });
+    doc.text(
+      t("documents.pageOf").replace("{page}", String(i)).replace("{pages}", String(pageCount)),
+      PAGE_WIDTH - PAGE_MARGIN,
+      pageHeight - 10,
+      { align: "right" },
+    );
+    drawPlatformFooter(doc, pageHeight - 5, "left", language);
   }
 
   return doc;
@@ -1043,6 +1173,7 @@ export function generateVaccinationCertificatePdf(
 export type ReportPdfCell = string | number | null | undefined;
 
 export interface ReportPdfData {
+  language?: SupportedLanguage;
   title: string;
   subtitle?: string;
   columns: string[];
@@ -1055,6 +1186,8 @@ export function generateReportPdf(data: ReportPdfData): jsPDF {
   const doc = new jsPDF({
     orientation: data.columns.length > 4 ? "landscape" : "portrait",
   });
+  const language = data.language ?? "en";
+  const t = createTranslator(language);
   const margin = 16;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -1106,7 +1239,7 @@ export function generateReportPdf(data: ReportPdfData): jsPDF {
     doc.setFont(FONT, "italic");
     doc.setFontSize(10);
     setColor(doc, COLOR_GRAY);
-    doc.text(data.emptyMessage ?? "No report data available.", margin, y);
+    doc.text(data.emptyMessage ?? t("pdf.noData"), margin, y);
   } else {
     drawTableHeader();
     doc.setFont(FONT, "normal");
@@ -1121,25 +1254,33 @@ export function generateReportPdf(data: ReportPdfData): jsPDF {
       addPageIfNeeded(rowHeight);
       setColor(doc, COLOR_DARK);
       cellLines.forEach((lines, index) => {
-        doc.text(lines, margin + index * colWidth + 2, y);
+        if (lines.length === 1) {
+          drawPdfText(doc, lines[0]!, margin + index * colWidth + 2, y);
+        } else {
+          doc.text(lines, margin + index * colWidth + 2, y);
+        }
       });
       y += rowHeight;
     }
   }
 
-  const generatedDate = data.generatedDate ?? formatGeneratedDateUtc();
+  const generatedDate = data.generatedDate ?? formatGeneratedDateUtc(language);
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFont(FONT, "italic");
     doc.setFontSize(8);
     setColor(doc, COLOR_GRAY);
-    doc.text(`Generated on ${generatedDate}`, pageWidth / 2, pageHeight - 8, {
+    doc.text(`${t("documents.generatedOn")} ${generatedDate}`, pageWidth / 2, pageHeight - 8, {
       align: "center",
     });
-    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 8, {
-      align: "right",
-    });
+    doc.text(
+      t("documents.pageOf").replace("{page}", String(i)).replace("{pages}", String(pageCount)),
+      pageWidth - margin,
+      pageHeight - 8,
+      { align: "right" },
+    );
+    drawPlatformFooter(doc, pageHeight - 3, "left", language);
   }
 
   return doc;
