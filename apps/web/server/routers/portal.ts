@@ -360,6 +360,10 @@ export const portalRouter = createRouter({
       await assertPortalReadRateLimit(input.token);
       const client = await getClientByToken(ctx.db, input.token);
       const timezone = await practiceTimeZone(ctx.db, client.practiceId);
+      const requestContext = await practicePortalRequestContext(
+        ctx.db,
+        client.practiceId,
+      );
       const appointmentLocations = await listActiveAppointmentLocations(
         ctx.db,
         client.practiceId,
@@ -394,6 +398,7 @@ export const portalRouter = createRouter({
         email: client.email,
         phone: client.phone,
         timezone,
+        language: requestContext.language,
         locations: appointmentLocations,
         patients: clientPatients,
       };

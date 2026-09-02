@@ -228,6 +228,31 @@ describe("sendEmail", () => {
     ).resolves.toMatchObject({ success: true, id: "email-invoice-1" });
   });
 
+  it("keeps safe provider evidence when a vaccination reminder is rejected", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    mocks.resendSend.mockResolvedValue({
+      data: null,
+      error: { message: "Sender rejected" },
+    });
+    const { sendVaccinationReminder } = await loadEmail();
+
+    await expect(
+      sendVaccinationReminder({
+        to: "client@example.com",
+        clientName: "Ada Lovelace",
+        patientName: "Miso",
+        vaccineName: "Rabies",
+        dueDate: "July 2",
+        practiceName: "Neighborhood Veterinary",
+      }),
+    ).resolves.toMatchObject({
+      success: false,
+      provider: "resend",
+      outcome: "definite_failure",
+      failureCode: "provider_rejected",
+    });
+  });
+
   it("keeps verification provider evidence and says the trial is already active", async () => {
     vi.stubEnv("RESEND_API_KEY", "re_test");
     mocks.resendSend.mockResolvedValue({ data: { id: "email-verify-1" } });

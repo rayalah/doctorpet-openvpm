@@ -20,7 +20,16 @@ const reminderNotesInput = z
   .max(4000, "Reminder notes must be at most 4,000 characters.")
   .optional()
   .transform((value) => value || undefined);
-const expectedUpdatedAtInput = z.string().datetime();
+const expectedUpdatedAtInput = z
+  .string()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/,
+    "Reminder version must be an ISO UTC timestamp with microsecond precision.",
+  );
+const careReminderUpdatedAtVersion = sql<string>`to_char(
+  ${careReminders.updatedAt} at time zone 'UTC',
+  'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'
+)`;
 
 async function activePractice(
   db: Pick<Database, "select">,
@@ -88,6 +97,7 @@ export const careRemindersRouter = createRouter({
           completedAt: careReminders.completedAt,
           createdAt: careReminders.createdAt,
           updatedAt: careReminders.updatedAt,
+          updatedAtVersion: careReminderUpdatedAtVersion,
         })
         .from(careReminders)
         .innerJoin(patients, eq(careReminders.patientId, patients.id))
@@ -180,7 +190,7 @@ export const careRemindersRouter = createRouter({
           .select({
             id: careReminders.id,
             status: careReminders.status,
-            updatedAt: careReminders.updatedAt,
+            updatedAtVersion: careReminderUpdatedAtVersion,
           })
           .from(careReminders)
           .where(
@@ -200,10 +210,7 @@ export const careRemindersRouter = createRouter({
         }
         const targetStatus = input.completed ? "completed" : "open";
         if (current.status === targetStatus) return current;
-        if (
-          current.updatedAt.getTime() !==
-          new Date(input.expectedUpdatedAt).getTime()
-        ) {
+        if (current.updatedAtVersion !== input.expectedUpdatedAt) {
           throw new TRPCError({
             code: "CONFLICT",
             message: "This reminder changed. Refresh before updating it.",
@@ -222,7 +229,7 @@ export const careRemindersRouter = createRouter({
             and(
               eq(careReminders.id, current.id),
               eq(careReminders.practiceId, ctx.practiceId),
-              eq(careReminders.updatedAt, current.updatedAt),
+              sql`${careReminders.updatedAt} = ${input.expectedUpdatedAt}::timestamptz`,
               isNull(careReminders.deletedAt),
             ),
           )

@@ -89,6 +89,20 @@ describe("settings marketing email preference", () => {
     ).resolves.toMatchObject({ enabled: false, configurable: true });
   });
 
+  it("fails closed when the platform preference identity configuration is unavailable", async () => {
+    const { db } = createDb([[{ email: "owner@example.com" }]]);
+    mocks.marketingEmailEnabledForRecipient.mockRejectedValueOnce(
+      new Error("email preference identity key is not configured"),
+    );
+
+    await expect(
+      callerWithDb(db).getMarketingEmailPreference(),
+    ).rejects.toMatchObject({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Email preferences are temporarily unavailable.",
+    });
+  });
+
   it("updates the normalized current recipient through the system service", async () => {
     const { db } = createDb([[{ email: " OWNER@Example.com " }]]);
 

@@ -12,6 +12,7 @@ import {
   vaccinationRecords,
 } from "@openpims/db";
 import { sendVaccinationReminder } from "@/lib/email";
+import { defaultEmailFrom } from "@/lib/email-env";
 import { normalizeEmailSuppressionAddress } from "@/lib/email-suppression";
 import { formatDateInputForTimeZone } from "@/lib/date-input";
 import { isQuietHours } from "@/lib/messaging/reminders";
@@ -34,6 +35,62 @@ import {
 } from "@/lib/vaccination-recalls";
 
 const DEFAULT_PRACTICE_NAME = "your clinic";
+
+function maskedEmailRecipient(email: string): string {
+  const [localPart, domain] = email.split("@");
+  if (!localPart || !domain) return "[invalid-email]";
+  return `${localPart.slice(0, 1)}***@${domain}`;
+}
+
+function emailSenderDomain(): string {
+  const match = defaultEmailFrom().match(/@([^>\s]+)/);
+  return match?.[1]?.toLowerCase() ?? "[invalid-sender]";
+}
+
+function safeVaccinationRecallEmailFailure(error: unknown): {
+  failureCode: string;
+  safeMessage: string;
+} {
+  const message = error instanceof Error ? error.message : "";
+  if (message === "Verify your email address before sending external email.") {
+    return {
+      failureCode: "outbound_email_unverified_user",
+      safeMessage: "The staff account email must be verified before sending.",
+    };
+  }
+  if (message === "Email sending is temporarily unavailable.") {
+    return {
+      failureCode: "outbound_email_security_unavailable",
+      safeMessage: "The outbound email security service is unavailable.",
+    };
+  }
+  if (message.startsWith("Email sending is temporarily limited")) {
+    return {
+      failureCode: "outbound_email_rate_limited",
+      safeMessage: "The outbound email safety limit was reached.",
+    };
+  }
+  return {
+    failureCode: "email_preparation_failed",
+    safeMessage: "Email preparation failed before provider delivery.",
+  };
+}
+
+function logVaccinationRecallEmailFailure(input: {
+  recipient: string;
+  provider: string;
+  failureCode: string;
+  safeMessage: string;
+}) {
+  console.error("[notifications.vaccination-recall-email] delivery_failed", {
+    operation: "vaccination_recall",
+    provider: input.provider,
+    failureCode: input.failureCode,
+    safeMessage: input.safeMessage,
+    recipient: maskedEmailRecipient(input.recipient),
+    senderDomain: emailSenderDomain(),
+  });
+}
 
 function activePracticePredicate(practiceId: string) {
   return sql`exists (
@@ -450,7 +507,7 @@ export async function sendVaccinationRecallReminders(
       }
       try {
         await ctx.beforeEmail();
-        return await sendVaccinationReminder({
+        const result = await sendVaccinationReminder({
           to: clientEmail,
           clientName: recipient.clientName,
           patientName: recipient.patientName,
@@ -459,7 +516,27 @@ export async function sendVaccinationRecallReminders(
           practiceName: practice.name,
           practicePhone: practice.phone ?? undefined,
         });
-      } catch {
+        if (!result.success) {
+          logVaccinationRecallEmailFailure({
+            recipient: clientEmail,
+            provider: result.provider ?? "unknown",
+            failureCode: result.failureCode ?? "provider_delivery_failed",
+            safeMessage:
+              result.failureCode === "provider_not_configured"
+                ? "The email provider is not configured for hosted sending."
+                : result.failureCode === "send_timeout"
+                  ? "The email provider timed out before confirming delivery."
+                  : "The email provider rejected or failed the delivery.",
+          });
+        }
+        return result;
+      } catch (error) {
+        const failure = safeVaccinationRecallEmailFailure(error);
+        logVaccinationRecallEmailFailure({
+          recipient: clientEmail,
+          provider: "not_reached",
+          ...failure,
+        });
         return { success: false as const };
       }
     };

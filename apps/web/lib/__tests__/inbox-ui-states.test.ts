@@ -14,7 +14,7 @@ import {
 } from "../clients/policy";
 
 describe("inbox UI states", () => {
-  const source = readFileSync("app/(dashboard)/inbox/page.tsx", "utf8");
+  const source = readFileSync("app/(dashboard)/inbox/page.tsx", "utf8").replace(/\r\n/g, "\n");
   const routerSource = readFileSync("server/routers/communications.ts", "utf8");
   const outboundEmailSecuritySource = readFileSync(
     "lib/outbound-email-security.ts",
@@ -51,9 +51,9 @@ describe("inbox UI states", () => {
     );
     expect(source).toContain("{canMutateInbox ? (");
     expect(source).toContain("{newMessageMode && canMutateInbox ? (");
-    expect(source).toContain("No client communications to review yet.");
+    expect(source).toContain('t("messaging.noCommunications")');
     expect(source).toContain("canMutateInbox\n                    ? {");
-    expect(source).toContain("Viewer access cannot link inbox messages.");
+    expect(source).toContain('t("messaging.viewerCannotLink")');
 
     expect(routerSource).toContain("const inboxStaffProcedure =");
     expect(routerSource).toContain(
@@ -91,12 +91,12 @@ describe("inbox UI states", () => {
     expect(source).toContain("formatDateInputForTimeZone(now, timeZone)");
     expect(source).toContain("formatDateInputForTimeZone(d, timeZone)");
     expect(source).toContain(
-      "relativeTime(\n                                group.latest.createdAt,\n                                inboxTimeZone",
+      "relativeTime(group.latest.createdAt, inboxTimeZone, locale, t)",
     );
     expect(source).toContain(
-      "relativeTime(\n                          selectedUnmatched.createdAt,\n                          inboxTimeZone",
+      "relativeTime(selectedUnmatched.createdAt, inboxTimeZone, locale, t)",
     );
-    expect(source).toContain("relativeTime(msg.createdAt, inboxTimeZone)");
+    expect(source).toContain("relativeTime(msg.createdAt, inboxTimeZone, locale, t)");
     expect(source).not.toContain("inboxSettings?.timezone");
     expect(source).not.toContain("return d.toLocaleDateString();");
   });
@@ -139,20 +139,18 @@ describe("inbox UI states", () => {
     expect(source).toContain(
       "{timelineDisplayError || timelineDisplayMissing ? (",
     );
-    expect(source).toContain("Unable to load inbox messages. Please retry.");
-    expect(source).toContain(
-      "Unable to load conversation messages. Please retry.",
-    );
-    expect(source).toContain("Unable to search clients. Please retry.");
+    expect(source).toContain('t("messaging.unableToLoadInbox")');
+    expect(source).toContain('t("messaging.unableToLoadConversation")');
+    expect(source).toContain('t("messaging.unableToSearchClients")');
     expect(source.indexOf("inboxListError || inboxListMissing")).toBeLessThan(
-      source.indexOf('title="No messages yet"'),
+      source.indexOf('title={t("messaging.noMessages")}'),
     );
     expect(source.indexOf("searchError || searchMissing")).toBeLessThan(
-      source.indexOf('title="No clients found"'),
+      source.indexOf('title={t("messaging.noClientsFound")}'),
     );
     expect(
       source.indexOf("timelineDisplayError || timelineDisplayMissing"),
-    ).toBeLessThan(source.indexOf('title="No messages with this client yet"'));
+    ).toBeLessThan(source.indexOf('title={t("messaging.noMessagesWithClient")}'));
   });
 
   it("surfaces SMS setup status failures before hiding the inbox setup prompt", () => {
@@ -163,15 +161,15 @@ describe("inbox UI states", () => {
       "Boolean(messagingStatusError) || !messagingStatus",
     );
     expect(source).toContain("const showSmsStatusError = Boolean(");
-    expect(source).toContain("Unable to check texting setup");
-    expect(source).toContain("SMS status unavailable");
+    expect(source).toContain('t("messaging.unableToCheckSms")');
+    expect(source).toContain('t("messaging.smsStatusUnavailable")');
     expect(source).toContain("onClick={() => void refetchMessagingStatus()}");
-    expect(source).toContain('aria-label="Dismiss SMS status warning"');
+    expect(source).toContain('aria-label={t("messaging.dismissSmsWarning")}');
     expect(source.indexOf("{showSmsStatusError ? (")).toBeLessThan(
       source.indexOf(") : showSmsBanner && smsSummary ? ("),
     );
     expect(source).toContain(
-      "Unable to check texting setup. Retry from the inbox banner",
+      't("messaging.retrySmsStatus")',
     );
   });
 
@@ -209,11 +207,11 @@ describe("inbox UI states", () => {
   });
 
   it("uses shared empty states for inbox empty panels", () => {
-    expect(source).toContain('title="No messages yet"');
-    expect(source).toContain('title="No clients found"');
-    expect(source).toContain('title="Type to search for a client"');
-    expect(source).toContain('title="No messages with this client yet"');
-    expect(source).toContain('label: "New message"');
+    expect(source).toContain('title={t("messaging.noMessages")}');
+    expect(source).toContain('title={t("messaging.noClientsFound")}');
+    expect(source).toContain('title={t("messaging.typeToSearchClient")}');
+    expect(source).toContain('title={t("messaging.noMessagesWithClient")}');
+    expect(source).toContain('label: t("messaging.newMessage")');
   });
 
   it("bounds compose inputs with the shared communications policy", () => {
@@ -266,7 +264,7 @@ describe("inbox UI states", () => {
     );
     expect(source).toContain("content: trimmedContent");
     expect(source).toContain(
-      "const statusLabel = communicationStatusLabel(msg)",
+      "const statusLabel = localizedStatusLabel(",
     );
     expect(source).toContain("{statusLabel ? (");
     expect(source).not.toContain("{msg.status && (");
@@ -310,7 +308,7 @@ describe("inbox UI states", () => {
     );
     expect(source).toContain('"hidden"');
     expect(source).toContain("md:w-80 md:border-r");
-    expect(source).toContain("Back to conversations");
+    expect(source).toContain('t("messaging.backToConversations")');
     expect(source).toContain("setSelectedUnmatched(null);");
   });
 });

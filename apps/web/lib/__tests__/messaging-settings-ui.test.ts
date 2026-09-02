@@ -56,9 +56,8 @@ describe("messaging settings UI", () => {
     expect(tabSource).toContain("m.launchEligible !== false");
     expect(tabSource).toContain("m.providerProfileAttestationFresh !== false");
     expect(tabSource).toContain("waitingForProviderVerification");
-    expect(tabSource).toContain("Provider safety check required");
-    expect(tabSource).toContain("does not need to repeat carrier");
-    expect(tabSource).toContain("registration; this operational check");
+    expect(tabSource).toContain('t("messaging.safetyRequired")');
+    expect(tabSource).toContain('t("messaging.providerSafetyDescription")');
     expect(routerSource).toContain(
       "providerProfileReady: locationMessaging.providerProfileReady",
     );
@@ -76,16 +75,11 @@ describe("messaging settings UI", () => {
       "disabled={!canSendTest || testSend.isPending}",
     );
     expect(tabSource).toContain("to: testTo.trim()");
-    expect(tabSource).toContain("Outbound texting is safely off");
-    expect(tabSource).toContain("Arbitrary test destinations are disabled");
+    expect(tabSource).toContain('t("messaging.safelyOff")');
+    expect(tabSource).toContain('t("messaging.arbitraryTestDisabled")');
     expect(tabSource).toContain("data.launch.setupAvailable");
-    expect(tabSource).toContain("Texting is a controlled clinic pilot");
-    expect(tabSource).toContain(
-      "Doctor Pet will not\n            search for or purchase a number",
-    );
-    expect(tabSource).toContain(
-      "Email appointment reminders remain\n            available",
-    );
+    expect(tabSource).toContain('t("messaging.controlledPilot")');
+    expect(tabSource).toContain('t("messaging.controlledPilotDescription")');
     expect(tabSource).toContain(
       "{data.launch.setupAvailable ? (\n        <MessagingWizard",
     );
@@ -98,38 +92,26 @@ describe("messaging settings UI", () => {
       "disabled={checking || !isMessagingAreaCodeInputValid(areaCode)}",
     );
     expect(wizardSource).toContain(
-      "validate through a current consented client workflow",
+      't("messaging.completeRegistrationHosted")',
     );
     expect(wizardSource).not.toContain("send a test from the active location");
     expect(tabSource).toContain("<MessagingRegistrationForm />");
     expect(tabSource).toContain(
       "data.launch.setupAvailable ||\n      locations.some((location) => location.messaging)",
     );
-    expect(tabSource).toContain(
-      "Number setup is disabled by your Doctor Pet administrator",
-    );
+    expect(tabSource).toContain('t("messaging.setupDisabledAdmin")');
     expect(tabSource).toContain("hosted={data.launch.hosted}");
     expect(wizardSource).toContain("hosted: boolean");
     expect(wizardSource).toContain(
       "<ConfirmStep\n                hosted={hosted}",
     );
-    expect(wizardSource).toContain(
-      'hosted\n          ? "Doctor Pet reviews them."\n          : "your administrator finishes provider activation."',
-    );
-    expect(wizardSource).toContain(
-      "Your administrator must finish provider activation",
-    );
-    expect(wizardSource).toContain("Hosted sending remains off");
-    expect(registrationSource).toContain(
-      "Carrier registration details saved for administrator review.",
-    );
-    expect(registrationSource).toContain(
-      "your messaging administrator reviews it first.",
-    );
+    expect(wizardSource).toContain('t("messaging.searchLocalNumber")');
+    expect(wizardSource).toContain('t("messaging.adminFinishesActivation")');
+    expect(wizardSource).toContain('t("messaging.completeRegistrationHosted")');
+    expect(registrationSource).toContain('t("messaging.detailsSaved")');
+    expect(registrationSource).toContain('t("messaging.registrationDescription")');
     expect(registrationSource).not.toContain("an OpenVPM operator reviews it");
-    expect(tabSource).toContain(
-      "Doctor Pet support must review this failed pilot setup",
-    );
+    expect(tabSource).toContain('t("messaging.supportReviewFailed")');
     expect(routerSource).toContain(
       "!existing && !provisioningAvailableForPractice(ctx.practiceId)",
     );
@@ -143,19 +125,14 @@ describe("messaging settings UI", () => {
   });
 
   it("keeps automatic reminders explicit, constrained, and off by default", () => {
-    expect(tabSource).toContain("Automatic appointment reminders");
+    expect(tabSource).toContain('t("messaging.automaticReminders")');
     expect(tabSource).toContain("APPOINTMENT_REMINDER_LEAD_OPTIONS");
     expect(tabSource).toContain("[24, 48, 72] as const");
     expect(tabSource).toContain("setAppointmentReminderSettings");
-    expect(tabSource).toContain("Off by default");
+    expect(tabSource).toContain('t("messaging.remindersOff")');
     expect(tabSource).toContain("confirmReminderCatchUp");
-    expect(tabSource).toContain('!confirmReminderCatchUp("expand", leadHours)');
-    expect(tabSource).toContain(
-      "Enabling reminders or increasing this window may send reminders for",
-    );
-    expect(tabSource).toContain(
-      "existing eligible confirmed appointments on the next hourly run.",
-    );
+    expect(tabSource).toContain('!confirmReminderCatchUp("expand", leadHours, t)');
+    expect(tabSource).toContain('t("messaging.catchupWarning")');
     expect(routerSource).toContain("appointmentReminderLeadHoursInput");
     expect(routerSource).toContain("appointmentRemindersEnabled");
   });
@@ -165,8 +142,8 @@ describe("messaging settings UI", () => {
     expect(tabSource).toContain("function MessagingLoadError");
     expect(tabSource).toContain("if (error)");
     expect(tabSource).toContain("if (!data)");
-    expect(tabSource).toContain("Unable to load messaging settings");
-    expect(tabSource).toContain("Messaging status is unavailable");
+    expect(tabSource).toContain('t("messaging.loadError")');
+    expect(tabSource).toContain('t("messaging.statusUnavailable")');
     expect(tabSource).toContain("onRetry={() => void refetch()}");
     expect(tabSource.indexOf("if (error)")).toBeLessThan(
       tabSource.indexOf("if (!data)"),
@@ -184,13 +161,11 @@ describe("messaging settings UI", () => {
 
   it("is explicit about unsupported existing numbers, charges, and recoverable setup", () => {
     expect(wizardSource).toContain(
-      "Existing-number texting is not available yet",
+      't("messaging.existingNumberUnavailable")',
     );
-    expect(wizardSource).toContain("will not be ported, hosted, or changed");
+    expect(wizardSource).toContain('t("messaging.existingNumberUnchanged")');
     expect(wizardSource).toContain("chargeAcknowledged");
-    expect(wizardSource).toContain(
-      "I authorize the exact upfront and monthly provider charges",
-    );
+    expect(wizardSource).toContain('t("messaging.authorizeCharges")');
     expect(wizardSource).toContain("confirmProviderCharges: true");
     expect(wizardSource).toContain(
       '(step === "registration" &&\n      mode === "buy" &&\n      Boolean(selectedNumber) &&\n      chargeAcknowledged)',
@@ -198,16 +173,16 @@ describe("messaging settings UI", () => {
     expect(wizardSource).toContain("upfrontCost");
     expect(wizardSource).toContain("monthlyCost");
     expect(wizardSource).toContain("currency");
-    expect(wizardSource).toContain("Purchase number and start setup");
-    expect(tabSource).toContain("Reconcile provider setup");
+    expect(wizardSource).toContain('t("messaging.purchaseStartSetup")');
+    expect(tabSource).toContain('t("messaging.reconcileSetup")');
     expect(tabSource).toContain('action: "resume"');
     expect(onboardingSource).not.toContain(
       "You can text from your existing number",
     );
-    expect(onboardingSource).toContain("Number order accepted");
-    expect(onboardingSource).toContain("Carrier registration is under review");
-    expect(onboardingSource).toContain("Carrier registration is approved");
-    expect(onboardingSource).toContain("Number setup did not finish");
+    expect(onboardingSource).toContain('t("messaging.onboardingNumberAccepted")');
+    expect(onboardingSource).toContain('t("messaging.onboardingRegistrationPending")');
+    expect(onboardingSource).toContain('t("messaging.onboardingRegistrationApproved")');
+    expect(onboardingSource).toContain('t("messaging.onboardingNumberSetupFailed")');
     expect(routerSource).toContain("pg_advisory_xact_lock");
     expect(routerSource).toContain("assertProvisioningEnabled();");
     expect(routerSource).toContain("confirmProviderCharges: z.literal(true)");
@@ -219,19 +194,13 @@ describe("messaging settings UI", () => {
     expect(onboardingSource).toContain(
       "const setupUnavailable = setupAvailable === false && !hasAnyNumber",
     );
-    expect(onboardingSource).toContain("controlled clinic pilot");
-    expect(onboardingSource).toContain("Email appointment reminders remain");
+    expect(onboardingSource).toContain('t("messaging.onboardingPilotTitle")');
+    expect(onboardingSource).toContain('t("messaging.onboardingEmailAvailable")');
     expect(onboardingSource).toContain("const setupCapabilityKnown");
     expect(onboardingSource).toContain("{!setupCapabilityKnown ? (");
-    expect(onboardingSource).toContain(
-      "We are checking whether new-number setup",
-    );
-    expect(onboardingSource).toContain(
-      "Texting number setup is disabled in this deployment",
-    );
-    expect(onboardingSource).toContain(
-      "Your clinic has an existing texting setup to review",
-    );
+    expect(onboardingSource).toContain('t("messaging.onboardingOptional")');
+    expect(onboardingSource).toContain('t("messaging.onboardingDisabledDeployment")');
+    expect(onboardingSource).toContain('t("messaging.onboardingExistingReview")');
     expect(onboardingSource).toContain("setupDisabled && !messaging");
     expect(onboardingSource).toContain('href="/settings?tab=messaging"');
     expect(onboardingSource).toContain(

@@ -1278,6 +1278,57 @@ describe("notification target safety", () => {
     );
   });
 
+  it("keeps a rejected outbound-email guard diagnosable without exposing the recipient", async () => {
+    mocks.assertOutboundEmailAllowed.mockRejectedValueOnce(
+      new Error("Verify your email address before sending external email."),
+    );
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const { db, updateSet } = createDb({
+      selectResults: [
+        [PRACTICE_SETTINGS],
+        [
+          {
+            vaccinationRecordId: VACCINATION_RECORD_ID,
+            patientId: PATIENT_ID,
+            patientName: "Miso",
+            clientId: CLIENT_ID,
+            clientFirstName: "Ada",
+            clientLastName: "Lovelace",
+            clientEmail: "ada@realclinic.com",
+            clientPhone: null,
+            preferredContactMethod: "email",
+            smsConsent: false,
+            vaccineName: "Rabies",
+            nextDueDate: "2026-06-01",
+          },
+        ],
+      ],
+    });
+
+    await expect(
+      callerWithDb(db).sendVaccinationReminders({ patientIds: [PATIENT_ID] }),
+    ).resolves.toEqual({ sent: 0, failed: 1, blocked: 0, deduped: 0 });
+
+    expect(updateSet).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "failed", dedupeKey: null }),
+    );
+    expect(consoleError).toHaveBeenCalledWith(
+      "[notifications.vaccination-recall-email] delivery_failed",
+      expect.objectContaining({
+        operation: "vaccination_recall",
+        provider: "not_reached",
+        failureCode: "outbound_email_unverified_user",
+        recipient: "a***@realclinic.com",
+        senderDomain: "mail.openvpm.com",
+      }),
+    );
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain(
+      "ada@realclinic.com",
+    );
+  });
+
   it("blocks SMS-only recalls when there is no active sender", async () => {
     const { db, insertValues } = createDb({
       selectResults: [

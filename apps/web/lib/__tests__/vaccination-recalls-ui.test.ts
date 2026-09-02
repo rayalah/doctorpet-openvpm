@@ -27,10 +27,10 @@ describe("vaccination recall operator UI", () => {
 
   it("requires an explicit final confirmation for single and batch sends", () => {
     expect(pageSource).toContain("window.confirm(");
-    expect(pageSource).toContain("Send selected ({selectedEligibleIds.length})");
+    expect(pageSource).toContain('t("recalls.sendSelected")');
     expect(pageSource).toContain("sendPatients([recipient.patientId])");
-    expect(pageSource).toContain("same exact");
-    expect(pageSource).toContain("recall snapshot");
+    expect(pageSource).toContain('t("recalls.description")');
+    expect(pageSource).toContain('t("recalls.selectDescription")');
     expect(pageSource).not.toContain("useEffect(");
   });
 

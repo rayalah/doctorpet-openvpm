@@ -24,7 +24,13 @@ describe("care reminder safety contract", () => {
     expect(schema).toContain("care_reminders_state_check");
     expect(router).toContain("setCompleted");
     expect(router).not.toMatch(/send(?:Email|Sms|Reminder)/);
-    expect(page).toMatch(/never sends an\s+email or text automatically/);
+    expect(page).toContain('t("reminders.description")');
+    expect(page).toContain("item.updatedAtVersion");
+    expect(page).toContain("reminders.changedError");
+    expect(page).not.toContain("toast.error(error.message)");
+    expect(router).toContain('code: "CONFLICT"');
+    expect(router).toContain("updatedAtVersion");
+    expect(router).toContain("::timestamptz");
   });
 
   it("surfaces the reusable queue in primary navigation", () => {
@@ -35,7 +41,7 @@ describe("care reminder safety contract", () => {
       'href: "/care-reminders"',
     );
     expect(read("components/layout/top-bar.tsx")).toContain(
-      '"/care-reminders": "Care Reminders"',
+      '"/care-reminders": "navigation.careReminders"',
     );
   });
 });

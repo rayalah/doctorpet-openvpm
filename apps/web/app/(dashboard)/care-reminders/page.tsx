@@ -20,6 +20,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/common/empty-state";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { dateLocaleForLanguage } from "@/lib/i18n/language";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/messages";
 
 type ReminderStatusFilter = "open" | "completed";
 type ReminderDueFilter = "all" | "overdue" | "upcoming";
@@ -30,8 +33,8 @@ function canManage(role?: string | null): boolean {
   );
 }
 
-function displayDate(value: string): string {
-  return new Date(`${value}T12:00:00Z`).toLocaleDateString("en-US", {
+function displayDate(value: string, locale: string): string {
+  return new Date(`${value}T12:00:00Z`).toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -39,8 +42,37 @@ function displayDate(value: string): string {
   });
 }
 
+type ReminderErrorFallback = "loadError" | "createError" | "updateError";
+
+type ReminderError = {
+  data?: { code?: string } | null;
+};
+
+function reminderErrorMessage(
+  error: ReminderError,
+  t: Translator,
+  fallback: ReminderErrorFallback,
+): string {
+  switch (error.data?.code) {
+    case "CONFLICT":
+      return t("reminders.changedError");
+    case "NOT_FOUND":
+      return t("reminders.notFoundError");
+    case "BAD_REQUEST":
+      return t("reminders.validationError");
+    case "FORBIDDEN":
+    case "UNAUTHORIZED":
+      return t("reminders.permissionError");
+    default:
+      return t(`reminders.${fallback}`);
+  }
+}
+
 export default function CareRemindersPage() {
   const { data: session } = useSession();
+  const language = useLanguage();
+  const t = useTranslations();
+  const locale = dateLocaleForLanguage(language);
   const utils = trpc.useUtils();
   const [status, setStatus] = useState<ReminderStatusFilter>("open");
   const [due, setDue] = useState<ReminderDueFilter>("all");
@@ -66,10 +98,10 @@ export default function CareRemindersPage() {
     onSuccess: async (_, variables) => {
       await utils.careReminders.list.invalidate();
       toast.success(
-        variables.completed ? "Reminder completed" : "Reminder reopened",
+        variables.completed ? t("reminders.completedToast") : t("reminders.reopenedToast"),
       );
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(reminderErrorMessage(error, t, "updateError")),
   });
   const manageable = canManage(session?.user?.role);
   const create = trpc.careReminders.create.useMutation({
@@ -83,15 +115,15 @@ export default function CareRemindersPage() {
       setStatus("open");
       setDue("all");
       await utils.careReminders.list.invalidate();
-      toast.success("Care reminder added");
+      toast.success(t("reminders.addedToast"));
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error(reminderErrorMessage(error, t, "createError")),
   });
 
   if (query.isLoading) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading care reminders...
+        <Loader2 className="h-4 w-4 animate-spin" /> {t("reminders.loading")}
       </div>
     );
   }
@@ -100,11 +132,13 @@ export default function CareRemindersPage() {
     return (
       <EmptyState
         icon={AlertTriangle}
-        title="Could not load care reminders"
+        title={t("reminders.loadError")}
         description={
-          query.error?.message ?? "The reminder queue returned no data."
+          query.error
+            ? reminderErrorMessage(query.error, t, "loadError")
+            : t("reminders.queueError")
         }
-        action={{ label: "Retry", onClick: () => query.refetch() }}
+        action={{ label: t("reminders.retry"), onClick: () => query.refetch() }}
       />
     );
   }
@@ -114,16 +148,14 @@ export default function CareRemindersPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-heading text-xl font-semibold">Care reminders</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("reminders.title")}</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Internal follow-up work for each patient. This queue never sends an
-            email or text automatically; client outreach remains a separate,
-            deliberate action with its own consent checks.
+            {t("reminders.description")}
           </p>
         </div>
         {manageable ? (
           <Button className="gap-2" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4" /> Add reminder
+            <Plus className="h-4 w-4" /> {t("reminders.add")}
           </Button>
         ) : null}
       </div>
@@ -132,16 +164,15 @@ export default function CareRemindersPage() {
         <Card>
           <CardHeader className="flex-row items-start justify-between space-y-0">
             <div>
-              <CardTitle>Add an internal reminder</CardTitle>
+              <CardTitle>{t("reminders.internalTitle")}</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                Choose an active patient. Saving adds clinic work only and does
-                not contact the client.
+                {t("reminders.internalDescription")}
               </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Close reminder form"
+              aria-label={t("reminders.closeForm")}
               onClick={() => setShowCreate(false)}
             >
               <X className="h-4 w-4" />
@@ -166,7 +197,7 @@ export default function CareRemindersPage() {
                   className="text-sm font-medium"
                   htmlFor="care-reminder-patient"
                 >
-                  Patient
+                  {t("reminders.patient")}
                 </label>
                 {selectedPatient ? (
                   <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
@@ -187,7 +218,7 @@ export default function CareRemindersPage() {
                         setPatientQuery("");
                       }}
                     >
-                      Change
+                      {t("reminders.change")}
                     </Button>
                   </div>
                 ) : (
@@ -196,12 +227,12 @@ export default function CareRemindersPage() {
                       id="care-reminder-patient"
                       value={patientQuery}
                       onChange={(event) => setPatientQuery(event.target.value)}
-                      placeholder="Search active patients or owners"
+                      placeholder={t("reminders.searchPatients")}
                       autoComplete="off"
                     />
                     {patientSearch.isFetching ? (
                       <p className="text-xs text-muted-foreground">
-                        Searching...
+                        {t("reminders.searching")}
                       </p>
                     ) : null}
                     {patientSearch.data?.length ? (
@@ -221,7 +252,7 @@ export default function CareRemindersPage() {
                                     patient.clientLastName,
                                   ]
                                     .filter(Boolean)
-                                    .join(" ") || "Client",
+                                    .join(" ") || t("reminders.client"),
                               })
                             }
                           >
@@ -245,7 +276,7 @@ export default function CareRemindersPage() {
                   className="text-sm font-medium"
                   htmlFor="care-reminder-title"
                 >
-                  Reminder
+                  {t("reminders.reminder")}
                 </label>
                 <Input
                   id="care-reminder-title"
@@ -260,7 +291,7 @@ export default function CareRemindersPage() {
                   className="text-sm font-medium"
                   htmlFor="care-reminder-date"
                 >
-                  Due date
+                  {t("reminders.dueDate")}
                 </label>
                 <Input
                   id="care-reminder-date"
@@ -275,7 +306,7 @@ export default function CareRemindersPage() {
                   className="text-sm font-medium"
                   htmlFor="care-reminder-notes"
                 >
-                  Notes (optional)
+                  {t("reminders.notesOptional")}
                 </label>
                 <Textarea
                   id="care-reminder-notes"
@@ -290,7 +321,7 @@ export default function CareRemindersPage() {
                   variant="outline"
                   onClick={() => setShowCreate(false)}
                 >
-                  Cancel
+                  {t("reminders.cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -304,7 +335,7 @@ export default function CareRemindersPage() {
                   {create.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
-                  Save reminder
+                  {t("reminders.save")}
                 </Button>
               </div>
             </form>
@@ -313,18 +344,17 @@ export default function CareRemindersPage() {
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Metric label="Open" value={counts.open} icon={BellRing} />
-        <Metric label="Due or overdue" value={counts.overdue} icon={Clock3} />
-        <Metric label="Upcoming" value={counts.upcoming} icon={CheckCircle2} />
+        <Metric label={t("reminders.open")} value={counts.open} icon={BellRing} />
+        <Metric label={t("reminders.dueOrOverdue")} value={counts.overdue} icon={Clock3} />
+        <Metric label={t("reminders.upcoming")} value={counts.upcoming} icon={CheckCircle2} />
       </div>
 
       <Card>
         <CardHeader className="gap-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
-            <CardTitle>Patient follow-up queue</CardTitle>
+            <CardTitle>{t("reminders.queueTitle")}</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Due dates use the practice day. Imported tasks retain source
-              identity so retrying a migration cannot duplicate them.
+              {t("reminders.queueDescription")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -333,7 +363,7 @@ export default function CareRemindersPage() {
               variant={status === "open" ? "default" : "outline"}
               onClick={() => setStatus("open")}
             >
-              Open
+              {t("reminders.open")}
             </Button>
             <Button
               size="sm"
@@ -343,7 +373,7 @@ export default function CareRemindersPage() {
                 setDue("all");
               }}
             >
-              Completed
+              {t("reminders.completed")}
             </Button>
             {status === "open" ? (
               <>
@@ -355,7 +385,7 @@ export default function CareRemindersPage() {
                     onClick={() => setDue(value)}
                     className="capitalize"
                   >
-                    {value}
+                    {value === "all" ? t("reminders.all") : value === "overdue" ? t("reminders.overdue") : t("reminders.upcoming")}
                   </Button>
                 ))}
               </>
@@ -368,13 +398,13 @@ export default function CareRemindersPage() {
               icon={status === "open" ? BellRing : CheckCircle2}
               title={
                 status === "open"
-                  ? "No reminders in this view"
-                  : "No completed reminders"
+                  ? t("reminders.noOpen")
+                  : t("reminders.noCompleted")
               }
               description={
                 status === "open"
-                  ? "Try another due-date filter, or add a reminder from a patient record."
-                  : "Completed care reminders will remain available here for review."
+                  ? t("reminders.noOpenDescription")
+                  : t("reminders.noCompletedDescription")
               }
             />
           ) : (
@@ -382,11 +412,11 @@ export default function CareRemindersPage() {
               <table className="w-full min-w-[800px] text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="py-3 pr-4 font-medium">Due</th>
-                    <th className="py-3 pr-4 font-medium">Patient / client</th>
-                    <th className="py-3 pr-4 font-medium">Reminder</th>
-                    <th className="py-3 pr-4 font-medium">Source</th>
-                    <th className="py-3 text-right font-medium">Action</th>
+                    <th className="py-3 pr-4 font-medium">{t("reminders.due")}</th>
+                    <th className="py-3 pr-4 font-medium">{t("reminders.patientClient")}</th>
+                    <th className="py-3 pr-4 font-medium">{t("reminders.reminder")}</th>
+                    <th className="py-3 pr-4 font-medium">{t("reminders.source")}</th>
+                    <th className="py-3 text-right font-medium">{t("reminders.action")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -406,11 +436,11 @@ export default function CareRemindersPage() {
                                 : "font-medium"
                             }
                           >
-                            {displayDate(item.dueDate)}
+                            {displayDate(item.dueDate, locale)}
                           </span>
                           {overdue ? (
                             <p className="mt-1 text-xs text-destructive">
-                              Due or overdue
+                              {t("reminders.dueOrOverdue")}
                             </p>
                           ) : null}
                         </td>
@@ -429,7 +459,9 @@ export default function CareRemindersPage() {
                               variant="outline"
                               className="mt-2 capitalize"
                             >
-                              {item.patientStatus}
+                              {item.patientStatus === "deceased"
+                                ? t("reminders.statusDeceased")
+                                : t("reminders.statusInactive")}
                             </Badge>
                           ) : null}
                         </td>
@@ -445,7 +477,7 @@ export default function CareRemindersPage() {
                           <Badge
                             variant={item.imported ? "secondary" : "outline"}
                           >
-                            {item.imported ? "Imported" : "Doctor Pet"}
+                            {item.imported ? t("reminders.imported") : t("reminders.doctorPet")}
                           </Badge>
                         </td>
                         <td className="py-4 text-right">
@@ -460,16 +492,15 @@ export default function CareRemindersPage() {
                                 update.mutate({
                                   id: item.id,
                                   completed: item.status === "open",
-                                  expectedUpdatedAt:
-                                    item.updatedAt.toISOString(),
+                                  expectedUpdatedAt: item.updatedAtVersion,
                                 })
                               }
                             >
-                              {item.status === "open" ? "Complete" : "Reopen"}
+                              {item.status === "open" ? t("reminders.complete") : t("reminders.reopen")}
                             </Button>
                           ) : (
                             <span className="text-xs text-muted-foreground">
-                              Read only
+                              {t("reminders.readOnly")}
                             </span>
                           )}
                         </td>

@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { EmptyState } from "@/components/common/empty-state";
 import { formatPortalDateTime } from "@/lib/portal/date";
 import { COMMUNICATION_CONTENT_MAX_LENGTH } from "@/lib/communications/policy";
+import { translate, type Translator } from "@/lib/i18n/messages";
 
 export default function PortalMessagesPage() {
   const params = useParams();
@@ -20,10 +21,13 @@ export default function PortalMessagesPage() {
     { token },
     { refetchInterval: 30000 }
   );
+  const { data: clientData } = trpc.portal.getClient.useQuery({ token });
+  const portalText = (key: Parameters<Translator>[0]) =>
+    translate(clientData?.language === "es" ? "es" : "en", key);
   const sendMessage = trpc.portal.createMessage.useMutation({
     onSuccess: () => {
       setContent("");
-      toast.success("Message sent");
+      toast.success(portalText("messaging.messageSent"));
       utils.portal.getMessages.invalidate({ token });
     },
     onError: (err) => {
@@ -92,8 +96,8 @@ export default function PortalMessagesPage() {
         <EmptyState
           className="py-12"
           icon={AlertCircle}
-          title="Unable to load messages"
-          description="Please refresh this page or contact your clinic if the portal link has expired."
+          title={portalText("messaging.portalLoadError")}
+          description={portalText("messaging.portalLoadErrorDescription")}
         />
       </div>
     );
@@ -106,13 +110,13 @@ export default function PortalMessagesPage() {
         className="mb-6 inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to portal
+        {portalText("messaging.backToPortal")}
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{portalText("messaging.messages")}</h1>
         <p className="mt-1 text-gray-500">
-          Send questions and follow-ups directly to your clinic.
+          {portalText("messaging.portalDescription")}
         </p>
       </div>
 
@@ -122,8 +126,8 @@ export default function PortalMessagesPage() {
             <EmptyState
               className="border-0 py-10"
               icon={MessageSquare}
-              title="No portal messages yet"
-              description="Messages from your clinic and your replies will appear here."
+              title={portalText("messaging.noPortalMessages")}
+              description={portalText("messaging.noPortalMessagesDescription")}
             />
           ) : (
             messages.map((message) => {
@@ -153,7 +157,7 @@ export default function PortalMessagesPage() {
                         isClientMessage ? "text-teal-50" : "text-gray-500"
                       }`}
                     >
-                      {isClientMessage ? "You" : "Clinic"} -{" "}
+                      {isClientMessage ? portalText("messaging.you") : portalText("messaging.clinic")} -{" "}
                       {formatPortalDateTime(
                         message.createdAt,
                         undefined,
@@ -169,7 +173,7 @@ export default function PortalMessagesPage() {
 
         <div className="border-t border-gray-200 p-4">
           <label className="sr-only" htmlFor="portal-message-content">
-            Message
+            {portalText("messaging.message")}
           </label>
           <textarea
             id="portal-message-content"
@@ -177,7 +181,7 @@ export default function PortalMessagesPage() {
             onChange={(event) => setContent(event.target.value)}
             maxLength={COMMUNICATION_CONTENT_MAX_LENGTH}
             rows={3}
-            placeholder="Type your message..."
+            placeholder={portalText("messaging.typeMessage")}
             className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
           />
           <div className="mt-3 flex items-center justify-between gap-3">
@@ -191,7 +195,7 @@ export default function PortalMessagesPage() {
               className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send className="h-4 w-4" aria-hidden="true" />
-              {sendMessage.isPending ? "Sending..." : "Send"}
+              {sendMessage.isPending ? portalText("messaging.sending") : portalText("messaging.send")}
             </button>
           </div>
         </div>

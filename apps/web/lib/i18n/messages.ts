@@ -16,6 +16,8 @@ import { enDocumentMessages, esDocumentMessages } from "./messages/documents";
 import { enPdfMessages, esPdfMessages } from "./messages/pdf";
 import { enBrandingMessages, esBrandingMessages } from "./messages/branding";
 import { enGuidesMessages, esGuidesMessages } from "./messages/guides";
+import { enReminderMessages, esReminderMessages } from "./messages/reminders";
+import { enMessagingMessages, esMessagingMessages } from "./messages/messaging";
 
 export const enMessages = {
   ...enCommonMessages,
@@ -35,6 +37,8 @@ export const enMessages = {
   ...enPdfMessages,
   ...enBrandingMessages,
   ...enGuidesMessages,
+  ...enReminderMessages,
+  ...enMessagingMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -61,6 +65,8 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
     ...esPdfMessages,
     ...esBrandingMessages,
     ...esGuidesMessages,
+    ...esReminderMessages,
+    ...esMessagingMessages,
   },
 };
 

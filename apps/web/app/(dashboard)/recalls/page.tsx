@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/common/empty-state";
+import { dateLocaleForLanguage } from "@/lib/i18n/language";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
 
 const MAX_BATCH_SIZE = 100;
 
@@ -31,10 +33,10 @@ function canOperateRecalls(role?: string | null): boolean {
   );
 }
 
-function clinicalDate(value: string): string {
+function clinicalDate(value: string, locale: string): string {
   const date = new Date(`${value}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -44,6 +46,9 @@ function clinicalDate(value: string): string {
 
 export default function VaccinationRecallsPage() {
   const { data: session, status: sessionStatus } = useSession();
+  const language = useLanguage();
+  const t = useTranslations();
+  const locale = dateLocaleForLanguage(language);
   const canOperate = canOperateRecalls(session?.user?.role);
   const utils = trpc.useUtils();
   const preview = trpc.notifications.getVaccinationRecallPreview.useQuery(
@@ -74,10 +79,16 @@ export default function VaccinationRecallsPage() {
       setSelected(new Set());
       await utils.notifications.getVaccinationRecallPreview.invalidate();
       const summary = [
-        `${result.sent} sent`,
-        result.deduped ? `${result.deduped} already handled` : null,
-        result.blocked ? `${result.blocked} blocked` : null,
-        result.failed ? `${result.failed} failed` : null,
+        t("recalls.sentCount").replace("{count}", String(result.sent)),
+        result.deduped
+          ? t("recalls.handledCount").replace("{count}", String(result.deduped))
+          : null,
+        result.blocked
+          ? t("recalls.blockedCount").replace("{count}", String(result.blocked))
+          : null,
+        result.failed
+          ? t("recalls.failedCount").replace("{count}", String(result.failed))
+          : null,
       ]
         .filter(Boolean)
         .join(" · ");
@@ -92,7 +103,12 @@ export default function VaccinationRecallsPage() {
     const count = patientIds.length;
     if (
       !window.confirm(
-        `Send vaccination reminders to ${count} ${count === 1 ? "patient" : "patients"} now? Delivery will use each client's eligible channel and will be logged in Communications.`
+        t("recalls.sendConfirm")
+          .replace("{count}", String(count))
+          .replace(
+            "{patients}",
+            count === 1 ? t("recalls.patientSingular") : t("recalls.patientPlural"),
+          ),
       )
     ) {
       return;
@@ -104,7 +120,7 @@ export default function VaccinationRecallsPage() {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Checking recall access...
+        {t("recalls.loadingAccess")}
       </div>
     );
   }
@@ -113,8 +129,8 @@ export default function VaccinationRecallsPage() {
     return (
       <EmptyState
         icon={ShieldCheck}
-        title="Vaccination recalls are restricted"
-        description="Administrators, veterinarians, and front desk staff can review and send recalls."
+        title={t("recalls.restricted")}
+        description={t("recalls.restrictedDescription")}
       />
     );
   }
@@ -123,7 +139,7 @@ export default function VaccinationRecallsPage() {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Building the recall preview...
+        {t("recalls.loadingPreview")}
       </div>
     );
   }
@@ -132,9 +148,9 @@ export default function VaccinationRecallsPage() {
     return (
       <EmptyState
         icon={AlertTriangle}
-        title="Could not load vaccination recalls"
-        description={preview.error?.message ?? "The preview returned no data."}
-        action={{ label: "Retry", onClick: () => preview.refetch() }}
+        title={t("recalls.loadError")}
+        description={preview.error?.message ?? t("recalls.noPreview")}
+        action={{ label: t("reminders.retry"), onClick: () => preview.refetch() }}
       />
     );
   }
@@ -145,12 +161,10 @@ export default function VaccinationRecallsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="font-heading text-xl font-semibold">
-            Vaccination recalls
+            {t("recalls.title")}
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Review overdue patients before anything sends. Sample records,
-            reserved contacts, opt-outs, suppressions, and repeat sends are
-            blocked automatically.
+            {t("recalls.description")}
           </p>
         </div>
         <Button
@@ -163,20 +177,20 @@ export default function VaccinationRecallsPage() {
           <RefreshCw
             className={`h-4 w-4 ${preview.isFetching ? "animate-spin" : ""}`}
           />
-          Refresh preview
+          {t("recalls.refresh")}
         </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <RecallMetric label="Overdue patients" value={data.total} icon={Syringe} />
+        <RecallMetric label={t("recalls.overduePatients")} value={data.total} icon={Syringe} />
         <RecallMetric
-          label="Ready to send"
+          label={t("recalls.readyToSend")}
           value={data.eligible}
           icon={CheckCircle2}
         />
-        <RecallMetric label="Blocked" value={data.blocked} icon={AlertTriangle} />
+        <RecallMetric label={t("recalls.blocked")} value={data.blocked} icon={AlertTriangle} />
         <RecallMetric
-          label="Already reminded"
+          label={t("recalls.alreadyReminded")}
           value={data.alreadySent}
           icon={Clock3}
         />
@@ -185,12 +199,9 @@ export default function VaccinationRecallsPage() {
       <Card>
         <CardHeader className="gap-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
-            <CardTitle>Recipient preview</CardTitle>
+            <CardTitle>{t("recalls.recipientPreview")}</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Select up to {MAX_BATCH_SIZE} eligible patients. Sending is always
-              a deliberate action and requires confirmation. The same exact
-              overdue-vaccine set can only be sent once; a newly overdue or
-              newly recorded vaccine creates a new recall snapshot.
+              {t("recalls.selectDescription").replace("{count}", String(MAX_BATCH_SIZE))}
             </p>
           </div>
           <Button
@@ -203,15 +214,15 @@ export default function VaccinationRecallsPage() {
             ) : (
               <Send className="h-4 w-4" />
             )}
-            Send selected ({selectedEligibleIds.length})
+            {t("recalls.sendSelected").replace("{count}", String(selectedEligibleIds.length))}
           </Button>
         </CardHeader>
         <CardContent>
           {data.recipients.length === 0 ? (
             <EmptyState
               icon={CheckCircle2}
-              title="No overdue vaccination recalls"
-              description="Active patients with a latest vaccination due date in the past will appear here."
+              title={t("recalls.noOverdue")}
+              description={t("recalls.noOverdueDescription")}
             />
           ) : (
             <div className="overflow-x-auto">
@@ -220,7 +231,7 @@ export default function VaccinationRecallsPage() {
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="w-10 py-3 pr-3 font-medium">
                       <Checkbox
-                        aria-label="Select all eligible recall recipients"
+                        aria-label={t("recalls.selectAll")}
                         checked={allEligibleSelected}
                         disabled={eligibleRecipients.length === 0}
                         onChange={(event) => {
@@ -238,11 +249,11 @@ export default function VaccinationRecallsPage() {
                         }}
                       />
                     </th>
-                    <th className="py-3 pr-4 font-medium">Patient / client</th>
-                    <th className="py-3 pr-4 font-medium">Overdue vaccines</th>
-                    <th className="py-3 pr-4 font-medium">Delivery</th>
-                    <th className="py-3 pr-4 font-medium">Eligibility</th>
-                    <th className="py-3 text-right font-medium">Action</th>
+                    <th className="py-3 pr-4 font-medium">{t("reminders.patientClient")}</th>
+                    <th className="py-3 pr-4 font-medium">{t("recalls.overdueVaccines")}</th>
+                    <th className="py-3 pr-4 font-medium">{t("recalls.delivery")}</th>
+                    <th className="py-3 pr-4 font-medium">{t("recalls.eligibility")}</th>
+                    <th className="py-3 text-right font-medium">{t("reminders.action")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -255,7 +266,7 @@ export default function VaccinationRecallsPage() {
                       >
                         <td className="py-4 pr-3">
                           <Checkbox
-                            aria-label={`Select ${recipient.patientName}`}
+                            aria-label={`${t("recalls.select")} ${recipient.patientName}`}
                             checked={eligible && selected.has(recipient.patientId)}
                             disabled={!eligible || sendReminders.isPending}
                             onChange={(event) =>
@@ -287,7 +298,7 @@ export default function VaccinationRecallsPage() {
                                   {vaccine.vaccineName}
                                 </span>{" "}
                                 <span className="text-xs text-muted-foreground">
-                                  due {clinicalDate(vaccine.nextDueDate)}
+                                  {t("recalls.due").replace("{date}", clinicalDate(vaccine.nextDueDate, locale))}
                                 </span>
                               </li>
                             ))}
@@ -313,19 +324,19 @@ export default function VaccinationRecallsPage() {
                         </td>
                         <td className="py-4 pr-4">
                           {eligible ? (
-                            <Badge variant="success">Ready</Badge>
+                              <Badge variant="success">{t("recalls.ready")}</Badge>
                           ) : recipient.status === "already_sent" ? (
                             <div>
-                              <Badge variant="outline">Already reminded</Badge>
+                              <Badge variant="outline">{t("recalls.alreadyReminded")}</Badge>
                               {recipient.lastSentAt ? (
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                  {new Date(recipient.lastSentAt).toLocaleString()}
+                                  {new Date(recipient.lastSentAt).toLocaleString(locale)}
                                 </p>
                               ) : null}
                             </div>
                           ) : (
                             <div className="max-w-xs">
-                              <Badge variant="warning">Blocked</Badge>
+                              <Badge variant="warning">{t("recalls.blocked")}</Badge>
                               <p className="mt-1 text-xs text-muted-foreground">
                                 {recipient.blockMessage}
                               </p>
@@ -339,7 +350,7 @@ export default function VaccinationRecallsPage() {
                             disabled={!eligible || sendReminders.isPending}
                             onClick={() => sendPatients([recipient.patientId])}
                           >
-                            Send
+                            {t("recalls.send")}
                           </Button>
                         </td>
                       </tr>

@@ -354,7 +354,14 @@ export async function sendVaccinationReminder(data: {
   dueDate: string;
   practiceName: string;
   practicePhone?: string;
-}): Promise<{ success: boolean; id?: string; error?: string }> {
+}): Promise<{
+  success: boolean;
+  id?: string;
+  error?: string;
+  provider?: EmailProvider;
+  outcome?: EmailProviderOutcome;
+  failureCode?: EmailProviderEvidence["failureCode"];
+}> {
   const body = `
     <p style="margin:0 0 16px;color:#111827;font-size:15px;line-height:1.6;">Hi ${data.clientName},</p>
     <p style="margin:0 0 24px;color:#111827;font-size:15px;line-height:1.6;">It's time to schedule <strong>${data.patientName}</strong>'s <strong>${data.vaccineName}</strong> vaccination.</p>
@@ -380,13 +387,24 @@ export async function sendVaccinationReminder(data: {
 
   const html = emailLayout(data.practiceName, body, footer);
 
-  const result = await sendEmail({
+  const result = await dispatchEmail({
     to: data.to,
     subject: `Vaccination Reminder: ${data.vaccineName} for ${data.patientName}`,
     html,
   });
 
-  return { success: result.success, id: result.id, error: result.error };
+  return {
+    success: result.success,
+    ...(result.id ? { id: result.id } : {}),
+    ...(result.error ? { error: result.error } : {}),
+    ...(!result.success
+      ? {
+          provider: result.provider,
+          outcome: result.outcome,
+          ...(result.failureCode ? { failureCode: result.failureCode } : {}),
+        }
+      : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------
