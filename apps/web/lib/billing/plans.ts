@@ -6,8 +6,8 @@
  * hosted subscription gates. We monetize hosting + scale (locations) + heavy
  * usage, not by locking the open core.
  *
- * Pricing (managed Cloud): ONE simple self-serve tier — flat $79/mo or
- * $790/yr per active location, unlimited staff. Hosted entitlements are included while
+ * Pricing (managed Cloud): ONE simple self-serve tier — flat $50/mo or
+ * $500/yr per active location, unlimited staff. Hosted entitlements are included while
  * trialing/active, with AI enabled after signed billing setup during a trial
  * and generous included SMS / AI allowances with metered
  * overage beyond. Enterprise = custom.
@@ -139,7 +139,7 @@ export const PLANS: Record<PlanTier, PlanDefinition> = {
     locationUnitPriceMonthlyUsd: CLOUD_LOCATION_UNIT_PRICE_MONTHLY_USD,
     seatUnitPriceMonthlyUsd: CLOUD_SEAT_UNIT_PRICE_MONTHLY_USD,
     blurb:
-      "We host the managed PIMS: agent access, SMS-ready shared inbox, reporting, scoped API/webhooks, multi-location tools, and supported integration hooks. $79/mo or $790/yr per location, unlimited staff.",
+      "We host the managed PIMS: agent access, SMS-ready shared inbox, reporting, scoped API/webhooks, multi-location tools, and supported integration hooks. $50/mo or $500/yr per location, unlimited staff.",
     seatLimit: null, // unlimited staff under the flat model
     locationLimit: null, // billed by location quantity, not capped
     features: [...ALL_FEATURES],

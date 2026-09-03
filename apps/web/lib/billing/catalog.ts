@@ -11,8 +11,8 @@ export interface CloudBillingOption {
   savingsUsd: number;
 }
 
-export const CLOUD_MONTHLY_PRICE_USD = 79;
-export const CLOUD_ANNUAL_PRICE_USD = 790;
+export const CLOUD_MONTHLY_PRICE_USD = 50;
+export const CLOUD_ANNUAL_PRICE_USD = 500;
 export const CLOUD_ANNUAL_SAVINGS_USD =
   CLOUD_MONTHLY_PRICE_USD * 12 - CLOUD_ANNUAL_PRICE_USD;
 

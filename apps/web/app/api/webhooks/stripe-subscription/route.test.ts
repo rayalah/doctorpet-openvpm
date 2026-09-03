@@ -194,7 +194,7 @@ function invoicePaymentSucceededEvent(subscriptionId?: string) {
       object: {
         id: "in_paid",
         customer: CUSTOMER_ID,
-        amount_paid: 7900,
+        amount_paid: 5000,
         currency: "usd",
         period_start: Math.floor(Date.parse("2026-07-01T02:00:00.000Z") / 1000),
         period_end: Math.floor(Date.parse("2026-08-01T02:00:00.000Z") / 1000),
@@ -222,7 +222,7 @@ function invoicePaymentFailedEvent() {
       object: {
         id: "in_failed",
         customer: CUSTOMER_ID,
-        amount_due: 7900,
+        amount_due: 5000,
         currency: "usd",
         attempt_count: 2,
         next_payment_attempt: Math.floor(
@@ -610,7 +610,7 @@ describe("Stripe subscription webhook", () => {
     expect(mocks.sendPaymentReceiptEmail).toHaveBeenCalledWith({
       to: "owner@example.com",
       practiceName: "Westside Vet",
-      amount: "$79.00",
+      amount: "$50.00",
       periodLabel: "June 30, 2026 – July 31, 2026",
       invoiceUrl: "https://billing.stripe.test/in_paid",
       idempotencyKey: "lc:receipt:in_paid",
@@ -687,7 +687,7 @@ describe("Stripe subscription webhook", () => {
         eventCreatedAt: new Date(EVENT_CREATED * 1000),
         objectId: "in_paid",
         evidenceKind: "positive_subscription_invoice_paid",
-        amountCents: 7900,
+        amountCents: 5000,
         currency: "usd",
       },
     });
@@ -765,7 +765,7 @@ describe("Stripe subscription webhook", () => {
     expect(mocks.sendPaymentFailedEmail).toHaveBeenCalledWith({
       to: "owner@example.com",
       practiceName: "Westside Vet",
-      amount: "$79.00",
+      amount: "$50.00",
       nextRetryDate: "June 30, 2026",
       idempotencyKey: "lc:dunning:in_failed:2",
     });

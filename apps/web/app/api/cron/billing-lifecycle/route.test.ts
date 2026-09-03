@@ -64,7 +64,7 @@ vi.mock("@/lib/tenant-db", () => ({
 
 vi.mock("@/lib/billing/plans", () => ({
   billingEnforced: mocks.billingEnforced,
-  CLOUD_LOCATION_UNIT_PRICE_MONTHLY_USD: 79,
+  CLOUD_LOCATION_UNIT_PRICE_MONTHLY_USD: 50,
 }));
 
 vi.mock("@/lib/cron-auth", () => ({
@@ -195,7 +195,7 @@ describe("billing lifecycle cron", () => {
       practiceName: "Neighborhood Veterinary",
       daysLeft: 3,
       trialEndDate: "July 4, 2026",
-      monthlyPrice: "$79",
+      monthlyPrice: "$50",
       billingConnected: false,
       idempotencyKey: `lc:trial-ending:${PRACTICE_ID}:2026-07-04:t-3`,
     });

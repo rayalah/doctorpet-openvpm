@@ -12,7 +12,10 @@ import {
   createEmailPreferenceLinks,
   emailPreferenceRecipientHash,
 } from "@/lib/email-preferences";
-import { billingEnforced } from "@/lib/billing/plans";
+import {
+  billingEnforced,
+  CLOUD_LOCATION_UNIT_PRICE_MONTHLY_USD,
+} from "@/lib/billing/plans";
 import { platformBrand } from "@/lib/brand/platform-brand";
 import {
   defaultEmailFrom,
@@ -738,7 +741,7 @@ export async function sendTrialEndingEmail(data: {
     practiceName: data.practiceName,
     daysLeft: data.daysLeft,
     trialEndDate: data.trialEndDate,
-    monthlyPrice: data.monthlyPrice ?? "$79",
+    monthlyPrice: data.monthlyPrice ?? `$${CLOUD_LOCATION_UNIT_PRICE_MONTHLY_USD}`,
     billingUrl,
     billingConnected: data.billingConnected,
     unsubscribeUrl: preferenceLinks.preferencesUrl,

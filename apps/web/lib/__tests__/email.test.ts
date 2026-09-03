@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("@/lib/billing/plans", () => ({
   billingEnforced: mocks.billingEnforced,
+  CLOUD_LOCATION_UNIT_PRICE_MONTHLY_USD: 50,
 }));
 
 vi.mock("resend", () => ({

@@ -123,10 +123,10 @@ describe("PLANS pricing", () => {
 
   it("estimates base Cloud subscription from locations (flat, unlimited staff)", () => {
     // Flat per-location model: staff count does not affect the base.
-    expect(estimatedCloudBaseMonthlyUsd(2, 5)).toBe(158);
-    expect(estimatedCloudBaseMonthlyUsd(0, 0)).toBe(79);
-    expect(estimatedCloudBaseAnnualUsd(2, 5)).toBe(1580);
-    expect(CLOUD_LOCATION_UNIT_PRICE_ANNUAL_USD).toBe(790);
+    expect(estimatedCloudBaseMonthlyUsd(2, 5)).toBe(100);
+    expect(estimatedCloudBaseMonthlyUsd(0, 0)).toBe(50);
+    expect(estimatedCloudBaseAnnualUsd(2, 5)).toBe(1000);
+    expect(CLOUD_LOCATION_UNIT_PRICE_ANNUAL_USD).toBe(500);
   });
 
   it("keeps customer-facing plan blurbs scoped to shipped hosted capabilities", () => {
