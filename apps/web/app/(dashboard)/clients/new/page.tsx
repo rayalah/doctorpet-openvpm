@@ -7,6 +7,7 @@ import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClientIdentificationFields } from "@/components/clients/identification-fields";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/common/empty-state";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ import {
   CLIENT_ADDRESS_MAX_LENGTH,
   CLIENT_CITY_MAX_LENGTH,
   CLIENT_EMAIL_MAX_LENGTH,
+  CLIENT_IDENTIFICATION_MAX_LENGTH,
   CLIENT_NAME_MAX_LENGTH,
   CLIENT_PHONE_MAX_LENGTH,
   CLIENT_STATE_MAX_LENGTH,
@@ -99,6 +101,7 @@ function NewClientForm({ firstClinicDay }: { firstClinicDay: boolean }) {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
+    identification: "",
     email: "",
     phone: "",
     address: "",
@@ -134,6 +137,7 @@ function NewClientForm({ firstClinicDay }: { firstClinicDay: boolean }) {
   const canSubmit =
     isRequiredClientTextValid(form.firstName, CLIENT_NAME_MAX_LENGTH) &&
     isRequiredClientTextValid(form.lastName, CLIENT_NAME_MAX_LENGTH) &&
+    isOptionalClientTextValid(form.identification, CLIENT_IDENTIFICATION_MAX_LENGTH) &&
     isOptionalClientTextValid(form.email, CLIENT_EMAIL_MAX_LENGTH) &&
     isOptionalClientTextValid(form.phone, CLIENT_PHONE_MAX_LENGTH) &&
     isOptionalClientTextValid(form.address, CLIENT_ADDRESS_MAX_LENGTH) &&
@@ -167,6 +171,7 @@ function NewClientForm({ firstClinicDay }: { firstClinicDay: boolean }) {
     createClient.mutate({
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
+      identification: form.identification.trim() || null,
       email: form.email.trim() || undefined,
       phone: form.phone.trim() || undefined,
       address: form.address.trim() || undefined,
@@ -214,6 +219,10 @@ function NewClientForm({ firstClinicDay }: { firstClinicDay: boolean }) {
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <ClientIdentificationFields
+          value={form.identification}
+          onChange={(value) => updateField("identification", value)}
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-sm font-medium" htmlFor="firstName">

@@ -87,7 +87,7 @@ function createDb(opts?: {
     async () => opts?.insertedRows ?? [{ id: "consent-event-1" }],
   );
   const insertConflict = vi.fn(async () => undefined);
-  const insertValues = vi.fn(() => ({
+  const insertValues = vi.fn((_values: Record<string, unknown>) => ({
     returning: insertReturning,
     onConflictDoNothing: vi.fn(() => ({ returning: insertReturning })),
     onConflictDoUpdate: insertConflict,
@@ -96,7 +96,7 @@ function createDb(opts?: {
 
   const updateReturning = vi.fn(async () => opts?.updatedRows ?? []);
   const updateWhere = vi.fn(() => ({ returning: updateReturning }));
-  const updateSet = vi.fn(() => ({ where: updateWhere }));
+  const updateSet = vi.fn((_values: Record<string, unknown>) => ({ where: updateWhere }));
   const update = vi.fn(() => ({ set: updateSet }));
   const execute = vi.fn(async (query: unknown) => {
     if (objectContainsText(query, "pg_advisory_xact_lock")) {
@@ -118,6 +118,78 @@ afterEach(() => {
 });
 
 describe("clients mutation safety", () => {
+  it.each([undefined, null, "", "  ", "001-0234-0567", "DIMEX 001234567890", "PA-001 abc"])(
+    "round-trips optional identification %j through create, read, edit and clear",
+    async (identification) => {
+      // Stateful in-memory DB boundary: exercise the actual tRPC procedures,
+      // including validation and write payloads, without connecting to real data.
+      const row: Record<string, unknown> = {
+        id: CLIENT_ID, identification: null, phone: null,
+      };
+      const { db, insertValues, updateSet } = createDb({
+        selectResults: [
+          [{ id: PRACTICE_ID }],
+          [row], [], [], // getById: client, patients, consent history
+        ],
+      });
+      insertValues.mockImplementation((values) => {
+        Object.assign(row, Object.fromEntries(
+          Object.entries(values).filter(([, value]) => value !== undefined),
+        ));
+        return {
+          returning: vi.fn(async () => [row]),
+          onConflictDoNothing: vi.fn(() => ({ returning: vi.fn(async () => []) })),
+          onConflictDoUpdate: vi.fn(async () => undefined),
+        };
+      });
+      updateSet.mockImplementation((values) => {
+        Object.assign(row, Object.fromEntries(
+          Object.entries(values).filter(([, value]) => value !== undefined),
+        ));
+        return { where: vi.fn(() => ({ returning: vi.fn(async () => [row]) })) };
+      });
+      const caller = callerWithDb(db);
+      const expected = identification?.trim() || null;
+      const created = await caller.create({
+        firstName: "Ada", lastName: "Lovelace",
+        ...(identification !== undefined ? { identification } : {}),
+      });
+      expect(created.identification).toBe(expected);
+      expect((await caller.getById({ id: CLIENT_ID })).identification).toBe(expected);
+      await caller.update({ id: CLIENT_ID, firstName: "Ada" });
+      expect(row.identification).toBe(expected);
+      const edited = await caller.update({ id: CLIENT_ID, identification: "  000-AB  " });
+      expect(edited.identification).toBe("000-AB");
+      expect(row.identification).toBe("000-AB");
+      await caller.update({ id: CLIENT_ID, identification: "" });
+      expect(row.identification).toBeNull();
+      await caller.update({ id: CLIENT_ID, identification: "PASSPORT 007" });
+      await caller.update({ id: CLIENT_ID, identification: null });
+      expect(row.identification).toBeNull();
+      expect(mocks.dispatchWebhookEvent).toHaveBeenCalledWith(
+        PRACTICE_ID, "client.created",
+        expect.not.objectContaining({ identification: expect.anything() }),
+      );
+    },
+  );
+
+  it("rejects invalid identification before writing and preserves role authorization", async () => {
+    const { db, insertValues, updateSet } = createDb();
+    for (const identification of ["x".repeat(129), 123 as unknown as string]) {
+      await expect(callerWithDb(db).create({
+        firstName: "Ada", lastName: "Lovelace", identification,
+      })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+      await expect(callerWithDb(db).update({
+        id: CLIENT_ID, identification,
+      })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    }
+    await expect(callerWithDb(db, "viewer").update({
+      id: CLIENT_ID, identification: "ID-001",
+    })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(insertValues).not.toHaveBeenCalled();
+    expect(updateSet).not.toHaveBeenCalled();
+  });
+
   it("keeps client write actions restricted to non-viewer staff roles", async () => {
     const { db, insertValues, updateSet } = createDb();
     const viewer = callerWithDb(db, "viewer");

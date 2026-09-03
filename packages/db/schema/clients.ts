@@ -30,6 +30,10 @@ export const clients = pgTable(
       .references(() => practices.id),
     firstName: varchar("first_name", { length: 128 }).notNull(),
     lastName: varchar("last_name", { length: 128 }).notNull(),
+    // Optional personal document reference; not an import identity or unique key.
+    // If workflows later need typed search/reporting, add a separate canonical
+    // identificationType and treat this value as the document number/content.
+    identification: varchar("identification", { length: 128 }),
     externalSource: varchar("external_source", { length: 64 }),
     externalId: varchar("external_id", { length: 160 }),
     // Set only by supervised migrations. Normal clinic-created clients leave

@@ -216,6 +216,11 @@ export default function ClientDetailPage() {
               {client.firstName} {client.lastName}
             </h2>
             <div className="mt-2 flex flex-col gap-1 text-sm text-muted-foreground">
+              {client.identification && (
+                <span className="break-all">
+                  {t("clients.identification")}: {client.identification}
+                </span>
+              )}
               {client.email && (
                 <span className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />

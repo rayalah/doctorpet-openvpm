@@ -31,6 +31,7 @@ import {
   CLIENT_CITY_MAX_LENGTH,
   CLIENT_CONTACT_METHODS,
   CLIENT_EMAIL_MAX_LENGTH,
+  CLIENT_IDENTIFICATION_MAX_LENGTH,
   CLIENT_NAME_MAX_LENGTH,
   CLIENT_PHONE_MAX_LENGTH,
   CLIENT_SEARCH_MAX_LENGTH,
@@ -54,6 +55,15 @@ import { recordActivationAfterClientCreated } from "@/lib/funnel-events-server";
 import { clientSearchContainsPattern } from "@/lib/clients/search";
 
 const clientNameInput = z.string().trim().min(1).max(CLIENT_NAME_MAX_LENGTH);
+// Omission preserves an existing value; explicit blank/null clears it.
+// Keep document formatting and leading zeros; no country-specific validation.
+const clientIdentificationInput = z
+  .string()
+  .trim()
+  .max(CLIENT_IDENTIFICATION_MAX_LENGTH)
+  .nullable()
+  .optional()
+  .transform((value) => value === undefined ? undefined : value || null);
 const clientEmailInput = z
   .string()
   .trim()
@@ -373,6 +383,7 @@ export const clientsRouter = createRouter({
       z.object({
         firstName: clientNameInput,
         lastName: clientNameInput,
+        identification: clientIdentificationInput,
         email: clientEmailInput,
         phone: optionalClientString(CLIENT_PHONE_MAX_LENGTH),
         address: clientAddressInput,
@@ -490,6 +501,7 @@ export const clientsRouter = createRouter({
         id: z.string().uuid(),
         firstName: clientNameInput.optional(),
         lastName: clientNameInput.optional(),
+        identification: clientIdentificationInput,
         email: clientEmailInput,
         phone: optionalClientString(CLIENT_PHONE_MAX_LENGTH),
         address: clientAddressInput,
