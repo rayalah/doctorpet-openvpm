@@ -4,10 +4,17 @@ import { Component, type ReactNode } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { reportClientError } from "@/components/common/report-client-error";
+import { useTranslations } from "@/lib/i18n/client";
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+}
+
+interface LocalizedProps extends Props {
+  errorTitle: string;
+  unexpectedError: string;
+  retryLabel: string;
 }
 
 interface State {
@@ -15,8 +22,8 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+class LocalizedErrorBoundary extends Component<LocalizedProps, State> {
+  constructor(props: LocalizedProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -40,10 +47,10 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
           <div className="text-center">
             <h3 className="font-heading text-lg font-semibold">
-              Something went wrong
+              {this.props.errorTitle}
             </h3>
             <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              {this.state.error?.message || "An unexpected error occurred."}
+              {this.state.error?.message || this.props.unexpectedError}
             </p>
           </div>
           <Button
@@ -51,7 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
             onClick={() => this.setState({ hasError: false, error: null })}
           >
             <RotateCcw className="mr-2 h-4 w-4" />
-            Try Again
+            {this.props.retryLabel}
           </Button>
         </div>
       );
@@ -59,4 +66,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
+}
+
+export function ErrorBoundary(props: Props) {
+  const t = useTranslations();
+  return (
+    <LocalizedErrorBoundary
+      {...props}
+      errorTitle={t("shared.error.title")}
+      unexpectedError={t("shared.error.unexpected")}
+      retryLabel={t("shared.error.retry")}
+    />
+  );
 }

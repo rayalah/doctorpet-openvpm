@@ -1,9 +1,11 @@
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n/client";
 
 const TABLE_SKELETON_WIDTHS = ["w-16", "w-20", "w-24", "w-28", "w-32"];
 
 export function PageLoading({ className }: { className?: string }) {
+  const t = useTranslations();
   return (
     <div
       className={cn(
@@ -13,7 +15,7 @@ export function PageLoading({ className }: { className?: string }) {
     >
       <div className="flex flex-col items-center gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{t("shared.loading")}</p>
       </div>
     </div>
   );

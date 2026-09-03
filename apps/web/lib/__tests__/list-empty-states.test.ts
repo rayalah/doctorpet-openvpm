@@ -138,10 +138,10 @@ describe("dashboard list empty/error states", () => {
     expect(page).toContain(") : isPageLoading ? (");
     expect(page).toContain(") : hasWhiteboardPatients ? (");
     expect(page.indexOf("pageError || pageMissing")).toBeLessThan(
-      page.indexOf("No patients on the whiteboard")
+      page.indexOf('t("whiteboard.emptyTitle")')
     );
     expect(page).toContain("<EmptyState");
-    expect(page).toContain('label: "Open schedule"');
+    expect(page).toContain('label: t("whiteboard.openSchedule")');
     expect(page).not.toContain("{error && (");
   });
 

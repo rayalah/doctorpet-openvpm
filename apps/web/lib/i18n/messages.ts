@@ -18,6 +18,7 @@ import { enBrandingMessages, esBrandingMessages } from "./messages/branding";
 import { enGuidesMessages, esGuidesMessages } from "./messages/guides";
 import { enReminderMessages, esReminderMessages } from "./messages/reminders";
 import { enMessagingMessages, esMessagingMessages } from "./messages/messaging";
+import { enSharedUiMessages, esSharedUiMessages } from "./messages/shared-ui";
 
 export const enMessages = {
   ...enCommonMessages,
@@ -39,6 +40,7 @@ export const enMessages = {
   ...enGuidesMessages,
   ...enReminderMessages,
   ...enMessagingMessages,
+  ...enSharedUiMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -67,8 +69,26 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
     ...esGuidesMessages,
     ...esReminderMessages,
     ...esMessagingMessages,
+    ...esSharedUiMessages,
   },
 };
+
+const warnedMissingLocalizedKeys = new Set<string>();
+
+function warnAboutMissingSpanishTranslation(key: string): void {
+  if (
+    process.env.NODE_ENV === "production" ||
+    warnedMissingLocalizedKeys.has(key) ||
+    !Object.prototype.hasOwnProperty.call(enMessages, key)
+  ) {
+    return;
+  }
+
+  warnedMissingLocalizedKeys.add(key);
+  console.warn(
+    `[i18n] Missing Spanish translation for "${key}"; falling back to English.`,
+  );
+}
 
 /**
  * English is the complete canonical catalog. A missing localized entry falls
@@ -77,7 +97,9 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
  */
 export function translate(language: SupportedLanguage, key: string): string {
   const localized = messages[language][key as TranslationKey];
-  if (localized) return localized;
+  if (localized !== undefined) return localized;
+
+  if (language === "es") warnAboutMissingSpanishTranslation(key);
 
   return enMessages[key as TranslationKey] ?? key;
 }

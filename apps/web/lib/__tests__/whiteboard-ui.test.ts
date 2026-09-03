@@ -5,7 +5,7 @@ describe("whiteboard appointment workflow UI", () => {
   it("does not offer status transitions that the appointment lifecycle rejects", () => {
     const source = readFileSync("app/(dashboard)/whiteboard/page.tsx", "utf8");
 
-    expect(source).toContain("Review closeout");
+    expect(source).toContain('t("whiteboard.reviewCloseout")');
     expect(source).toContain("`/encounters/${appointment.id}#visit-closeout`");
     expect(source).toContain("`/encounters/${appointment.id}`");
     expect(source).not.toContain('label: "Check Out"');
@@ -19,7 +19,7 @@ describe("whiteboard appointment workflow UI", () => {
       'action.status === "in_exam" && missingClinicalTarget'
     );
     expect(source).toContain(
-      "Open the visit and attach an active patient before starting the exam."
+      't("whiteboard.startExamBlocked")'
     );
   });
 
@@ -45,9 +45,9 @@ describe("whiteboard appointment workflow UI", () => {
   it("renders whiteboard times in the practice timezone", () => {
     const source = readFileSync("app/(dashboard)/whiteboard/page.tsx", "utf8");
 
-    expect(source).toContain("function formatCurrentTime(date: Date, timeZone?: string | null)");
-    expect(source).toContain("function formatCurrentDate(date: Date, timeZone?: string | null)");
-    expect(source).toContain("function formatAppointmentTime(date: Date, timeZone?: string | null)");
+    expect(source).toContain("function formatCurrentTime(date: Date, language: SupportedLanguage, timeZone?: string | null)");
+    expect(source).toContain("function formatCurrentDate(date: Date, language: SupportedLanguage, timeZone?: string | null)");
+    expect(source).toContain("function formatAppointmentTime(date: Date, language: SupportedLanguage, timeZone?: string | null)");
     expect(source).toContain("trpc.whiteboard.settings.useQuery");
     expect(source).toContain("const settingsQuery = trpc.whiteboard.settings.useQuery()");
     expect(source).toContain("const practiceSettings = settingsQuery.data");
@@ -71,17 +71,17 @@ describe("whiteboard appointment workflow UI", () => {
     expect(source).toContain("verifiedActiveAppointments ?? []");
     expect(source).toContain("{pageError || pageMissing ? (");
     expect(source).toContain(
-      '{pageError?.message ?? "Unable to load whiteboard. Please retry."}'
+      '{pageError?.message ?? t("whiteboard.loadError")}'
     );
     expect(source).toContain(") : isPageLoading ? (");
     expect(source).toContain("practiceClockReady && currentTime && verifiedPracticeSettings");
-    expect(source).toContain("formatCurrentTime(currentTime, verifiedPracticeSettings.timezone)");
-    expect(source).toContain("formatCurrentDate(currentTime, verifiedPracticeSettings.timezone)");
+    expect(source).toContain("formatCurrentTime(currentTime, language, verifiedPracticeSettings.timezone)");
+    expect(source).toContain("formatCurrentDate(currentTime, language, verifiedPracticeSettings.timezone)");
     expect(source).toContain("appointment={selectedAppointmentFromList}");
     expect(source).toContain("timeZone={verifiedPracticeSettings.timezone}");
     expect(source).toContain("pageReady &&");
     expect(source).toContain("selectedAppointmentStillActive &&");
-    expect(source).toContain("formatAppointmentTime(start, timeZone)");
+    expect(source).toContain("formatAppointmentTime(start, language, timeZone)");
     expect(source).not.toContain("settingsQuery.data?.timezone");
     expect(source).not.toContain("settingsQuery.data?.name");
     expect(source).not.toContain("settingsQuery.data?.phone");

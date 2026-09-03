@@ -17,6 +17,7 @@ export const enCommonMessages = {
 export const esCommonMessages = {
   "common.cancel": "Cancelar",
   "common.save": "Guardar",
+  "common.edit": "Editar",
   "common.search": "Buscar...",
   "common.new": "Nuevo",
   "common.signOut": "Cerrar sesión",

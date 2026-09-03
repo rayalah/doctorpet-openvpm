@@ -18,6 +18,9 @@ import { trpc } from "@/lib/trpc";
 import { EmptyState } from "@/components/common/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
+import { dateLocaleForLanguage, type SupportedLanguage } from "@/lib/i18n/language";
+import type { TranslationKey } from "@/lib/i18n/messages";
 
 // --- Types ---
 
@@ -75,7 +78,7 @@ function focusElementAfterNavigation(elementId: string) {
 const COLUMNS = [
   {
     key: "waiting",
-    label: "Waiting",
+    labelKey: "whiteboard.column.waiting",
     statuses: ["confirmed"],
     color: "bg-blue-500",
     headerBg: "bg-blue-500/10",
@@ -83,7 +86,7 @@ const COLUMNS = [
   },
   {
     key: "in_progress",
-    label: "In Progress",
+    labelKey: "whiteboard.column.inProgress",
     statuses: ["checked_in", "in_exam"],
     color: "bg-amber-500",
     headerBg: "bg-amber-500/10",
@@ -91,7 +94,7 @@ const COLUMNS = [
   },
   {
     key: "completed",
-    label: "Completed",
+    labelKey: "whiteboard.column.completed",
     statuses: ["checked_out"],
     color: "bg-green-500",
     headerBg: "bg-green-500/10",
@@ -99,14 +102,14 @@ const COLUMNS = [
   },
 ] as const;
 
-const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  scheduled: "Scheduled",
-  confirmed: "Confirmed",
-  checked_in: "Checked In",
-  in_exam: "In Exam",
-  checked_out: "Checked Out",
-  no_show: "No Show",
-  cancelled: "Cancelled",
+const STATUS_LABEL_KEYS: Record<AppointmentStatus, TranslationKey> = {
+  scheduled: "appointments.status.scheduled",
+  confirmed: "appointments.status.confirmed",
+  checked_in: "appointments.status.checked_in",
+  in_exam: "appointments.status.in_exam",
+  checked_out: "appointments.status.checked_out",
+  no_show: "appointments.status.no_show",
+  cancelled: "appointments.status.cancelled",
 };
 
 const STATUS_COLORS: Record<AppointmentStatus, string> = {
@@ -127,6 +130,16 @@ const SPECIES_EMOJI: Record<string, string> = {
   reptile: "\uD83E\uDD8E",
 };
 
+const SPECIES_LABEL_KEYS: Record<string, TranslationKey> = {
+  canine: "patients.species.canine",
+  feline: "patients.species.feline",
+  avian: "patients.species.avian",
+  rabbit: "patients.species.rabbit",
+  reptile: "patients.species.reptile",
+  equine: "patients.species.equine",
+  other: "patients.species.other",
+};
+
 function canUpdateWhiteboardStatusRole(role?: string | null): boolean {
   return (
     role === "admin" ||
@@ -143,27 +156,20 @@ function getSpeciesEmoji(species: string | null): string {
   return SPECIES_EMOJI[species.toLowerCase()] || "\uD83D\uDC3E";
 }
 
-function getTimeAgo(startTime: Date | string): string {
+function getTimeAgo(startTime: Date | string, language: SupportedLanguage): string {
   const start = new Date(startTime);
   const now = new Date();
   const diffMs = now.getTime() - start.getTime();
   const diffMin = Math.floor(diffMs / 60000);
 
-  if (diffMin < 0) {
-    const absMin = Math.abs(diffMin);
-    if (absMin < 60) return `in ${absMin} min`;
-    const hours = Math.floor(absMin / 60);
-    return `in ${hours}h ${absMin % 60}m`;
-  }
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
-  const hours = Math.floor(diffMin / 60);
-  const mins = diffMin % 60;
-  if (mins === 0) return `${hours}h ago`;
-  return `${hours}h ${mins}m ago`;
+  const relative = new Intl.RelativeTimeFormat(dateLocaleForLanguage(language), {
+    numeric: "auto",
+  });
+  if (Math.abs(diffMin) < 60) return relative.format(-diffMin, "minute");
+  return relative.format(-Math.round(diffMin / 60), "hour");
 }
 
-function formatCurrentTime(date: Date, timeZone?: string | null): string {
+function formatCurrentTime(date: Date, language: SupportedLanguage, timeZone?: string | null): string {
   const options: Intl.DateTimeFormatOptions = {
     hour: "numeric",
     minute: "2-digit",
@@ -172,16 +178,16 @@ function formatCurrentTime(date: Date, timeZone?: string | null): string {
     timeZone: timeZone ?? undefined,
   };
   try {
-    return date.toLocaleTimeString("en-US", options);
+    return date.toLocaleTimeString(dateLocaleForLanguage(language), options);
   } catch {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString(dateLocaleForLanguage(language), {
       ...options,
       timeZone: undefined,
     });
   }
 }
 
-function formatCurrentDate(date: Date, timeZone?: string | null): string {
+function formatCurrentDate(date: Date, language: SupportedLanguage, timeZone?: string | null): string {
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
     year: "numeric",
@@ -190,16 +196,16 @@ function formatCurrentDate(date: Date, timeZone?: string | null): string {
     timeZone: timeZone ?? undefined,
   };
   try {
-    return date.toLocaleDateString("en-US", options);
+    return date.toLocaleDateString(dateLocaleForLanguage(language), options);
   } catch {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(dateLocaleForLanguage(language), {
       ...options,
       timeZone: undefined,
     });
   }
 }
 
-function formatAppointmentTime(date: Date, timeZone?: string | null): string {
+function formatAppointmentTime(date: Date, language: SupportedLanguage, timeZone?: string | null): string {
   const options: Intl.DateTimeFormatOptions = {
     hour: "numeric",
     minute: "2-digit",
@@ -207,9 +213,9 @@ function formatAppointmentTime(date: Date, timeZone?: string | null): string {
     timeZone: timeZone ?? undefined,
   };
   try {
-    return date.toLocaleTimeString("en-US", options);
+    return date.toLocaleTimeString(dateLocaleForLanguage(language), options);
   } catch {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString(dateLocaleForLanguage(language), {
       ...options,
       timeZone: undefined,
     });
@@ -219,13 +225,14 @@ function formatAppointmentTime(date: Date, timeZone?: string | null): string {
 // --- Components ---
 
 function LiveIndicator() {
+  const t = useTranslations();
   return (
     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
       <span className="relative flex h-2 w-2">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
         <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
       </span>
-      Live
+      {t("whiteboard.live")}
     </span>
   );
 }
@@ -246,6 +253,8 @@ function WhiteboardCard({
   appointment: WhiteboardAppointment;
   onClick: () => void;
 }) {
+  const t = useTranslations();
+  const language = useLanguage();
   const clientName = [appointment.clientFirstName, appointment.clientLastName]
     .filter(Boolean)
     .join(" ");
@@ -262,7 +271,7 @@ function WhiteboardCard({
           {getSpeciesEmoji(appointment.patientSpecies)}
         </span>
         <span className="font-medium text-sm truncate">
-          {appointment.patientName || "Unknown Patient"}
+          {appointment.patientName || t("whiteboard.unknownPatient")}
         </span>
         <StatusDot status={appointment.status} />
       </div>
@@ -309,7 +318,7 @@ function WhiteboardCard({
         )}
         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
           <Clock className="h-2.5 w-2.5" />
-          {getTimeAgo(appointment.startTime)}
+          {getTimeAgo(appointment.startTime, language)}
         </span>
       </div>
     </button>
@@ -331,6 +340,8 @@ function AppointmentDetailModal({
   canUpdateStatus: boolean;
   isUpdating: boolean;
 }) {
+  const t = useTranslations();
+  const language = useLanguage();
   const modalRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   const restoreFocusRef = useRef(true);
@@ -411,24 +422,24 @@ function AppointmentDetailModal({
   const clientName =
     [appointment.clientFirstName, appointment.clientLastName]
       .filter(Boolean)
-      .join(" ") || "Unknown Client";
+      .join(" ") || t("whiteboard.unknownClient");
 
   const current = appointment.status as AppointmentStatus;
   const missingClinicalTarget =
     !appointment.patientId || !appointment.clientId;
 
   const statusActions: {
-    label: string;
+    labelKey: TranslationKey;
     status: AppointmentStatus;
     variant: "default" | "outline" | "destructive";
   }[] = [];
 
   if (current === "confirmed") {
-    statusActions.push({ label: "Check In", status: "checked_in", variant: "default" });
-    statusActions.push({ label: "No Show", status: "no_show", variant: "outline" });
-    statusActions.push({ label: "Cancel", status: "cancelled", variant: "destructive" });
+    statusActions.push({ labelKey: "appointments.checkIn", status: "checked_in", variant: "default" });
+    statusActions.push({ labelKey: "appointments.noShow", status: "no_show", variant: "outline" });
+    statusActions.push({ labelKey: "common.cancel", status: "cancelled", variant: "destructive" });
   } else if (current === "checked_in") {
-    statusActions.push({ label: "Start Exam", status: "in_exam", variant: "default" });
+    statusActions.push({ labelKey: "appointments.startExam", status: "in_exam", variant: "default" });
   }
   const visibleStatusActions = canUpdateStatus ? statusActions : [];
 
@@ -447,12 +458,12 @@ function AppointmentDetailModal({
           <div className="flex items-center gap-2">
             <StatusDot status={appointment.status} />
             <span className="text-sm font-medium">
-              {STATUS_LABELS[current] || appointment.status}
+              {STATUS_LABEL_KEYS[current] ? t(STATUS_LABEL_KEYS[current]) : appointment.status}
             </span>
           </div>
           <button
             type="button"
-            aria-label="Close appointment details"
+            aria-label={t("appointments.closeDetails")}
             onClick={onClose}
             className="rounded-md p-1 hover:bg-muted transition-colors"
           >
@@ -468,11 +479,13 @@ function AppointmentDetailModal({
             </span>
             <div>
               <h3 id={dialogTitleId} className="font-semibold text-base">
-                {appointment.patientName || "Unknown Patient"}
+                {appointment.patientName || t("whiteboard.unknownPatient")}
               </h3>
               {appointment.patientSpecies && (
                 <p className="text-xs text-muted-foreground capitalize">
-                  {appointment.patientSpecies}
+                  {SPECIES_LABEL_KEYS[appointment.patientSpecies]
+                    ? t(SPECIES_LABEL_KEYS[appointment.patientSpecies])
+                    : appointment.patientSpecies}
                 </p>
               )}
             </div>
@@ -481,13 +494,13 @@ function AppointmentDetailModal({
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <User className="h-3.5 w-3.5" />
-              <span>Client: {clientName}</span>
+              <span>{t("whiteboard.client")} {clientName}</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
               <span>
-                {formatAppointmentTime(start, timeZone)}{" "}
-                ({getTimeAgo(appointment.startTime)})
+                {formatAppointmentTime(start, language, timeZone)}{" "}
+                ({getTimeAgo(appointment.startTime, language)})
               </span>
             </div>
             {appointment.doctorName && (
@@ -543,8 +556,8 @@ function AppointmentDetailModal({
                 }}
               >
                  {current === "in_exam"
-                   ? "Review closeout"
-                   : "Open visit"}
+                   ? t("whiteboard.reviewCloseout")
+                   : t("appointments.openVisit")}
               </Link>
             </Button>
             {visibleStatusActions.map((action) => (
@@ -558,7 +571,7 @@ function AppointmentDetailModal({
                 }
                 title={
                   action.status === "in_exam" && missingClinicalTarget
-                    ? "Open the visit and attach an active patient before starting the exam."
+                    ? t("whiteboard.startExamBlocked")
                     : undefined
                 }
                 onClick={() => onStatusChange(appointment.id, action.status)}
@@ -566,7 +579,7 @@ function AppointmentDetailModal({
                 {isUpdating ? (
                   <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
                 ) : null}
-                {action.label}
+                {t(action.labelKey)}
               </Button>
             ))}
           </div>
@@ -579,6 +592,8 @@ function AppointmentDetailModal({
 // --- Main Page ---
 
 export default function WhiteboardPage() {
+  const t = useTranslations();
+  const language = useLanguage();
   const router = useRouter();
   const { data: session } = useSession();
   const canUpdateStatus = canUpdateWhiteboardStatusRole(session?.user?.role);
@@ -629,7 +644,7 @@ export default function WhiteboardPage() {
   const utils = trpc.useUtils();
   const updateStatus = trpc.whiteboard.updateStatus.useMutation({
     onSuccess: () => {
-      toast.success("Status updated");
+      toast.success(t("whiteboard.statusUpdated"));
       setSelectedAppointment(null);
       utils.whiteboard.getActive.invalidate();
     },
@@ -682,23 +697,23 @@ export default function WhiteboardPage() {
         <div>
           <div className="flex items-center gap-3">
             <h2 className="font-heading text-xl font-semibold">
-              Practice Whiteboard
+               {t("whiteboard.title")}
             </h2>
             <LiveIndicator />
           </div>
           <p className="text-sm text-muted-foreground">
-            Live patient status board
+             {t("whiteboard.subtitle")}
           </p>
         </div>
         <div className="text-right">
           <p className="text-sm font-medium">
             {practiceClockReady && currentTime && verifiedPracticeSettings
-              ? formatCurrentTime(currentTime, verifiedPracticeSettings.timezone)
+               ? formatCurrentTime(currentTime, language, verifiedPracticeSettings.timezone)
               : "\u00A0"}
           </p>
           <p className="text-xs text-muted-foreground">
             {practiceClockReady && currentTime && verifiedPracticeSettings
-              ? formatCurrentDate(currentTime, verifiedPracticeSettings.timezone)
+               ? formatCurrentDate(currentTime, language, verifiedPracticeSettings.timezone)
               : "\u00A0"}
           </p>
         </div>
@@ -708,12 +723,12 @@ export default function WhiteboardPage() {
       <div data-tour="whiteboard-board">
       {pageError || pageMissing ? (
         <div className="mt-4 rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-          {pageError?.message ?? "Unable to load whiteboard. Please retry."}
+          {pageError?.message ?? t("whiteboard.loadError")}
         </div>
       ) : isPageLoading ? (
         <div className="mt-12 flex items-center justify-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Loading whiteboard...
+          {t("whiteboard.loading")}
         </div>
       ) : hasWhiteboardPatients ? (
         /* Kanban columns */
@@ -740,7 +755,7 @@ export default function WhiteboardPage() {
                       col.headerText
                     )}
                   >
-                    {col.label}
+                    {t(col.labelKey)}
                   </h3>
                 </div>
                 <span
@@ -758,7 +773,7 @@ export default function WhiteboardPage() {
               <div className="space-y-3 p-3" style={{ minHeight: 120 }}>
                 {col.items.length === 0 ? (
                   <div className="flex h-20 items-center justify-center">
-                    <p className="text-xs text-muted-foreground">No patients</p>
+                    <p className="text-xs text-muted-foreground">{t("whiteboard.noPatients")}</p>
                   </div>
                 ) : (
                   col.items.map((appt) => (
@@ -777,10 +792,10 @@ export default function WhiteboardPage() {
         <EmptyState
           className="mt-6"
           icon={ClipboardList}
-          title="No patients on the whiteboard"
-          description="Checked-in and in-progress appointments will appear here as the day moves."
+          title={t("whiteboard.emptyTitle")}
+          description={t("whiteboard.emptyDescription")}
           action={{
-            label: "Open schedule",
+            label: t("whiteboard.openSchedule"),
             onClick: () => router.push("/schedule"),
             icon: CalendarPlus,
           }}

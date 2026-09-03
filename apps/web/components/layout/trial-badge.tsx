@@ -6,6 +6,7 @@ import { AlertTriangle, Clock, CreditCard, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { trialCalendarDaysLeft } from "@/lib/billing/trial-days";
+import { useTranslations } from "@/lib/i18n/client";
 
 /**
  * Trial countdown / read-only indicator in the TopBar. Admin-only and hidden on
@@ -14,6 +15,7 @@ import { trialCalendarDaysLeft } from "@/lib/billing/trial-days";
  * clinic can compare monthly and annual billing before entering Stripe.
  */
 export function TrialBadge() {
+  const t = useTranslations();
   const { data: session, status } = useSession();
   const isAdmin = status === "authenticated" && session?.user?.role === "admin";
 
@@ -29,11 +31,11 @@ export function TrialBadge() {
   if (isLoading) {
     return (
       <span
-        aria-label="Checking billing status"
+        aria-label={t("trial.checking")}
         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground"
       >
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Billing
+        {t("trial.billing")}
       </span>
     );
   }
@@ -45,7 +47,7 @@ export function TrialBadge() {
         className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
       >
         <AlertTriangle className="h-3.5 w-3.5" />
-        Billing status unavailable
+        {t("trial.unavailable")}
       </Link>
     );
   }
@@ -61,7 +63,7 @@ export function TrialBadge() {
         className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-100"
       >
         <CreditCard className="h-3.5 w-3.5" />
-        Payment retrying · Review billing
+        {t("trial.pastDue")}
       </Link>
     );
   }
@@ -73,7 +75,7 @@ export function TrialBadge() {
         className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
       >
         <CreditCard className="h-3.5 w-3.5" />
-        Payment unpaid · Read only
+        {t("trial.unpaid")}
       </Link>
     );
   }
@@ -88,7 +90,7 @@ export function TrialBadge() {
         className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800 transition-colors hover:bg-teal-100"
       >
         <CreditCard className="h-3.5 w-3.5" />
-        Billing connected · Manage billing
+        {t("trial.connected")}
       </Link>
     );
   }
@@ -100,7 +102,7 @@ export function TrialBadge() {
     return (
       <Link
         href="/settings?tab=billing"
-        aria-label="Activate account"
+        aria-label={t("trial.activate")}
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
           urgent
@@ -110,9 +112,9 @@ export function TrialBadge() {
       >
         <Clock className="h-3.5 w-3.5" />
         {days === 0
-          ? "Trial ends today"
-          : `${days} day${days === 1 ? "" : "s"} left in trial`}
-        <span className="font-semibold">· Activate account</span>
+          ? t("trial.endsToday")
+          : `${days} ${t(days === 1 ? "trial.dayLeft" : "trial.daysLeft")}`}
+        <span className="font-semibold">· {t("trial.activate")}</span>
       </Link>
     );
   }
@@ -125,7 +127,7 @@ export function TrialBadge() {
         className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20"
       >
         <Clock className="h-3.5 w-3.5" />
-        Trial ended, read only · Turn it back on
+        {t("trial.ended")}
       </Link>
     );
   }

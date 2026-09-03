@@ -28,7 +28,7 @@ describe("dashboard onboarding UI states", () => {
     expect(activationSource).toContain("function ActivationChecklistError");
     expect(activationSource).toContain("function ActivationChecklistLoading");
     expect(activationSource).toContain("const loadError =");
-    expect(activationSource).toContain("Setup checklist could not load");
+    expect(activationSource).toContain('t("activation.loadError")');
     expect(activationSource).toContain("const isChecklistLoading");
     expect(activationSource).toContain("practice.isLoading");
     expect(activationSource).toContain(
@@ -36,7 +36,7 @@ describe("dashboard onboarding UI states", () => {
     );
     expect(activationSource).toContain("!clientPayments.data");
     expect(activationSource).toContain(
-      "Setup checklist data was unavailable. Try loading it again.",
+      'message={t("activation.dataUnavailable")}',
     );
     expect(activationSource).toContain("state.refetch()");
     expect(activationSource).toContain("onboarding.refetch()");
@@ -58,14 +58,14 @@ describe("dashboard onboarding UI states", () => {
     expect(activationSource).toContain("const practiceData = practice.data");
     expect(activationSource).toContain("const subscriptionData = sub.data");
     expect(activationSource).toContain(
-      'const practiceName = practiceData.name ?? "your practice"',
+      'const practiceName = practiceData.name ?? t("activation.practiceFallback")',
     );
     expect(activationSource).toContain(
       "done: !!practiceData.logoUrl || !!brandColor",
     );
     expect(activationSource).toContain("done: onboardingData.hasRealData");
     expect(activationSource).toContain(
-      'label: "Configure appointment requests"',
+      'label: t("activation.booking.label")',
     );
     expect(activationSource).toContain(
       "bookingData.page?.published === true &&",
@@ -73,7 +73,7 @@ describe("dashboard onboarding UI states", () => {
     expect(activationSource).toContain(
       "bookingData.page.config.bookableTypeIds.length > 0",
     );
-    expect(activationSource).toContain('label: "Finish texting activation"');
+    expect(activationSource).toContain('label: t("activation.texting.label")');
     expect(activationSource).toContain("done: textingData.hasActiveNumber");
     expect(activationSource).toContain(
       "textingData.setupAvailable || textingData.hasAnyNumber",
@@ -81,15 +81,15 @@ describe("dashboard onboarding UI states", () => {
     expect(activationSource.indexOf("includeTextingMilestone")).toBeLessThan(
       activationSource.indexOf('key: "texting"'),
     );
-    expect(activationSource).toContain('label: "Add one real client and pet"');
+    expect(activationSource).toContain('label: t("activation.data.label")');
     expect(activationSource).toContain('href: "/clients/new"');
     expect(activationSource).toContain(
-      'label: "Book that pet\'s first appointment"',
+      'label: t("activation.firstAppointment.label")',
     );
     expect(activationSource).toContain(
       "done: onboardingData.hasRealAppointment",
     );
-    expect(activationSource).toContain('label: "Complete your first visit"');
+    expect(activationSource).toContain('label: t("activation.firstVisit.label")');
     expect(activationSource).toContain(
       "done: onboardingData.hasCompletedRealVisit",
     );
@@ -100,7 +100,7 @@ describe("dashboard onboarding UI states", () => {
     expect(activationSource.indexOf('key: "firstAppointment"')).toBeLessThan(
       activationSource.indexOf('key: "firstVisit"'),
     );
-    expect(activationSource).toContain('label: "Set up client card payments"');
+    expect(activationSource).toContain('label: t("activation.payments.label")');
     expect(activationSource).toContain("done: clientPaymentData.enabled");
     expect(activationSource).toContain('pathway.value === "explore"');
     expect(activationSource).not.toContain("practice.data?.");
@@ -196,17 +196,17 @@ describe("dashboard onboarding UI states", () => {
   it("uses the selected pathway to put a tailored first win first", () => {
     expect(activationSource).toContain("getOnboardingIntentOption");
     expect(activationSource).toContain("pathway.firstWinTarget");
-    expect(activationSource).toContain("label: pathway.firstWin");
-    expect(activationSource).toContain("hint: pathway.firstWinHint");
-    expect(activationSource).toContain("{pathway.shortLabel} · {doneCount}");
+    expect(activationSource).toContain("PATH_TRANSLATION_KEYS[pathway.value].firstWin");
+    expect(activationSource).toContain("PATH_TRANSLATION_KEYS[pathway.value].firstWinHint");
+    expect(activationSource).toContain("PATH_TRANSLATION_KEYS[pathway.value].short");
   });
 
   it("turns the activation checklist into a mobile first-win path with a persisted help request", () => {
     expect(activationSource).toContain(
       "trpc.settings.requestOnboardingHelp.useMutation",
     );
-    expect(activationSource).toContain("Help me set this up");
-    expect(activationSource).toContain("Setup help requested");
+    expect(activationSource).toContain('t("activation.help")');
+    expect(activationSource).toContain('t("activation.helpRequested")');
     expect(activationSource).toContain("setupHelpRequestedAt");
     expect(activationSource).toContain(
       "relative z-20 w-full sm:fixed sm:bottom-4",
@@ -219,8 +219,8 @@ describe("dashboard onboarding UI states", () => {
     );
     expect(settingsRouter).toContain('"Hands-on onboarding requested"');
     expect(activationSource).toContain("useOnboardingJourney");
-    expect(activationSource).toContain("Resume guided setup");
-    expect(activationSource).toContain("Start guided setup");
+    expect(activationSource).toContain('t("activation.resume")');
+    expect(activationSource).toContain('t("activation.start")');
     expect(activationSource).toContain("onClick={openJourney}");
     expect(migrationHelpSource).toContain(
       "trpc.settings.requestMigrationHelp.useMutation",
