@@ -1,9 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { appBaseUrl } from "@/lib/app-url";
 
-export const CANONICAL_EMAIL_PREFERENCE_BASE_URL =
-  "https://app.openvpm.com" as const;
-
 export type EmailPreferenceTarget = { kind: "recipient"; id: string };
 
 type EmailPreferencePayload = {
@@ -58,6 +55,14 @@ export function normalizeEmailPreferenceBaseUrl(value: unknown): string | null {
       return null;
     }
     return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+export function canonicalEmailPreferenceBaseUrl(): string | null {
+  try {
+    return normalizeEmailPreferenceBaseUrl(appBaseUrl());
   } catch {
     return null;
   }
@@ -254,8 +259,9 @@ export function emailPreferenceBaseUrl(explicit?: string): string | null {
     ["1", "true", "yes", "on"].includes(
       process.env.HOSTED_BILLING_ENABLED?.trim().toLowerCase() ?? "",
     );
-  if (hosted && normalized !== CANONICAL_EMAIL_PREFERENCE_BASE_URL) {
-    return null;
+  if (hosted) {
+    const canonicalBaseUrl = canonicalEmailPreferenceBaseUrl();
+    if (!canonicalBaseUrl || normalized !== canonicalBaseUrl) return null;
   }
   return normalized;
 }

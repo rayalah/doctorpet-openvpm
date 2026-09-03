@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  CANONICAL_EMAIL_PREFERENCE_BASE_URL,
+  canonicalEmailPreferenceBaseUrl,
   createEmailPreferenceLinks,
   createEmailPreferenceToken,
   emailPreferenceBaseUrl,
@@ -213,44 +213,50 @@ describe("email preference tokens", () => {
           now: NOW,
           signingSecret: SIGNING_SECRET,
           previousSigningSecrets: `${PREVIOUS_SIGNING_SECRET},too-short`,
-          baseUrl: CANONICAL_EMAIL_PREFERENCE_BASE_URL,
+          baseUrl: "https://app.example.com",
         },
       ),
     ).toBeNull();
   });
 
-  it("defaults links to the configured canonical HTTPS origin", () => {
+  it("uses the configured Doctor Pet app origin for hosted links", () => {
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://app.doctorpetapp.com");
+    vi.stubEnv("NEXTAUTH_URL", "https://app.doctorpetapp.com");
     vi.stubEnv(
       "EMAIL_PREFERENCE_BASE_URL",
-      CANONICAL_EMAIL_PREFERENCE_BASE_URL,
+      "https://app.doctorpetapp.com",
     );
     const links = createEmailPreferenceLinks(
       { kind: "recipient", id: RECIPIENT_HASH },
       {
         now: NOW,
         signingSecret: SIGNING_SECRET,
-        baseUrl: "https://demo.openvpm.com",
+        baseUrl: "https://ignored.example.com",
       },
     );
 
     expect(links?.preferencesUrl).toMatch(
-      /^https:\/\/app\.openvpm\.com\/email-preferences\?token=/,
+      /^https:\/\/app\.doctorpetapp\.com\/email-preferences\?token=/,
     );
     expect(links?.oneClickUrl).toMatch(
-      /^https:\/\/app\.openvpm\.com\/api\/email-preferences\/unsubscribe\?token=/,
+      /^https:\/\/app\.doctorpetapp\.com\/api\/email-preferences\/unsubscribe\?token=/,
     );
-    expect(emailPreferenceBaseUrl()).toBe(CANONICAL_EMAIL_PREFERENCE_BASE_URL);
+    expect(canonicalEmailPreferenceBaseUrl()).toBe(
+      "https://app.doctorpetapp.com",
+    );
+    expect(emailPreferenceBaseUrl()).toBe("https://app.doctorpetapp.com");
   });
 
   it("rejects non-HTTPS or non-origin preference base URLs", () => {
     expect(
-      normalizeEmailPreferenceBaseUrl("http://app.openvpm.com"),
+      normalizeEmailPreferenceBaseUrl("http://app.example.com"),
     ).toBeNull();
     expect(
-      normalizeEmailPreferenceBaseUrl("https://app.openvpm.com/path"),
+      normalizeEmailPreferenceBaseUrl("https://app.example.com/path"),
     ).toBeNull();
-    expect(normalizeEmailPreferenceBaseUrl("https://app.openvpm.com")).toBe(
-      CANONICAL_EMAIL_PREFERENCE_BASE_URL,
+    expect(normalizeEmailPreferenceBaseUrl("https://app.example.com")).toBe(
+      "https://app.example.com",
     );
 
     const links = createEmailPreferenceLinks(
@@ -258,17 +264,22 @@ describe("email preference tokens", () => {
       {
         now: NOW,
         signingSecret: SIGNING_SECRET,
-        baseUrl: "https://demo.openvpm.com",
+        baseUrl: "https://demo.example.com",
       },
     );
     expect(links?.preferencesUrl).toMatch(
-      /^https:\/\/demo\.openvpm\.com\/email-preferences\?token=/,
+      /^https:\/\/demo\.example\.com\/email-preferences\?token=/,
     );
   });
 
-  it("rejects a noncanonical preference owner in hosted deployments", () => {
+  it("rejects a preference origin that differs from the hosted app origin", () => {
     vi.stubEnv("VERCEL", "1");
-    vi.stubEnv("EMAIL_PREFERENCE_BASE_URL", "https://demo.openvpm.com");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://app.doctorpetapp.com");
+    vi.stubEnv("NEXTAUTH_URL", "https://app.doctorpetapp.com");
+    vi.stubEnv(
+      "EMAIL_PREFERENCE_BASE_URL",
+      "https://otro-dominio.example",
+    );
 
     expect(emailPreferenceBaseUrl()).toBeNull();
     expect(

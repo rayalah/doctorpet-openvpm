@@ -32,7 +32,7 @@ import { platformAdminEmails } from "@/lib/platform-admin";
 import { rowsFromExecute } from "@/lib/db/execute-rows";
 import { withSystem } from "@/lib/tenant-db";
 import {
-  CANONICAL_EMAIL_PREFERENCE_BASE_URL,
+  canonicalEmailPreferenceBaseUrl,
   isValidEmailPreferencePreviousSecrets,
   isValidEmailPreferenceSecret,
   normalizeEmailPreferenceBaseUrl,
@@ -184,9 +184,11 @@ async function hostedEmailCheck(): Promise<{ ok: boolean; detail: string }> {
   const preferenceBaseUrl = normalizeEmailPreferenceBaseUrl(
     process.env.EMAIL_PREFERENCE_BASE_URL,
   );
+  const canonicalPreferenceBaseUrl = canonicalEmailPreferenceBaseUrl();
   const invalidBaseUrl =
     configured("EMAIL_PREFERENCE_BASE_URL") &&
-    preferenceBaseUrl !== CANONICAL_EMAIL_PREFERENCE_BASE_URL;
+    (!canonicalPreferenceBaseUrl ||
+      preferenceBaseUrl !== canonicalPreferenceBaseUrl);
   const invalid =
     invalidSecrets.length +
     (invalidPreviousSecrets ? 1 : 0) +
