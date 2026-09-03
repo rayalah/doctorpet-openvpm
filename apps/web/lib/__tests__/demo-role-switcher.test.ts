@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { DemoRoleSwitcherView } from "@/components/demo/demo-role-switcher";
+import { I18nProvider } from "@/lib/i18n/client";
 import {
   DEMO_ROLE_OPTIONS,
   addDemoRoleSwitchMarker,
@@ -28,9 +29,9 @@ describe("post-gate demo role switcher", () => {
       false,
     );
     expect(shouldShowDemoRoleSwitcher(true, "loading", "admin")).toBe(false);
-    expect(
-      shouldShowDemoRoleSwitcher(true, "unauthenticated", "admin"),
-    ).toBe(false);
+    expect(shouldShowDemoRoleSwitcher(true, "unauthenticated", "admin")).toBe(
+      false,
+    );
     expect(shouldShowDemoRoleSwitcher(true, "authenticated", "viewer")).toBe(
       false,
     );
@@ -42,9 +43,9 @@ describe("post-gate demo role switcher", () => {
   it("uses only the existing demo provider and treats every uncertain result as failure", async () => {
     const signInDemo = vi.fn(async () => ({ ok: true, error: null }));
 
-    await expect(
-      requestDemoRoleSwitch("technician", signInDemo),
-    ).resolves.toBe(true);
+    await expect(requestDemoRoleSwitch("technician", signInDemo)).resolves.toBe(
+      true,
+    );
     expect(signInDemo).toHaveBeenCalledWith("demo", {
       role: "technician",
       redirect: false,
@@ -90,9 +91,9 @@ describe("post-gate demo role switcher", () => {
   });
 
   it("marks role-switch landings and strips only the one-time marker", () => {
-    expect(
-      addDemoRoleSwitchMarker("/encounters/abc?tab=soap#draft"),
-    ).toBe("/encounters/abc?tab=soap&demo_role_switch=1#draft");
+    expect(addDemoRoleSwitchMarker("/encounters/abc?tab=soap#draft")).toBe(
+      "/encounters/abc?tab=soap&demo_role_switch=1#draft",
+    );
     expect(addDemoRoleSwitchMarker("https://outside.example/path")).toBe("/");
 
     expect(
@@ -111,12 +112,16 @@ describe("post-gate demo role switcher", () => {
 
   it("shows the current role and disables switching while a role change is pending", () => {
     const currentMarkup = renderToStaticMarkup(
-      createElement(DemoRoleSwitcherView, {
-        currentRole: "front_desk",
-        pendingRole: null,
-        error: null,
-        onRoleChange: vi.fn(),
-      }),
+      createElement(
+        I18nProvider,
+        { language: "en" },
+        createElement(DemoRoleSwitcherView, {
+          currentRole: "front_desk",
+          pendingRole: null,
+          error: null,
+          onRoleChange: vi.fn(),
+        }),
+      ),
     );
     expect(currentMarkup).toContain("Explore as");
     expect(currentMarkup).toContain("Current role: Front Desk");
@@ -125,12 +130,16 @@ describe("post-gate demo role switcher", () => {
     expect(currentMarkup).not.toContain(' disabled=""');
 
     const pendingMarkup = renderToStaticMarkup(
-      createElement(DemoRoleSwitcherView, {
-        currentRole: "admin",
-        pendingRole: "technician",
-        error: null,
-        onRoleChange: vi.fn(),
-      }),
+      createElement(
+        I18nProvider,
+        { language: "en" },
+        createElement(DemoRoleSwitcherView, {
+          currentRole: "admin",
+          pendingRole: "technician",
+          error: null,
+          onRoleChange: vi.fn(),
+        }),
+      ),
     );
     expect(pendingMarkup).toContain(' disabled=""');
     expect(pendingMarkup).toContain("Switching to Technician");
@@ -139,12 +148,16 @@ describe("post-gate demo role switcher", () => {
 
   it("surfaces role-switch failures without touching the pre-gate flow or funnel", () => {
     const failureMarkup = renderToStaticMarkup(
-      createElement(DemoRoleSwitcherView, {
-        currentRole: "admin",
-        pendingRole: null,
-        error: "Your current role is unchanged.",
-        onRoleChange: vi.fn(),
-      }),
+      createElement(
+        I18nProvider,
+        { language: "en" },
+        createElement(DemoRoleSwitcherView, {
+          currentRole: "admin",
+          pendingRole: null,
+          error: "Your current role is unchanged.",
+          onRoleChange: vi.fn(),
+        }),
+      ),
     );
     expect(failureMarkup).toContain('role="alert"');
     expect(failureMarkup).toContain("Your current role is unchanged.");

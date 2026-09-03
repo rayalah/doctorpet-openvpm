@@ -10,8 +10,10 @@ import {
   AUTH_PASSWORD_MAX_LENGTH,
   AUTH_PASSWORD_MIN_LENGTH,
 } from "@/lib/auth-password-policy";
+import { PreAuthI18nProvider, useTranslations } from "@/lib/i18n/client";
 
 function ResetPasswordInner() {
+  const t = useTranslations();
   const params = useSearchParams();
   const token = params.get("token") ?? "";
   const [password, setPassword] = useState("");
@@ -29,23 +31,27 @@ function ResetPasswordInner() {
     <div className="flex min-h-screen items-center justify-center bg-surface">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8">
         <div className="mb-6 text-center">
-          <h1 className="font-heading text-2xl font-bold text-foreground">{platformBrand.displayName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Choose a new password</p>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            {platformBrand.displayName}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("auth.reset.heading")}
+          </p>
         </div>
 
         {done ? (
           <div className="text-center">
-            <p className="text-sm text-foreground">Your password has been reset.</p>
+            <p className="text-sm text-foreground">{t("auth.reset.success")}</p>
             <Link
               href="/login"
               className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              Sign in
+              {t("auth.login.submit")}
             </Link>
           </div>
         ) : !token ? (
           <p className="text-center text-sm text-destructive">
-            This reset link is invalid. Request a new one from the sign-in page.
+            {t("auth.reset.invalidLink")}
           </p>
         ) : (
           <form
@@ -53,7 +59,7 @@ function ResetPasswordInner() {
               e.preventDefault();
               if (!canSubmit) {
                 toast.error(
-                  `Use ${AUTH_PASSWORD_MIN_LENGTH}-${AUTH_PASSWORD_MAX_LENGTH} characters.`
+                  `${t("auth.password.rangePrefix")} ${AUTH_PASSWORD_MIN_LENGTH}-${AUTH_PASSWORD_MAX_LENGTH} ${t("auth.password.rangeSuffix")}`,
                 );
                 return;
               }
@@ -62,8 +68,11 @@ function ResetPasswordInner() {
             className="space-y-4"
           >
             <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
-                New password
+              <label
+                htmlFor="password"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                {t("auth.password.new")}
               </label>
               <input
                 id="password"
@@ -74,7 +83,7 @@ function ResetPasswordInner() {
                 minLength={AUTH_PASSWORD_MIN_LENGTH}
                 maxLength={AUTH_PASSWORD_MAX_LENGTH}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder={`At least ${AUTH_PASSWORD_MIN_LENGTH} characters`}
+                placeholder={`${t("auth.password.minimumPrefix")} ${AUTH_PASSWORD_MIN_LENGTH} ${t("auth.password.minimumSuffix")}`}
               />
             </div>
             <button
@@ -82,7 +91,9 @@ function ResetPasswordInner() {
               disabled={!canSubmit || reset.isPending}
               className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              {reset.isPending ? "Resetting…" : "Reset password"}
+              {reset.isPending
+                ? t("auth.reset.resetting")
+                : t("auth.reset.submit")}
             </button>
           </form>
         )}
@@ -93,8 +104,10 @@ function ResetPasswordInner() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={null}>
-      <ResetPasswordInner />
-    </Suspense>
+    <PreAuthI18nProvider>
+      <Suspense fallback={null}>
+        <ResetPasswordInner />
+      </Suspense>
+    </PreAuthI18nProvider>
   );
 }

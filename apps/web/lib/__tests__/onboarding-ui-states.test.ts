@@ -90,8 +90,8 @@ describe("onboarding UI states", () => {
     );
     expect(choosePath).toContain("clinicModel: state.clinicModel");
     expect(choosePath).toContain("firstGoal: state.firstGoal");
-    expect(choosePath).toContain("Build my first day");
-    expect(clinicIntentBuilder).toContain("Your first OpenVPM day");
+    expect(choosePath).toContain('t("onboarding.journey.buildFirstDay")');
+    expect(clinicIntentBuilder).toContain('t("onboarding.builder.firstDay")');
     expect(choosePath).toContain("journeyDismissed: false");
     expect(settingsRouter).toContain("onboardingIntentSelectedAt");
     expect(settingsRouter).toContain("clinicModelSelectedAt");
@@ -103,7 +103,7 @@ describe("onboarding UI states", () => {
       'selectedModel.readiness === "design_partner"',
     );
     expect(clinicIntentBuilder).not.toContain("HeartPulse className");
-    expect(clinicIntentBuilder).toContain("Nothing moves until you review it.");
+    expect(clinicIntentBuilder).toContain('t("onboarding.builder.review")');
     expect(choosePath).toContain("FUNNEL_EVENTS.onboardingModelSelected");
     expect(choosePath).toContain("FUNNEL_EVENTS.onboardingGoalSelected");
     expect(choosePath).toContain("FUNNEL_EVENTS.onboardingPlanBuilt");
@@ -158,13 +158,13 @@ describe("onboarding UI states", () => {
     expect(journeyOverlay).toContain("state.hasPartialImport");
     expect(journeyOverlay).toContain('id="onboarding-back-disabled-reason"');
     expect(journeyOverlay).toContain("whitespace-normal");
-    expect(journeyOverlay).toContain('"I\'ll finish later"');
+    expect(journeyOverlay).toContain('t("onboarding.journey.finishLater")');
     expect(journeyOverlay).not.toContain("I&apos;ll finish later");
   });
 
   it("surfaces guided setup query failures instead of showing default step states", () => {
     expect(practiceBasics).toContain("function OnboardingStepError");
-    expect(practiceBasics).toContain("Practice details could not load");
+    expect(practiceBasics).toContain('t("onboarding.basics.loadError")');
     expect(practiceBasics).toContain("getMyClinicalProfile.useQuery()");
     expect(practiceBasics).toContain("updateMyClinicalProfile.useMutation()");
     expect(practiceBasics).toContain("void refetch();");
@@ -179,23 +179,21 @@ describe("onboarding UI states", () => {
     );
 
     expect(branding).toContain("error: practiceError");
-    expect(branding).toContain("Saved branding could not load");
+    expect(branding).toContain('t("onboarding.brand.loadError")');
     expect(branding).toContain("onClick={() => void refetchPractice()}");
     expect(branding.indexOf("{practiceError ? (")).toBeLessThan(
       branding.indexOf("{currentLogo ? ("),
     );
 
-    expect(tryAgent).toContain("AI helper status could not load");
-    expect(tryAgent).toContain("AI helper status is unavailable");
-    expect(tryAgent).toContain(
-      "AI helper configuration could not be verified. Please retry before asking the helper.",
-    );
+    expect(tryAgent).toContain('t("onboarding.agent.statusError")');
+    expect(tryAgent).toContain('t("onboarding.agent.statusUnavailable")');
+    expect(tryAgent).toContain('t("onboarding.agent.verifyError")');
     expect(tryAgent).toContain("const verifiedAgentStatus =");
     expect(tryAgent).toContain(
       "status.error || statusMissing || !status.data ? null : status.data",
     );
-    expect(tryAgent).toContain(
-      "const configured = verifiedAgentStatus\n    ? verifiedAgentStatus.configured\n    : false",
+    expect(tryAgent).toMatch(
+      /const configured = verifiedAgentStatus\r?\n\s+\? verifiedAgentStatus\.configured\r?\n\s+: false/,
     );
     expect(tryAgent).toContain("onClick={() => void status.refetch()}");
     expect(tryAgent.indexOf("if (status.error || statusMissing)")).toBeLessThan(
@@ -218,8 +216,9 @@ describe("onboarding UI states", () => {
     expect(practiceBasics).toContain('useState<ClinicRegionCode | "">("")');
     expect(practiceBasics).toContain('jurisdictionSource: "onboarding"');
     expect(practiceBasics).toContain(
-      "setTimezone(regionDefaults(nextCountry).timezone)",
+      "const defaults = regionDefaults(nextCountry)",
     );
+    expect(practiceBasics).toContain("setTimezone(defaults.timezone)");
     expect(practiceBasics).not.toContain('useState("US")');
     expect(practiceBasics).toContain("name: trimmedName");
     expect(practiceBasics).toContain("maxLength={PRACTICE_NAME_MAX_LENGTH}");
@@ -228,7 +227,7 @@ describe("onboarding UI states", () => {
     );
     expect(practiceBasics).toContain('id="ob-practice-name-error"');
     expect(practiceBasics).toContain(
-      "Practice name must be at most {PRACTICE_NAME_MAX_LENGTH} characters.",
+      't("onboarding.basics.nameTooLongPrefix")',
     );
   });
 
@@ -260,11 +259,11 @@ describe("onboarding UI states", () => {
     expect(inviteTeam).toContain("function getInviteEmailError");
     expect(inviteTeam).toContain("trimmed.length > SETTINGS_EMAIL_MAX_LENGTH");
     expect(inviteTeam).toContain(
-      "const invalidRows = rows.filter((r) => getInviteEmailError(r.email));",
+      "const invalidRows = rows.filter((r) => getInviteEmailError(r.email, t));",
     );
     expect(inviteTeam).toContain("if (invalidRows.length > 0) {");
     expect(inviteTeam).toContain(
-      "const toInvite = rows.filter((r) => isInviteEmailValid(r.email));",
+      "const toInvite = rows.filter((r) => isInviteEmailValid(r.email, t));",
     );
     expect(inviteTeam).toContain("email: row.email.trim().toLowerCase()");
     expect(inviteTeam).toContain("maxLength={SETTINGS_EMAIL_MAX_LENGTH}");

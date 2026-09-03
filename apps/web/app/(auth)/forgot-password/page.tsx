@@ -10,8 +10,18 @@ import {
 } from "@/lib/auth-input-policy";
 import { isValidEmail } from "@/lib/utils";
 import { platformBrand } from "@/lib/brand/platform-brand";
+import { PreAuthI18nProvider, useTranslations } from "@/lib/i18n/client";
 
 export default function ForgotPasswordPage() {
+  return (
+    <PreAuthI18nProvider>
+      <ForgotPasswordContent />
+    </PreAuthI18nProvider>
+  );
+}
+
+function ForgotPasswordContent() {
+  const t = useTranslations();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
@@ -25,14 +35,18 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-surface">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8">
         <div className="mb-6 text-center">
-          <h1 className="font-heading text-2xl font-bold text-foreground">{platformBrand.displayName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Reset your password</p>
+          <h1 className="font-heading text-2xl font-bold text-foreground">
+            {platformBrand.displayName}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("auth.forgot.heading")}
+          </p>
         </div>
 
         {sent ? (
           <p className="text-center text-sm text-muted-foreground">
-            If an account exists for <strong>{email}</strong>, we&apos;ve sent a reset link.
-            Check your inbox.
+            {t("auth.forgot.sentPrefix")} <strong>{email}</strong>,{" "}
+            {t("auth.forgot.sentSuffix")}
           </p>
         ) : (
           <form
@@ -44,8 +58,11 @@ export default function ForgotPasswordPage() {
             className="space-y-4"
           >
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-                Email
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                {t("auth.login.email")}
               </label>
               <input
                 id="email"
@@ -55,7 +72,7 @@ export default function ForgotPasswordPage() {
                 required
                 maxLength={AUTH_EMAIL_MAX_LENGTH}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="you@clinic.com"
+                placeholder={t("auth.login.emailPlaceholder")}
               />
             </div>
             <button
@@ -63,14 +80,16 @@ export default function ForgotPasswordPage() {
               disabled={!canSubmit || request.isPending}
               className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              {request.isPending ? "Sending…" : "Send reset link"}
+              {request.isPending
+                ? t("auth.forgot.sending")
+                : t("auth.forgot.submit")}
             </button>
           </form>
         )}
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           <Link href="/login" className="text-primary hover:underline">
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
         </p>
       </div>

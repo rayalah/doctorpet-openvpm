@@ -9,10 +9,7 @@ import {
   CLIENT_UPLOAD_TIMEOUT_MS,
   fetchWithClientTimeout,
 } from "@/lib/client-fetch";
-import {
-  IMAGE_UPLOAD_POLICY_MESSAGE,
-  isImageUploadFileValid,
-} from "@/lib/upload-policy";
+import { isImageUploadFileValid } from "@/lib/upload-policy";
 import {
   selectManagedUploadFile,
   settleManagedUploadAttempt,
@@ -20,6 +17,7 @@ import {
 } from "@/lib/managed-upload-attempt";
 import { toast } from "sonner";
 import type { StepHandle } from "../journey-types";
+import { useTranslations } from "@/lib/i18n/client";
 
 /** Brand default accent, pre-highlighted so the step never arrives blank. */
 const SUGGESTED_ACCENT = "#0d9488";
@@ -33,6 +31,7 @@ export function BrandingStep({
 }: {
   register: (h: StepHandle) => void;
 }) {
+  const t = useTranslations();
   const {
     data: practice,
     error: practiceError,
@@ -65,7 +64,7 @@ export function BrandingStep({
     if (selectedFile && !isImageUploadFileValid(selectedFile)) {
       uploadAttemptRef.current = null;
       setUploadError(null);
-      toast.error(IMAGE_UPLOAD_POLICY_MESSAGE);
+      toast.error(t("onboarding.brand.uploadPolicy"));
       return;
     }
 
@@ -102,7 +101,7 @@ export function BrandingStep({
           kind: "response",
           status: res.status,
         });
-        throw new Error(json.error ?? "Upload failed");
+        throw new Error(json.error ?? t("onboarding.brand.uploadFailed"));
       }
       uploadAttemptRef.current = settleManagedUploadAttempt(attempt, {
         kind: "success",
@@ -112,14 +111,15 @@ export function BrandingStep({
         utils.settings.getPractice.invalidate(),
         utils.settings.getBranding.invalidate(),
       ]);
-      toast.success("Logo saved");
+      toast.success(t("onboarding.brand.logoSaved"));
     } catch (err) {
       if (uploadAttemptRef.current === attempt) {
         uploadAttemptRef.current = settleManagedUploadAttempt(attempt, {
           kind: "ambiguous",
         });
       }
-      const message = err instanceof Error ? err.message : "Upload failed";
+      const message =
+        err instanceof Error ? err.message : t("onboarding.brand.uploadFailed");
       setUploadError(message);
       toast.error(message);
     } finally {
@@ -130,15 +130,14 @@ export function BrandingStep({
   function pickColor(color: string) {
     updatePractice.mutate(
       { brandColor: color },
-      { onSuccess: () => toast.success("Color saved") },
+      { onSuccess: () => toast.success(t("onboarding.brand.colorSaved")) },
     );
   }
 
   return (
     <div className="space-y-6">
       <p className="text-sm leading-6 text-slate-600">
-        Add your logo and pick a color. This is just for looks, so feel free to
-        skip it and come back later.
+        {t("onboarding.brand.intro")}
       </p>
 
       {practiceError ? (
@@ -147,7 +146,7 @@ export function BrandingStep({
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
             <div>
               <p className="font-medium text-destructive">
-                Saved branding could not load
+                {t("onboarding.brand.loadError")}
               </p>
               <p className="mt-1 text-slate-600">{practiceError.message}</p>
               <Button
@@ -157,7 +156,7 @@ export function BrandingStep({
                 onClick={() => void refetchPractice()}
                 className="mt-3"
               >
-                Retry
+                {t("onboarding.basics.retry")}
               </Button>
             </div>
           </div>
@@ -166,13 +165,15 @@ export function BrandingStep({
 
       {/* Logo */}
       <div className="space-y-2">
-        <span className="text-sm font-medium text-slate-700">Your logo</span>
+        <span className="text-sm font-medium text-slate-700">
+          {t("onboarding.brand.logo")}
+        </span>
         <div className="flex items-center gap-4">
           {currentLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={currentLogo}
-              alt="Practice logo"
+              alt={t("onboarding.brand.logoAlt")}
               className="h-16 w-16 rounded-lg border border-slate-200 object-cover"
             />
           ) : (
@@ -204,10 +205,12 @@ export function BrandingStep({
               ) : (
                 <Upload className="mr-2 h-4 w-4" />
               )}
-              {currentLogo ? "Replace logo" : "Upload logo"}
+              {currentLogo
+                ? t("onboarding.brand.replace")
+                : t("onboarding.brand.upload")}
             </Button>
             <p className="mt-1.5 text-xs text-slate-500">
-              PNG, JPG, or WebP. Square images look best.
+              {t("onboarding.brand.formats")}
             </p>
             {uploadError ? (
               <div className="mt-2 flex items-center gap-2 text-xs text-red-600">
@@ -219,7 +222,7 @@ export function BrandingStep({
                     onClick={() => void handleFile()}
                     className="font-medium underline underline-offset-2 disabled:opacity-50"
                   >
-                    Try again
+                    {t("onboarding.brand.tryAgain")}
                   </button>
                 ) : null}
               </div>
@@ -230,7 +233,9 @@ export function BrandingStep({
 
       {/* Accent color */}
       <div className="space-y-2">
-        <span className="text-sm font-medium text-slate-700">Accent color</span>
+        <span className="text-sm font-medium text-slate-700">
+          {t("onboarding.brand.accent")}
+        </span>
         <AccentColorPicker
           value={savedColor ?? SUGGESTED_ACCENT}
           onChange={pickColor}
@@ -238,7 +243,7 @@ export function BrandingStep({
         />
         {!savedColor ? (
           <p className="text-xs text-slate-500">
-            We picked a color to start. Tap another if you like.
+            {t("onboarding.brand.colorHint")}
           </p>
         ) : null}
       </div>

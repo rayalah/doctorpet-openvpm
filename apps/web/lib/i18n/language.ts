@@ -12,7 +12,9 @@ export type LanguagePreference = {
   language?: string | null;
 };
 
-export function isSupportedLanguage(value: unknown): value is SupportedLanguage {
+export function isSupportedLanguage(
+  value: unknown,
+): value is SupportedLanguage {
   return (
     typeof value === "string" &&
     (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
@@ -54,6 +56,11 @@ export function resolvePublicTenantLanguage(
 /**
  * Login and other pre-auth routes do not yet have a trustworthy tenant context.
  */
-export function resolvePreAuthLanguage(): SupportedLanguage {
+export function resolvePreAuthLanguage(
+  browserLanguage?: unknown,
+): SupportedLanguage {
+  if (typeof browserLanguage === "string") {
+    return resolveLanguage(browserLanguage.trim().toLowerCase().split("-")[0]);
+  }
   return PLATFORM_FALLBACK_LANGUAGE;
 }

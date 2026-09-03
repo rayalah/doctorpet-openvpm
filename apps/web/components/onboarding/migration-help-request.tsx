@@ -3,6 +3,7 @@
 import { Check, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { useTranslations } from "@/lib/i18n/client";
 
 /**
  * Requests a hands-on migration review without asking a clinic to email PHI or
@@ -10,6 +11,7 @@ import { trpc } from "@/lib/trpc";
  * also feeds the existing activation-recovery queue.
  */
 export function MigrationHelpRequest({ source }: { source: string }) {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const state = trpc.settings.getOnboardingState.useQuery();
   const request = trpc.settings.requestMigrationHelp.useMutation({
@@ -27,7 +29,7 @@ export function MigrationHelpRequest({ source }: { source: string }) {
           : previous,
       );
       await utils.settings.getOnboardingState.invalidate();
-      toast.success("Migration review requested");
+      toast.success(t("onboarding.migration.requested"));
     },
     onError: (error) => toast.error(error.message),
   });
@@ -41,18 +43,18 @@ export function MigrationHelpRequest({ source }: { source: string }) {
         <div className="min-w-0">
           <p className="text-xs font-semibold text-emerald-900">
             {requestedAt
-              ? "Migration review requested"
-              : "Want us to review the export first?"}
+              ? t("onboarding.migration.requested")
+              : t("onboarding.migration.question")}
           </p>
           <p className="mt-1 text-xs leading-5 text-slate-600">
             {requestedAt
-              ? "We will contact your clinic admin with a private transfer and review plan. Keep the files where they are until then."
-              : "Request a hands-on review before importing. Do not email patient files or use an Anyone-with-the-link folder. We will contact your clinic admin with a private transfer plan."}
+              ? t("onboarding.migration.requestedBody")
+              : t("onboarding.migration.requestBody")}
           </p>
           {requestedAt ? (
             <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800">
               <Check className="h-3.5 w-3.5" />
-              Request saved
+              {t("onboarding.migration.saved")}
             </span>
           ) : (
             <button
@@ -64,7 +66,7 @@ export function MigrationHelpRequest({ source }: { source: string }) {
               {request.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : null}
-              Request a private migration review
+              {t("onboarding.migration.action")}
             </button>
           )}
         </div>

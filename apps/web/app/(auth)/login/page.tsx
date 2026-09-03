@@ -20,14 +20,13 @@ import {
 import { trackFunnelEvent } from "@/lib/track-funnel-event";
 import { getFunnelVisitorId, useFunnelVisitorId } from "@/lib/funnel-visitor";
 import { safeAuthNextPath } from "@/lib/auth-redirect";
-import { I18nProvider, useTranslations } from "@/lib/i18n/client";
-import { resolvePreAuthLanguage } from "@/lib/i18n/language";
+import { PreAuthI18nProvider, useTranslations } from "@/lib/i18n/client";
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE?.trim() === "true";
 
 export default function LoginPage() {
   return (
-    <I18nProvider language={resolvePreAuthLanguage()}>
+    <PreAuthI18nProvider>
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center bg-surface">
@@ -37,7 +36,7 @@ export default function LoginPage() {
       >
         <LoginPageInner />
       </Suspense>
-    </I18nProvider>
+    </PreAuthI18nProvider>
   );
 }
 
@@ -46,10 +45,7 @@ function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const visitorId = useFunnelVisitorId();
-  const nextPath = safeAuthNextPath(
-    searchParams.get("next"),
-    "/post-login",
-  );
+  const nextPath = safeAuthNextPath(searchParams.get("next"), "/post-login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -149,9 +145,7 @@ function LoginPageInner() {
             {platformBrand.tagline}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {DEMO_MODE
-              ? t("auth.login.demo.heading")
-              : t("auth.login.heading")}
+            {DEMO_MODE ? t("auth.login.demo.heading") : t("auth.login.heading")}
           </p>
         </div>
 
@@ -188,7 +182,7 @@ function LoginPageInner() {
               required
               maxLength={AUTH_EMAIL_MAX_LENGTH}
               className="min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="you@clinic.com"
+              placeholder={t("auth.login.emailPlaceholder")}
               autoComplete="email"
             />
           </div>

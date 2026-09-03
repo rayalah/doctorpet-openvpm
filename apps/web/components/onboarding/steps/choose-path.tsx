@@ -11,18 +11,20 @@ import {
 import { trackFunnelEvent } from "@/lib/track-funnel-event";
 import { trpc } from "@/lib/trpc";
 import type { StepProps } from "../journey-types";
+import { useTranslations } from "@/lib/i18n/client";
 
 /**
  * Personalize the workspace around a coarse care model and first outcome.
  * Neither value contains patient, client, or clinical information.
  */
 export function ChoosePathStep({ register, state, setState }: StepProps) {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const saveIntent = trpc.settings.setOnboardingIntent.useMutation();
 
   useEffect(() => {
     register({
-      continueLabel: "Build my first day",
+      continueLabel: t("onboarding.journey.buildFirstDay"),
       async onContinue() {
         await saveIntent.mutateAsync({
           intent: state.onboardingIntent,
@@ -48,7 +50,7 @@ export function ChoosePathStep({ register, state, setState }: StepProps) {
         return true;
       },
     });
-  }, [register, saveIntent, state, utils]);
+  }, [register, saveIntent, state, t, utils]);
 
   function selectModel(model: ClinicModel) {
     const nextGoal =

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { MailCheck, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { platformBrand } from "@/lib/brand/platform-brand";
+import { PreAuthI18nProvider, useTranslations } from "@/lib/i18n/client";
 
 function VerifyEmailInner() {
   const params = useSearchParams();
@@ -19,7 +20,10 @@ function VerifyEmailInner() {
 }
 
 function ConfirmToken({ token }: { token: string }) {
-  const [status, setStatus] = useState<"verifying" | "ok" | "error">("verifying");
+  const t = useTranslations();
+  const [status, setStatus] = useState<"verifying" | "ok" | "error">(
+    "verifying",
+  );
   const ran = useRef(false);
 
   const verify = trpc.auth.verifyEmail.useMutation({
@@ -39,33 +43,33 @@ function ConfirmToken({ token }: { token: string }) {
       {status === "verifying" && (
         <p className="mt-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Verifying your email…
+          {t("auth.verify.verifying")}
         </p>
       )}
       {status === "ok" && (
         <>
           <p className="mt-3 text-sm text-foreground">
-            Email confirmed. Your trial was already active, so you can continue
-            where you left off.
+            {t("auth.verify.confirmed")}
           </p>
           <Link
             href="/"
             className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Open {platformBrand.productName}
+            {t("auth.verify.openPrefix")} {platformBrand.productName}
           </Link>
         </>
       )}
       {status === "error" && (
         <>
           <p className="mt-3 text-sm text-destructive">
-            This verification link is invalid or has expired.
+            {t("auth.verify.invalid")}
           </p>
           <Link
             href="/"
             className="mt-6 inline-block text-sm text-primary hover:underline"
           >
-            Open {platformBrand.productName} to resend
+            {t("auth.verify.openPrefix")} {platformBrand.productName}{" "}
+            {t("auth.verify.resendSuffix")}
           </Link>
         </>
       )}
@@ -74,6 +78,7 @@ function ConfirmToken({ token }: { token: string }) {
 }
 
 function VerificationRecovery() {
+  const t = useTranslations();
   return (
     <Shell>
       <div className="mt-4 flex justify-center">
@@ -82,21 +87,21 @@ function VerificationRecovery() {
         </span>
       </div>
       <h2 className="mt-4 font-heading text-lg font-semibold text-foreground">
-        Confirm your email
+        {t("auth.verify.heading")}
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Your trial is already active. Open {platformBrand.productName} and use the verification
-        banner to send a new link securely. Any unexpired verification link will
-        work.
+        {t("auth.verify.recoveryPrefix")} {platformBrand.productName}{" "}
+        {t("auth.verify.recoverySuffix")}
       </p>
       <Link
         href="/"
         className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
       >
-        Open {platformBrand.productName}
+        {t("auth.verify.openPrefix")} {platformBrand.productName}
       </Link>
       <p className="mt-4 text-xs text-muted-foreground">
-        If you&apos;re signed out, {platformBrand.productName} will ask you to sign in first.
+        {t("auth.verify.signedOutPrefix")} {platformBrand.productName}{" "}
+        {t("auth.verify.signedOutSuffix")}
       </p>
     </Shell>
   );
@@ -106,7 +111,9 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface p-4">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-8 text-center">
-        <h1 className="font-heading text-2xl font-bold text-foreground">{platformBrand.displayName}</h1>
+        <h1 className="font-heading text-2xl font-bold text-foreground">
+          {platformBrand.displayName}
+        </h1>
         {children}
       </div>
     </div>
@@ -115,8 +122,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={null}>
-      <VerifyEmailInner />
-    </Suspense>
+    <PreAuthI18nProvider>
+      <Suspense fallback={null}>
+        <VerifyEmailInner />
+      </Suspense>
+    </PreAuthI18nProvider>
   );
 }

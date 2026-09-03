@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { CalendarPlus, UserPlus } from "lucide-react";
 import { FirstDayRecommendations } from "@/components/onboarding/first-day-recommendations";
 import type { JourneyState, StepHandle } from "../journey-types";
+import { useTranslations } from "@/lib/i18n/client";
 
 /**
  * Closing step: turn setup momentum into the first real clinic action. The
@@ -16,15 +17,16 @@ export function AllSetStep({
   register: (h: StepHandle) => void;
   state: JourneyState;
 }) {
+  const t = useTranslations();
   const hasImportedData = state.hasImportedData;
   useEffect(() => {
     register({
       continueLabel: hasImportedData
-        ? "Book the first appointment"
-        : "Add the first real client",
+        ? t("onboarding.allSet.book")
+        : t("onboarding.allSet.addClient"),
       onContinue: async () => true,
     });
-  }, [hasImportedData, register]);
+  }, [hasImportedData, register, t]);
 
   const Icon = hasImportedData ? CalendarPlus : UserPlus;
 
@@ -36,8 +38,8 @@ export function AllSetStep({
         </span>
         <p className="max-w-3xl text-sm leading-6 text-slate-600">
           {hasImportedData
-            ? "Your reviewed records are saved. Start with one real appointment, then decide what deserves a larger rollout."
-            : "Your clinic basics are saved. Start with one real client and visit while your current PIMS stays safely in place."}
+            ? t("onboarding.allSet.imported")
+            : t("onboarding.allSet.basics")}
         </p>
       </div>
 

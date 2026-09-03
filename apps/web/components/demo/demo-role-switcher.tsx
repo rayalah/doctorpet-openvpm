@@ -9,11 +9,19 @@ import {
   addDemoRoleSwitchMarker,
   type DemoSwitcherRole,
   demoRoleDestination,
-  demoRoleLabel,
   isDemoSwitcherRole,
   requestDemoRoleSwitch,
   shouldShowDemoRoleSwitcher,
 } from "@/lib/demo-role-switcher";
+import { useTranslations } from "@/lib/i18n/client";
+import type { TranslationKey } from "@/lib/i18n/messages";
+
+const demoRoleKeys: Record<DemoSwitcherRole, TranslationKey> = {
+  admin: "onboarding.demo.role.admin",
+  veterinarian: "onboarding.demo.role.veterinarian",
+  technician: "onboarding.demo.role.technician",
+  front_desk: "onboarding.demo.role.frontDesk",
+};
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE?.trim() === "true";
 
@@ -30,8 +38,9 @@ export function DemoRoleSwitcherView({
   error,
   onRoleChange,
 }: DemoRoleSwitcherViewProps) {
+  const t = useTranslations();
   const isSwitching = pendingRole !== null;
-  const currentLabel = demoRoleLabel(currentRole);
+  const currentLabel = t(demoRoleKeys[currentRole]);
 
   return (
     <div className="flex min-w-0 flex-col gap-1">
@@ -40,7 +49,7 @@ export function DemoRoleSwitcherView({
           htmlFor="demo-role-switcher"
           className="shrink-0 text-xs font-medium text-muted-foreground"
         >
-          Explore as
+          {t("onboarding.demo.exploreAs")}
         </label>
         <div className="relative">
           <UserRoundCog
@@ -51,7 +60,7 @@ export function DemoRoleSwitcherView({
             id="demo-role-switcher"
             value={currentRole}
             disabled={isSwitching}
-            aria-label={`Demo role. Current role: ${currentLabel}`}
+            aria-label={`${t("onboarding.demo.roleAria")} ${currentLabel}`}
             onChange={(event) => {
               const nextRole = event.currentTarget.value;
               if (isDemoSwitcherRole(nextRole)) onRoleChange(nextRole);
@@ -60,7 +69,7 @@ export function DemoRoleSwitcherView({
           >
             {DEMO_ROLE_OPTIONS.map((role) => (
               <option key={role.value} value={role.value}>
-                {role.label}
+                {t(demoRoleKeys[role.value])}
               </option>
             ))}
           </select>
@@ -81,8 +90,8 @@ export function DemoRoleSwitcherView({
       </div>
       <span className="sr-only" aria-live="polite">
         {pendingRole
-          ? `Switching to ${demoRoleLabel(pendingRole)}`
-          : `Viewing demo as ${currentLabel}`}
+          ? `${t("onboarding.demo.switching")} ${t(demoRoleKeys[pendingRole])}`
+          : `${t("onboarding.demo.viewing")} ${currentLabel}`}
       </span>
       {error ? (
         <p role="alert" className="max-w-64 text-xs text-destructive">
@@ -94,10 +103,12 @@ export function DemoRoleSwitcherView({
 }
 
 export function DemoRoleSwitcher() {
+  const t = useTranslations();
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const [pendingRole, setPendingRole] =
-    React.useState<DemoSwitcherRole | null>(null);
+  const [pendingRole, setPendingRole] = React.useState<DemoSwitcherRole | null>(
+    null,
+  );
   const [error, setError] = React.useState<string | null>(null);
   const sessionRole = session?.user?.role;
 
@@ -116,25 +127,19 @@ export function DemoRoleSwitcher() {
     );
     if (!switched) {
       setPendingRole(null);
-      setError(
-        "We couldn't switch roles. Your current role is unchanged. Try again.",
-      );
+      setError(t("onboarding.demo.switchError"));
       return;
     }
 
     try {
       const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      const destination = demoRoleDestination(
-        nextRole,
-        pathname,
-        currentPath,
-      );
+      const destination = demoRoleDestination(nextRole, pathname, currentPath);
       // A full local navigation reloads the JWT-backed session before any
       // role-gated page or query can render under the new identity.
       window.location.assign(addDemoRoleSwitchMarker(destination));
     } catch {
       setPendingRole(null);
-      setError("Role changed. Refresh this page to finish switching views.");
+      setError(t("onboarding.demo.refresh"));
     }
   }
 

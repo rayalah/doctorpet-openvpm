@@ -46,10 +46,8 @@ describe("onboarding import UI", () => {
     );
     expect(source).toContain("MIGRATION_STEPS.slice(0, 2)");
     expect(source).toContain("MIGRATION_STEPS.slice(2)");
-    expect(source).toContain("Also bring vaccine and visit history");
-    expect(source).toContain(
-      "History attaches only to a safely matched real patient",
-    );
+    expect(source).toContain('t("onboarding.import.historyTitle")');
+    expect(source).toContain('t("onboarding.import.historyBody")');
     expect(journeyPlanSource).toContain(
       'title: "Bring your history with confidence."',
     );
@@ -70,19 +68,16 @@ describe("onboarding import UI", () => {
     expect(source).toContain("setPreviewByMode");
     expect(source).toContain("setCommittedByMode");
     expect(source).toContain("if (result) return true");
-    expect(source).toContain(
-      "planned changes and every issue before you confirm",
-    );
-    expect(source).toContain("Start with a small representative sample");
-    expect(source).toContain("has no one-click rollback");
-    expect(source).toContain("Earlier completed stages are safe");
-    expect(source).toContain("Retry the same import. It is safe");
+    expect(source).toContain('t("onboarding.import.previewBody")');
+    expect(source).toContain('t("onboarding.import.noRollback")');
+    expect(source).toContain('t("onboarding.import.conflictSuffix")');
+    expect(source).toContain('t("onboarding.import.confirmErrorSuffix")');
     expect(source).toContain(
       "response.alreadyCommitted && response.errors.length === 0",
     );
     expect(source).toContain("? activePreview.errors");
     expect(source).not.toContain("if (activePreview.total === 0) {");
-    expect(source).toContain("`all ${errors.length} issues`");
+    expect(source).toContain('t("onboarding.import.allIssuesPrefix")');
     expect(source).not.toContain("clientCsv:");
     expect(source).not.toContain("function parseCSV");
     expect(source).not.toContain("row.first_name");
@@ -109,12 +104,12 @@ describe("onboarding import UI", () => {
     expect(source).toContain(
       "migrationCompletedModes: nextKnownCompletedModes",
     );
-    expect(source).toContain("Already reviewed:");
+    expect(source).toContain('t("onboarding.import.alreadyReviewed")');
     expect(source.match(/clearAllImportReview\(\)/g)).toHaveLength(4);
     expect(source).toContain("<MigrationHelpRequest source={migrationSource}");
-    expect(migrationHelpSource).toContain("Request a private migration review");
+    expect(migrationHelpSource).toContain('t("onboarding.migration.action")');
     expect(migrationHelpSource).toContain(
-      "Do not email patient files or use an Anyone-with-the-link folder.",
+      't("onboarding.migration.requestBody")',
     );
   });
 
@@ -133,7 +128,7 @@ describe("onboarding import UI", () => {
     expect(source).toContain("maxLength={IMPORT_CSV_MAX_BYTES}");
     expect(source).toContain("aria-invalid={tooLarge || undefined}");
     expect(source).toContain(
-      "aria-label={`Paste ${step.label.toLowerCase()} CSV text`}",
+      'aria-label={`${t("onboarding.import.pasteAriaPrefix")}',
     );
     expect(source).toContain("aria-pressed={active}");
     expect(source).toContain("`${step.mode}-csv-size-error`");
@@ -153,11 +148,11 @@ describe("onboarding import UI", () => {
       MIGRATION_STEPS.find((step) => step.mode === "vaccinations")
         ?.unmatchedLabel,
     ).toBe("Missing pets");
-    expect(source).toContain("Ready with issues to review");
-    expect(source).toContain('label="Valid rows parsed"');
+    expect(source).toContain('t("onboarding.import.readyIssues")');
+    expect(source).toContain('label={t("onboarding.import.validRows")}');
     expect(source).not.toContain("issue rows will be skipped");
-    expect(source).toContain("Review completed with issues");
-    expect(source).toContain("Fix skipped records in Settings, then Data");
+    expect(source).toContain('t("onboarding.import.reviewIssues")');
+    expect(source).toContain('t("onboarding.import.fixSkipped")');
     expect(source).toContain("migrationHasCommittedChanges: true");
     expect(source).toContain("migrationSourceHasCommittedChanges: true");
     expect(source).toContain(

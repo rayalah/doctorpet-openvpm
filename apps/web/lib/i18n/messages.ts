@@ -2,13 +2,25 @@ import type { SupportedLanguage } from "./language";
 import { enAuthMessages, esAuthMessages } from "./messages/auth";
 import { enCommonMessages, esCommonMessages } from "./messages/common";
 import { enDashboardMessages, esDashboardMessages } from "./messages/dashboard";
-import { enNavigationMessages, esNavigationMessages } from "./messages/navigation";
+import {
+  enNavigationMessages,
+  esNavigationMessages,
+} from "./messages/navigation";
 import { enWelcomeMessages, esWelcomeMessages } from "./messages/welcome";
 import { enClientMessages, esClientMessages } from "./messages/clients";
 import { enPatientMessages, esPatientMessages } from "./messages/patients";
-import { enAppointmentMessages, esAppointmentMessages } from "./messages/appointments";
-import { enClinicalRecordMessages, esClinicalRecordMessages } from "./messages/clinical-records";
-import { enVisitWorkspaceMessages, esVisitWorkspaceMessages } from "./messages/visit-workspace";
+import {
+  enAppointmentMessages,
+  esAppointmentMessages,
+} from "./messages/appointments";
+import {
+  enClinicalRecordMessages,
+  esClinicalRecordMessages,
+} from "./messages/clinical-records";
+import {
+  enVisitWorkspaceMessages,
+  esVisitWorkspaceMessages,
+} from "./messages/visit-workspace";
 import { enBillingMessages, esBillingMessages } from "./messages/billing";
 import { enInventoryMessages, esInventoryMessages } from "./messages/inventory";
 import { enReportsMessages, esReportsMessages } from "./messages/reports";
@@ -19,6 +31,10 @@ import { enGuidesMessages, esGuidesMessages } from "./messages/guides";
 import { enReminderMessages, esReminderMessages } from "./messages/reminders";
 import { enMessagingMessages, esMessagingMessages } from "./messages/messaging";
 import { enSharedUiMessages, esSharedUiMessages } from "./messages/shared-ui";
+import {
+  enOnboardingMessages,
+  esOnboardingMessages,
+} from "./messages/onboarding";
 
 export const enMessages = {
   ...enCommonMessages,
@@ -41,6 +57,7 @@ export const enMessages = {
   ...enReminderMessages,
   ...enMessagingMessages,
   ...enSharedUiMessages,
+  ...enOnboardingMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -70,6 +87,7 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
     ...esReminderMessages,
     ...esMessagingMessages,
     ...esSharedUiMessages,
+    ...esOnboardingMessages,
   },
 };
 

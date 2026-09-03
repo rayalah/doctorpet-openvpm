@@ -23,6 +23,8 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n/client";
+import type { TranslationKey } from "@/lib/i18n/messages";
 import {
   CLINIC_MODEL_OPTIONS,
   FIRST_GOAL_OPTIONS,
@@ -66,15 +68,76 @@ const toneClasses = {
   amber: "bg-amber-50 text-amber-700",
 } as const;
 
+const modelLabelKeys: Record<ClinicModel, TranslationKey> = {
+  companion: "onboarding.care.companion",
+  mobile: "onboarding.care.mobile",
+  equine: "onboarding.care.equine",
+  specialty: "onboarding.care.specialty",
+  shelter: "onboarding.care.shelter",
+  exploring: "onboarding.care.exploring",
+};
+const modelShortLabelKeys: Record<ClinicModel, TranslationKey> = {
+  companion: "onboarding.care.short.companion",
+  mobile: "onboarding.care.short.mobile",
+  equine: "onboarding.care.short.equine",
+  specialty: "onboarding.care.short.specialty",
+  shelter: "onboarding.care.short.shelter",
+  exploring: "onboarding.care.short.exploring",
+};
+const goalLabelKeys: Record<FirstGoal, TranslationKey> = {
+  run_visit: "onboarding.goal.runVisit",
+  import_records: "onboarding.goal.importRecords",
+  start_fresh: "onboarding.goal.startFresh",
+  explore_sample: "onboarding.goal.exploreSample",
+  self_host: "onboarding.goal.selfHost",
+};
+const taskKeys: Record<string, TranslationKey> = {
+  "Review today’s schedule": "onboarding.task.reviewSchedule",
+  "Add your first real client": "onboarding.task.addClient",
+  "Complete one visit": "onboarding.task.completeVisit",
+  "Review the client handoff": "onboarding.task.reviewHandoff",
+  "Map one house-call workflow": "onboarding.task.mapHouseCall",
+  "Add a real client and patient": "onboarding.task.addClientPatient",
+  "Test a visit from your phone": "onboarding.task.testPhone",
+  "Review the field handoff": "onboarding.task.reviewFieldHandoff",
+  "Map one farm-call workflow": "onboarding.task.mapFarmCall",
+  "Add an owner, animal, and location":
+    "onboarding.task.addOwnerAnimalLocation",
+  "Test one low-risk visit": "onboarding.task.testLowRisk",
+  "Review the ambulatory gaps together": "onboarding.task.reviewAmbulatory",
+  "Choose your first consult type": "onboarding.task.chooseConsult",
+  "Capture the history you rely on": "onboarding.task.captureHistory",
+  "Complete one specialty visit": "onboarding.task.completeSpecialty",
+  "Plan the next follow-up": "onboarding.task.planFollowUp",
+  "Map one intake workflow": "onboarding.task.mapIntake",
+  "Add a real animal record": "onboarding.task.addAnimal",
+  "Complete one care handoff": "onboarding.task.completeHandoff",
+  "Review team access together": "onboarding.task.reviewAccess",
+  "Meet the sample clinic": "onboarding.task.meetSample",
+  "Open a patient timeline": "onboarding.task.openTimeline",
+  "Walk through one visit": "onboarding.task.walkVisit",
+  "Choose what to make yours": "onboarding.task.chooseYours",
+  "Inventory your current export": "onboarding.task.inventoryExport",
+  "Preview supported record counts": "onboarding.task.previewCounts",
+  "Review a representative chart": "onboarding.task.reviewChart",
+  "Plan your first live visit": "onboarding.task.planLiveVisit",
+  "Set your clinic basics": "onboarding.task.setBasics",
+  "Book the first appointment": "onboarding.task.bookAppointment",
+  "Confirm your deployment path": "onboarding.task.confirmDeployment",
+  "Make the workspace yours": "onboarding.task.makeYours",
+  "Review data ownership controls": "onboarding.task.reviewOwnership",
+  "Plan your first local workflow": "onboarding.task.planLocal",
+};
+
 export function ClinicIntentBuilder({
   clinicModel,
   firstGoal,
   onClinicModelChange,
   onFirstGoalChange,
-  intro = "Start with one useful workflow. We’ll shape Doctor Pet around the way your team works—and you stay in control.",
+  intro,
   showClinicModel = true,
   showFirstGoal = true,
-  goalLegend = "What would feel useful first?",
+  goalLegend,
   beforeChoices,
   afterChoices,
 }: {
@@ -89,6 +152,10 @@ export function ClinicIntentBuilder({
   beforeChoices?: ReactNode;
   afterChoices?: ReactNode;
 }) {
+  const t = useTranslations();
+  const resolvedIntro =
+    intro === undefined ? t("onboarding.builder.intro") : intro;
+  const resolvedGoalLegend = goalLegend ?? t("onboarding.goal.question");
   const selectedModel = clinicModelOption(clinicModel);
   const tasks = firstDayTasks(clinicModel, firstGoal);
   const goalOptions =
@@ -107,16 +174,16 @@ export function ClinicIntentBuilder({
       <div className="min-w-0">
         {beforeChoices}
 
-        {intro ? (
+        {resolvedIntro ? (
           <p className="max-w-2xl text-[15px] leading-7 text-slate-600 sm:text-base">
-            {intro}
+            {resolvedIntro}
           </p>
         ) : null}
 
         {showClinicModel ? (
-          <fieldset className={intro ? "mt-7" : undefined}>
+          <fieldset className={resolvedIntro ? "mt-7" : undefined}>
             <legend className="text-sm font-semibold text-slate-950 sm:text-base">
-              What kind of care do you provide?
+              {t("onboarding.care.question")}
             </legend>
             <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
               {CLINIC_MODEL_OPTIONS.map((option) => {
@@ -144,7 +211,7 @@ export function ClinicIntentBuilder({
                       <Icon className="h-5 w-5" strokeWidth={1.8} />
                     </span>
                     <span className="mt-2.5 block max-w-[10rem] text-[13px] font-semibold leading-[1.3] text-slate-900 sm:text-sm">
-                      {option.label}
+                      {t(modelLabelKeys[option.value])}
                     </span>
                     {active ? (
                       <span className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
@@ -161,11 +228,13 @@ export function ClinicIntentBuilder({
         {showFirstGoal ? (
           <fieldset
             className={
-              showClinicModel || intro || beforeChoices ? "mt-6" : undefined
+              showClinicModel || resolvedIntro || beforeChoices
+                ? "mt-6"
+                : undefined
             }
           >
             <legend className="text-sm font-semibold text-slate-950 sm:text-base">
-              {goalLegend}
+              {resolvedGoalLegend}
             </legend>
             <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
               {goalOptions.map((option) => {
@@ -195,7 +264,7 @@ export function ClinicIntentBuilder({
                       <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
                     </span>
                     <span className="min-w-0 flex-1 text-[13px] font-medium leading-5 text-slate-800 sm:text-sm">
-                      {option.label}
+                      {t(goalLabelKeys[option.value])}
                     </span>
                     <span
                       className={cn(
@@ -237,10 +306,12 @@ export function ClinicIntentBuilder({
               </span>
               <div>
                 <h3 className="font-heading text-lg font-semibold text-slate-950 sm:text-xl">
-                  Your first Doctor Pet day
+                  {t("onboarding.builder.firstDay")}
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  Shaped for {selectedModel.shortLabel.toLowerCase()} care
+                  {t("onboarding.builder.shapedPrefix")}{" "}
+                  {t(modelShortLabelKeys[selectedModel.value])}{" "}
+                  {t("onboarding.builder.shapedSuffix")}
                 </p>
               </div>
             </div>
@@ -261,7 +332,7 @@ export function ClinicIntentBuilder({
                       <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
                     </span>
                     <span className="text-sm font-medium leading-5 text-slate-800">
-                      {task}
+                      {taskKeys[task] ? t(taskKeys[task]) : task}
                     </span>
                   </li>
                 );
@@ -270,7 +341,7 @@ export function ClinicIntentBuilder({
 
             <div className="mt-4 flex items-center gap-2 text-xs text-primary">
               <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
-              <span>Nothing moves until you review it.</span>
+              <span>{t("onboarding.builder.review")}</span>
             </div>
           </div>
           <style>{`

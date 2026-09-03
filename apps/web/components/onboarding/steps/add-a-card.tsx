@@ -6,6 +6,7 @@ import { CreditCard, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import type { StepHandle } from "../journey-types";
+import { useTranslations } from "@/lib/i18n/client";
 
 /**
  * Optional step: add a card to lock in the plan. Never forced — Continue always
@@ -18,6 +19,7 @@ export function AddACardStep({
 }: {
   register: (h: StepHandle) => void;
 }) {
+  const t = useTranslations();
   const subscription = trpc.subscription.get.useQuery(undefined, {
     retry: false,
   });
@@ -30,15 +32,13 @@ export function AddACardStep({
   const unitPrice = subscription.data?.locationUnitPriceMonthlyUsd ?? 79;
   const annualPrice = subscription.data?.annualLocationUnitPriceUsd ?? 790;
   const alreadyHasCard = Boolean(
-    subscription.data?.hasSubscription || subscription.data?.hasBillingAccount
+    subscription.data?.hasSubscription || subscription.data?.hasBillingAccount,
   );
 
   return (
     <div className="space-y-5">
       <p className="text-sm leading-6 text-slate-600">
-        This is optional. Your 14-day trial is fully featured and needs no card.
-        Add one whenever you are ready and your plan continues without a gap when
-        the trial ends.
+        {t("onboarding.card.optional")}
       </p>
 
       <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
@@ -47,32 +47,35 @@ export function AddACardStep({
           <div className="text-right">
             <p className="font-heading text-lg font-bold text-slate-900">
               ${unitPrice}
-              <span className="text-sm font-normal text-slate-500">/month</span>
+              <span className="text-sm font-normal text-slate-500">
+                {t("onboarding.card.month")}
+              </span>
             </p>
             <p className="text-sm font-medium text-emerald-700">
-              or ${annualPrice}/year
+              {t("onboarding.card.or")} ${annualPrice}
+              {t("onboarding.card.year")}
             </p>
           </div>
         </div>
         <p className="mt-1 text-xs text-slate-500">
-          Unlimited staff included. Billed only after your free trial.
+          {t("onboarding.card.included")}
         </p>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-slate-500">
         <ShieldCheck className="h-4 w-4 text-emerald-600" />
-        Payments are handled securely by Stripe. Cancel anytime.
+        {t("onboarding.card.secure")}
       </div>
 
       {alreadyHasCard ? (
         <p className="text-sm font-medium text-emerald-700">
-          A card is already on file. You are all set.
+          {t("onboarding.card.saved")}
         </p>
       ) : (
         <Button asChild type="button" variant="outline">
           <Link href="/settings?tab=billing">
             <CreditCard className="mr-2 h-4 w-4" />
-            Choose billing plan
+            {t("onboarding.card.choose")}
           </Link>
         </Button>
       )}

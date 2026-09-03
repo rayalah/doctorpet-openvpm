@@ -11,24 +11,20 @@ import {
   AGENT_INSTRUCTION_MAX_LENGTH,
   isAgentInstructionValid,
 } from "@/lib/agent/policy";
-
-const DEFAULT_QUESTION = "Which pets are overdue for vaccines?";
-
-const EXAMPLE_QUESTION = "Which pets are overdue for vaccines?";
-const EXAMPLE_ANSWER =
-  "Two of your sample pets look overdue. Biscuit is past due for the DHPP shot, and Luna is coming up soon. Want me to draft a friendly reminder you can send to each owner?";
+import { useTranslations } from "@/lib/i18n/client";
 
 /** A short, clearly-labeled sample so users see the value even with no AI key. */
 function ExampleChat() {
+  const t = useTranslations();
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">
-        Example
+        {t("onboarding.agent.example")}
       </div>
       <div className="space-y-3">
         <div className="flex justify-end">
           <div className="max-w-[85%] rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-800">
-            {EXAMPLE_QUESTION}
+            {t("onboarding.agent.question")}
           </div>
         </div>
         <div className="flex items-start gap-2">
@@ -36,7 +32,7 @@ function ExampleChat() {
             <Bot className="h-3.5 w-3.5" />
           </span>
           <div className="max-w-[85%] rounded-lg bg-emerald-50/70 px-3 py-2 text-sm leading-relaxed text-slate-700">
-            {EXAMPLE_ANSWER}
+            {t("onboarding.agent.answer")}
           </div>
         </div>
       </div>
@@ -53,10 +49,13 @@ export function TryAgentStep({
 }: {
   register: (h: StepHandle) => void;
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const status = trpc.agent.status.useQuery();
   const run = trpc.agent.run.useMutation();
-  const [question, setQuestion] = useState(DEFAULT_QUESTION);
+  const [question, setQuestion] = useState(() =>
+    t("onboarding.agent.question"),
+  );
 
   useEffect(() => {
     register({ onContinue: async () => true });
@@ -99,12 +98,11 @@ export function TryAgentStep({
           <div>
             <p className="font-medium text-destructive">
               {statusMissing
-                ? "AI helper status is unavailable"
-                : "AI helper status could not load"}
+                ? t("onboarding.agent.statusUnavailable")
+                : t("onboarding.agent.statusError")}
             </p>
             <p className="mt-1 text-slate-600">
-              {status.error?.message ??
-                "AI helper configuration could not be verified. Please retry before asking the helper."}
+              {status.error?.message ?? t("onboarding.agent.verifyError")}
             </p>
             <Button
               type="button"
@@ -113,7 +111,7 @@ export function TryAgentStep({
               onClick={() => void status.refetch()}
               className="mt-3"
             >
-              Retry
+              {t("onboarding.basics.retry")}
             </Button>
           </div>
         </div>
@@ -130,16 +128,14 @@ export function TryAgentStep({
     return (
       <div className="space-y-4">
         <p className="text-sm leading-6 text-slate-600">
-          AI is built right into Doctor Pet. It can answer questions about your
-          clinic in plain words.
+          {t("onboarding.agent.intro")}
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
-            <p className="font-medium">Add a card to try AI</p>
+            <p className="font-medium">{t("onboarding.agent.addCardTitle")}</p>
             <p className="mt-1 text-emerald-900/80">
-              Your free trial keeps going. The rest of Doctor Pet is ready to use
-              without a card.
+              {t("onboarding.agent.addCardBody")}
             </p>
             <Button
               type="button"
@@ -147,7 +143,7 @@ export function TryAgentStep({
               className="mt-3"
               onClick={() => router.push("/settings?tab=billing")}
             >
-              Add a card
+              {t("onboarding.agent.addCard")}
             </Button>
           </div>
         </div>
@@ -161,7 +157,7 @@ export function TryAgentStep({
       <div className="space-y-4">
         <p className="text-sm text-slate-600">
           {verifiedAgentStatus.accessMessage ??
-            "AI is not available for this workspace."}
+            t("onboarding.agent.unavailable")}
         </p>
         <ExampleChat />
       </div>
@@ -172,15 +168,11 @@ export function TryAgentStep({
     return (
       <div className="space-y-4">
         <p className="text-sm leading-6 text-slate-600">
-          AI is built right into Doctor Pet. It can answer questions about your
-          clinic in plain words.
+          {t("onboarding.agent.intro")}
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>
-            Your AI helper is not available right now. You can try it any time
-            from the Agent page once service is restored.
-          </p>
+          <p>{t("onboarding.agent.notReady")}</p>
         </div>
         <ExampleChat />
       </div>
@@ -190,8 +182,7 @@ export function TryAgentStep({
   return (
     <div className="space-y-4">
       <p className="text-sm leading-6 text-slate-600">
-        AI is built right in. Ask a question about your clinic and see what
-        comes back.
+        {t("onboarding.agent.askIntro")}
       </p>
 
       <ExampleChat />
@@ -205,8 +196,8 @@ export function TryAgentStep({
           }}
           maxLength={AGENT_INSTRUCTION_MAX_LENGTH}
           aria-invalid={questionInvalid || undefined}
-          placeholder="Ask your AI helper something"
-          aria-label="Ask your AI helper"
+          placeholder={t("onboarding.agent.placeholder")}
+          aria-label={t("onboarding.agent.aria")}
         />
         <Button type="button" onClick={ask} disabled={!canAsk}>
           {run.isPending ? (
@@ -214,7 +205,7 @@ export function TryAgentStep({
           ) : (
             <Send className="mr-1.5 h-4 w-4" />
           )}
-          Ask
+          {t("onboarding.agent.ask")}
         </Button>
       </div>
 
@@ -228,7 +219,7 @@ export function TryAgentStep({
         <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 p-4">
           <div className="mb-2 flex items-center gap-2 text-xs font-medium text-emerald-700">
             <Bot className="h-3.5 w-3.5" />
-            Your AI helper
+            {t("onboarding.agent.response")}
           </div>
           <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
             {run.data.text}

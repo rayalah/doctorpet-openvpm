@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FirstGoal } from "@/lib/onboarding/clinic-profile";
+import { useTranslations } from "@/lib/i18n/client";
+import type { TranslationKey } from "@/lib/i18n/messages";
 
 type RecommendationTone = "primary" | "violet" | "coral";
 
@@ -31,37 +33,42 @@ const RECOMMENDATION_TONES: Record<
 
 const FIRST_GOAL_RECOMMENDATIONS: Record<
   FirstGoal,
-  { title: string; body: string; pictureLabel: string; rowLabel: string }
+  {
+    title: TranslationKey;
+    body: TranslationKey;
+    pictureLabel: TranslationKey;
+    rowLabel: TranslationKey;
+  }
 > = {
   run_visit: {
-    title: "Run one real visit",
-    body: "Add one owner and pet, then work from check-in through the client handoff.",
-    pictureLabel: "Your clinic day",
-    rowLabel: "New patient",
+    title: "onboarding.recommendations.runTitle",
+    body: "onboarding.recommendations.runBody",
+    pictureLabel: "onboarding.recommendations.clinicDay",
+    rowLabel: "onboarding.recommendations.newPatient",
   },
   import_records: {
-    title: "Plan a safe first import",
-    body: "Inventory an export and review one representative chart before anything goes live.",
-    pictureLabel: "Migration preview",
-    rowLabel: "Review one chart",
+    title: "onboarding.recommendations.importTitle",
+    body: "onboarding.recommendations.importBody",
+    pictureLabel: "onboarding.recommendations.migrationPreview",
+    rowLabel: "onboarding.recommendations.reviewChart",
   },
   start_fresh: {
-    title: "Build your first real visit",
-    body: "Set your clinic basics, add one owner and pet, then book the first appointment.",
-    pictureLabel: "Your clinic day",
-    rowLabel: "First appointment",
+    title: "onboarding.recommendations.freshTitle",
+    body: "onboarding.recommendations.freshBody",
+    pictureLabel: "onboarding.recommendations.clinicDay",
+    rowLabel: "onboarding.recommendations.firstAppointment",
   },
   explore_sample: {
-    title: "Explore a ready-made clinic",
-    body: "Open a sample schedule and patient timeline without using real clinic data.",
-    pictureLabel: "Sample clinic",
-    rowLabel: "Guided visit",
+    title: "onboarding.recommendations.sampleTitle",
+    body: "onboarding.recommendations.sampleBody",
+    pictureLabel: "onboarding.recommendations.sampleClinic",
+    rowLabel: "onboarding.recommendations.guidedVisit",
   },
   self_host: {
-    title: "Review the self-hosted path",
-    body: "Confirm deployment and data-ownership controls before moving any live work.",
-    pictureLabel: "Self-hosted setup",
-    rowLabel: "Deployment plan",
+    title: "onboarding.recommendations.selfTitle",
+    body: "onboarding.recommendations.selfBody",
+    pictureLabel: "onboarding.recommendations.selfSetup",
+    rowLabel: "onboarding.recommendations.deploymentPlan",
   },
 };
 
@@ -121,70 +128,74 @@ export function FirstDayRecommendations({
   hasImportedData?: boolean;
   primaryGoal?: FirstGoal;
 }) {
+  const t = useTranslations();
   const primaryRecommendation = hasImportedData
     ? {
-        title: "Book one real appointment",
-        body: "Choose a patient from your reviewed records and put one visit on the schedule.",
-        pictureLabel: "Your clinic day",
-        rowLabel: "First visit",
+        title: "onboarding.recommendations.bookTitle" as TranslationKey,
+        body: "onboarding.recommendations.bookBody" as TranslationKey,
+        pictureLabel: "onboarding.recommendations.clinicDay" as TranslationKey,
+        rowLabel: "onboarding.recommendations.firstVisit" as TranslationKey,
       }
     : FIRST_GOAL_RECOMMENDATIONS[primaryGoal];
 
   return (
-    <section aria-label="Your first-day recommendations">
+    <section aria-label={t("onboarding.recommendations.label")}>
       <ul className="grid gap-6 sm:grid-cols-3 sm:gap-5">
         <RecommendationCard
-          title={primaryRecommendation.title}
-          body={primaryRecommendation.body}
-          tag="Best next step"
+          title={t(primaryRecommendation.title)}
+          body={t(primaryRecommendation.body)}
+          tag={t("onboarding.recommendations.best")}
           tone="primary"
           tilt="sm:-rotate-1"
         >
           <span className="flex items-center gap-2 text-xs font-semibold text-primary">
             <CalendarCheck2 className="h-4 w-4" />
-            {primaryRecommendation.pictureLabel}
+            {t(primaryRecommendation.pictureLabel)}
           </span>
           <div className="space-y-2">
             <div className="flex items-center gap-2 rounded-lg bg-white/90 px-3 py-2 text-xs text-slate-700 shadow-sm">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <PawPrint className="h-3.5 w-3.5" />
               </span>
-              <span>{primaryRecommendation.rowLabel}</span>
+              <span>{t(primaryRecommendation.rowLabel)}</span>
               <Check className="ml-auto h-3.5 w-3.5 text-primary" />
             </div>
           </div>
         </RecommendationCard>
 
         <RecommendationCard
-          title="Make getting paid easy"
-          body="Send an online invoice and let clients pay by card from their private link."
-          tag="Get paid faster"
+          title={t("onboarding.recommendations.billingTitle")}
+          body={t("onboarding.recommendations.billingBody")}
+          tag={t("onboarding.recommendations.billingTag")}
           tone="violet"
           tilt="sm:rotate-1"
         >
           <span className="flex items-center gap-2 text-xs font-semibold text-violet-700">
-            <ReceiptText className="h-4 w-4" /> Client billing
+            <ReceiptText className="h-4 w-4" />{" "}
+            {t("onboarding.recommendations.clientBilling")}
           </span>
           <div className="rounded-lg bg-white/90 px-3 py-2.5 shadow-sm">
             <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>Invoice total</span>
+              <span>{t("onboarding.recommendations.invoiceTotal")}</span>
               <span className="font-semibold text-slate-900">$68.00</span>
             </div>
             <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-violet-700">
-              <CreditCard className="h-3.5 w-3.5" /> Pay securely online
+              <CreditCard className="h-3.5 w-3.5" />{" "}
+              {t("onboarding.recommendations.payOnline")}
             </div>
           </div>
         </RecommendationCard>
 
         <RecommendationCard
-          title="Give clients one simple place"
-          body="Share visits, vaccine history, and bills through a private client portal."
-          tag="Fewer status calls"
+          title={t("onboarding.recommendations.portalTitle")}
+          body={t("onboarding.recommendations.portalBody")}
+          tag={t("onboarding.recommendations.portalTag")}
           tone="coral"
           tilt="sm:-rotate-1"
         >
           <span className="flex items-center gap-2 text-xs font-semibold text-orange-700">
-            <Globe2 className="h-4 w-4" /> Client portal
+            <Globe2 className="h-4 w-4" />{" "}
+            {t("onboarding.recommendations.clientPortal")}
           </span>
           <div className="flex items-center gap-2 rounded-lg bg-white/90 px-3 py-2.5 shadow-sm">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-700">
@@ -192,10 +203,10 @@ export function FirstDayRecommendations({
             </span>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-slate-900">
-                Everything in one link
+                {t("onboarding.recommendations.oneLink")}
               </p>
               <p className="text-[10px] text-slate-500">
-                Visits · Vaccines · Bills
+                {t("onboarding.recommendations.contents")}
               </p>
             </div>
           </div>
