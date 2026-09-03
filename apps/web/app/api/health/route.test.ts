@@ -343,12 +343,16 @@ describe("health route", () => {
     expect(json.checks.hostedAppUrls.detail).toBe(
       "2 required hosted app URL values are missing",
     );
-    expect(json.checks.hostedBilling.detail).toBe(
-      "6 required hosted configuration values are missing",
-    );
+    expect(json.checks.hostedBilling).toEqual({
+      ok: true,
+      detail: "Stripe billing is not configured",
+      advisory: true,
+    });
     expect(json.checks.hostedSubscriptionTax).toEqual({
-      ok: false,
-      detail: "Hosted subscription tax is not enabled",
+      ok: true,
+      detail:
+        "Stripe subscription tax check skipped because Stripe is not configured",
+      advisory: true,
     });
     expect(json.checks.hostedAi.detail).toBe(
       "6 required hosted configuration values are missing",
@@ -633,6 +637,36 @@ describe("health route", () => {
     });
     expect(JSON.stringify(json)).not.toContain("test-api-key");
     expect(JSON.stringify(json)).not.toContain("test-public-key");
+  });
+
+  it("allows hosted readiness when Stripe is intentionally not configured", async () => {
+    mocks.billingEnforced.mockReturnValue(true);
+    stubHostedRequiredEnvs();
+    vi.stubEnv("STRIPE_SECRET_KEY", "");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "");
+    vi.stubEnv("STRIPE_SUBSCRIPTION_WEBHOOK_SECRET", "");
+    vi.stubEnv("STRIPE_PRICE_CLOUD_LOCATION", "");
+    vi.stubEnv("STRIPE_PRICE_CLOUD_LOCATION_ANNUAL", "");
+    vi.stubEnv("STRIPE_TAX_ENABLED", "");
+
+    const response = await GET();
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.mode).toBe("hosted");
+    expect(json.checks.hostedBilling).toEqual({
+      ok: true,
+      detail: "Stripe billing is not configured",
+      advisory: true,
+    });
+    expect(json.checks.hostedSubscriptionTax).toEqual({
+      ok: true,
+      detail:
+        "Stripe subscription tax check skipped because Stripe is not configured",
+      advisory: true,
+    });
   });
 
   it("does not require the legacy Cloud seat price for hosted readiness", async () => {
@@ -926,8 +960,15 @@ describe("health route", () => {
 
     expect(response.status).toBe(503);
     expect(json.checks.hostedBilling).toEqual({
-      ok: false,
-      detail: "1 required hosted configuration value is missing",
+      ok: true,
+      detail: "Stripe billing is not configured",
+      advisory: true,
+    });
+    expect(json.checks.hostedSubscriptionTax).toEqual({
+      ok: true,
+      detail:
+        "Stripe subscription tax check skipped because Stripe is not configured",
+      advisory: true,
     });
     expect(json.checks.hostedStorage).toEqual({
       ok: false,

@@ -39,6 +39,7 @@ import {
 } from "@/lib/email-preferences";
 import { platformEmailIdentityConfigurationReady } from "@/lib/platform-email-preferences";
 import { hostedSmsCredentialIssueCount } from "@/lib/messaging/hosted-sms-readiness";
+import { stripeConfigured } from "@/lib/stripe-config";
 
 export const dynamic = "force-dynamic";
 
@@ -534,11 +535,24 @@ export async function GET() {
       "Hosted core envs present",
     );
     checks.hostedAppUrls = hostedAppUrlCheck();
-    checks.hostedBilling = hostedEnvCheck(
-      HOSTED_BILLING_ENV_NAMES,
-      "Hosted billing envs present",
-    );
-    checks.hostedSubscriptionTax = hostedSubscriptionTaxCheck();
+    if (stripeConfigured()) {
+      checks.hostedBilling = hostedEnvCheck(
+        HOSTED_BILLING_ENV_NAMES,
+        "Hosted billing envs present",
+      );
+      checks.hostedSubscriptionTax = hostedSubscriptionTaxCheck();
+    } else {
+      checks.hostedBilling = {
+        ok: true,
+        detail: "Stripe billing is not configured",
+        advisory: true,
+      };
+      checks.hostedSubscriptionTax = {
+        ok: true,
+        detail: "Stripe subscription tax check skipped because Stripe is not configured",
+        advisory: true,
+      };
+    }
     const hostedStorageEnv = hostedStorageEnvCheck();
     checks.hostedStorage = hostedStorageEnv.ok
       ? await checkObjectStorageHealth()
