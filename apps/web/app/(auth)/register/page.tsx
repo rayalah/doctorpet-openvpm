@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/ui/form-field";
-import { PawMark } from "@/components/brand/paw-mark";
+import { PlatformLogo } from "@/components/brand/platform-logo";
 import { platformBrand } from "@/lib/brand/platform-brand";
 import { platformOperationalConfig } from "@/lib/brand/platform-operational-config";
 import { cn, initials, isValidEmail } from "@/lib/utils";
@@ -374,9 +374,7 @@ function RegisterPageInner() {
               href="/"
               className="inline-flex items-center gap-3 font-heading text-lg font-semibold tracking-tight text-slate-950 sm:text-xl"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-                <PawMark className="h-5 w-5" />
-              </span>
+              <PlatformLogo variant="mark" className="h-10 w-10 rounded-xl object-cover shadow-sm" />
               {platformBrand.displayName}
             </Link>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 sm:gap-3 sm:text-sm">
@@ -436,9 +434,7 @@ function RegisterPageInner() {
               href="/"
               className="inline-flex items-center gap-3 font-heading text-lg font-semibold tracking-tight text-slate-950 sm:text-xl"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-                <PawMark className="h-5 w-5" />
-              </span>
+              <PlatformLogo variant="mark" className="h-10 w-10 rounded-xl object-cover shadow-sm" />
               {platformBrand.displayName}
             </Link>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 sm:gap-3 sm:text-sm">
@@ -565,9 +561,7 @@ function RegisterPageInner() {
               href="/"
               className="inline-flex items-center gap-3 font-heading text-lg font-semibold tracking-tight text-slate-950 sm:text-xl"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-                <PawMark className="h-5 w-5" />
-              </span>
+              <PlatformLogo variant="mark" className="h-10 w-10 rounded-xl object-cover shadow-sm" />
               {platformBrand.displayName}
             </Link>
             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 sm:gap-3 sm:text-sm">
@@ -635,9 +629,7 @@ function RegisterPageInner() {
               href="/"
               className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-primary"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <PawMark className="h-4 w-4" />
-              </span>
+              <PlatformLogo variant="mark" className="h-8 w-8 rounded-lg object-cover" />
               {platformBrand.displayName} {cloudIntent ? "Cloud" : ""}
             </Link>
             <span className="text-xs font-medium text-slate-500">

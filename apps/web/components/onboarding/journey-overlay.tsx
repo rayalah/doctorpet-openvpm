@@ -14,7 +14,8 @@ import { useRouter } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ArrowLeft, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { BrandBadge } from "@/components/brand/paw-mark";
+import { PlatformLogo } from "@/components/brand/platform-logo";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -466,12 +467,12 @@ function JourneyShell({
             >
               <header className="flex items-center justify-between gap-5 border-b border-slate-100 px-5 py-4 sm:px-8 sm:py-5 lg:px-12">
                 <div className="inline-flex items-center gap-2.5 text-slate-950">
-                  <BrandBadge
-                    className="h-9 w-9 rounded-xl"
-                    pawClassName="h-5 w-5"
+                  <PlatformLogo
+                    variant="mark"
+                    className="h-9 w-9 rounded-xl object-cover"
                   />
                   <span className="font-heading text-lg font-semibold tracking-tight">
-                    Doctor Pet
+                    {platformBrand.productName}
                   </span>
                 </div>
                 <div className="flex min-w-[132px] items-center gap-3 sm:min-w-[230px]">

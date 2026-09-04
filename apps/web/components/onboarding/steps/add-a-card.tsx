@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CreditCard, ShieldCheck } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
+import { platformBrand } from "@/lib/brand/platform-brand";
 import type { StepHandle } from "../journey-types";
 import { useTranslations } from "@/lib/i18n/client";
 
@@ -43,7 +44,7 @@ export function AddACardStep({
 
       <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
         <div className="flex items-start justify-between gap-4">
-          <span className="text-sm text-slate-600">Doctor Pet</span>
+          <span className="text-sm text-slate-600">{platformBrand.productName}</span>
           <div className="text-right">
             <p className="font-heading text-lg font-bold text-slate-900">
               ${unitPrice}

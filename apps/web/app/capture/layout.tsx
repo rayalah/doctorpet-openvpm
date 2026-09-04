@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PawMark } from "@/components/brand/paw-mark";
+import { PlatformLogo } from "@/components/brand/platform-logo";
 import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const metadata: Metadata = {
@@ -24,9 +24,7 @@ export default function CaptureLayout({
       <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="mx-auto max-w-lg px-4 py-3 flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-teal-600 flex items-center justify-center">
-              <PawMark className="h-4 w-4 text-white" />
-            </div>
+            <PlatformLogo variant="mark" className="h-8 w-8 rounded-lg object-cover" />
             <div>
               <span className="font-semibold text-gray-900 text-sm">
                 {platformBrand.productName}

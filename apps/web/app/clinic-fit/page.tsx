@@ -10,7 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PawMark } from "@/components/brand/paw-mark";
+import { PlatformLogo } from "@/components/brand/platform-logo";
 import { platformBrand } from "@/lib/brand/platform-brand";
 import {
   buildClinicFitDemoUrl,
@@ -77,9 +77,7 @@ export default async function ClinicFitPage({
             href="/register"
             className="inline-flex items-center gap-2 font-semibold"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <PawMark className="h-4 w-4" />
-            </span>
+            <PlatformLogo variant="mark" className="h-9 w-9 rounded-lg object-cover" />
             {platformBrand.productName}
           </Link>
           <div className="flex items-center gap-2">

@@ -30,7 +30,7 @@ function nonBlankEnv(name: string): string | undefined {
 
 export function doctorPetBrand(): Brand {
   return {
-    name: "Doctor Pet by ResilIA",
+    name: "Doctor Pet App",
     companyName: nonBlankEnv("EMAIL_COMPANY_NAME") ?? "ResilIA",
     supportEmail: nonBlankEnv("EMAIL_SUPPORT_ADDRESS") ?? "support@openvpm.com",
     companyAddress: nonBlankEnv("EMAIL_COMPANY_ADDRESS"),

@@ -270,7 +270,7 @@ describe("sendEmail", () => {
     const [payload] = mocks.resendSend.mock.calls[0] ?? [];
     expect(payload).toMatchObject({
       to: "admin@example.com",
-      subject: "Verify your Doctor Pet email",
+      subject: "Verify your Doctor Pet App email",
     });
     expect(payload.html).toContain("Your trial is already active.");
     expect(payload.html).toContain("Confirm email");
@@ -474,7 +474,7 @@ describe("doctorPetBrand compatibility export", () => {
     const { openvpmBrand } = await loadEmailBrand();
 
     expect(openvpmBrand()).toMatchObject({
-      name: "Doctor Pet by ResilIA",
+      name: "Doctor Pet App",
       companyName: "Open Vet Ops",
       supportEmail: "support@example.com",
       companyAddress: "123 Clinic Way",
@@ -580,7 +580,7 @@ describe("lifecycle email branding", () => {
     });
     expect(payload.html).toContain("/email-preferences?token=");
     expect(payload.html).toContain(
-      "This address is the Doctor Pet by ResilIA billing contact for Neighborhood Veterinary.",
+      "This address is the Doctor Pet App billing contact for Neighborhood Veterinary.",
     );
     expect(payload.html).toContain("Review billing");
     expect(payload.html).toContain("no need to add it again");
@@ -620,7 +620,7 @@ describe("lifecycle email branding", () => {
     const [payload, providerOptions] = mocks.resendSend.mock.calls[0] ?? [];
     expect(payload).toMatchObject({
       to: "owner@example.com",
-      subject: "Your first real Doctor Pet by ResilIA visit is complete",
+      subject: "Your first real Doctor Pet App visit is complete",
       headers: {
         "List-Unsubscribe": expect.stringContaining(
           "https://app.openvpm.com/api/email-preferences/unsubscribe?token=",
@@ -697,7 +697,7 @@ describe("lifecycle email branding", () => {
     );
     expect(payload.html).toContain("/email-preferences?token=");
     expect(payload.html).toContain(
-      "because you created a Doctor Pet by ResilIA account",
+      "because you created a Doctor Pet App account",
     );
   });
 

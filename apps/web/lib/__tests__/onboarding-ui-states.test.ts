@@ -109,9 +109,10 @@ describe("onboarding UI states", () => {
     expect(choosePath).toContain("FUNNEL_EVENTS.onboardingPlanBuilt");
   });
 
-  it("uses the canonical OpenVPM mark, typography, and primary color tokens", () => {
-    expect(journeyOverlay).toContain("import { BrandBadge }");
-    expect(journeyOverlay).toContain("<BrandBadge");
+  it("uses the official Doctor Pet App mark, typography, and primary color tokens", () => {
+    expect(journeyOverlay).toContain('import { PlatformLogo }');
+    expect(journeyOverlay).toContain('<PlatformLogo');
+    expect(journeyOverlay).toContain('variant="mark"');
     expect(journeyOverlay).toContain("font-heading text-[2.15rem]");
     expect(journeyOverlay).not.toContain("[font-family:Georgia,serif]");
     expect(journeyOverlay).not.toContain("<PawPrint");

@@ -4,10 +4,11 @@ import { resolveTenantBrand } from "../brand/tenant-brand";
 
 describe("Doctor Pet branding foundation", () => {
   it("defines the approved commercial identity and official asset paths", () => {
-    expect(platformBrand.productName).toBe("Doctor Pet");
-    expect(platformBrand.companyName).toBe("ResilIA");
-    expect(platformBrand.displayName).toBe("Doctor Pet by ResilIA");
+    expect(platformBrand.productName).toBe("Doctor Pet App");
+    expect(platformBrand.companyName).toBe("EstrategIA Consulting");
+    expect(platformBrand.displayName).toBe("Doctor Pet App");
     expect(platformBrand.tagline).toBe("Llegá más lejos.");
+    expect(platformBrand.sourceProject).toBe("OpenVPM");
     expect(platformBrand.assets.mark).toBe("/brand/doctor-pet-mark.png");
   });
 
@@ -25,7 +26,7 @@ describe("Doctor Pet branding foundation", () => {
       isTenantBranded: true,
     });
     expect(resolveTenantBrand()).toMatchObject({
-      name: "Doctor Pet",
+      name: "Doctor Pet App",
       logoUrl: null,
       isTenantBranded: false,
     });

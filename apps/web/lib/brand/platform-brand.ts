@@ -1,8 +1,8 @@
 /** Commercial platform identity. Tenant identity stays in practice data. */
 export const platformBrand = {
-  productName: "Doctor Pet",
-  companyName: "ResilIA",
-  displayName: "Doctor Pet by ResilIA",
+  productName: "Doctor Pet App",
+  companyName: "EstrategIA Consulting",
+  displayName: "Doctor Pet App",
   tagline: "Llegá más lejos.",
   sourceProject: "OpenVPM",
   license: "AGPL-3.0",

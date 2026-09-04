@@ -2,7 +2,7 @@ import { platformBrand } from "@/lib/brand/platform-brand";
 
 export const metadata = {
   title: `Open source | ${platformBrand.productName}`,
-  description: "Open-source and license information for Doctor Pet by ResilIA.",
+  description: `Open-source and license information for ${platformBrand.displayName}.`,
 };
 
 export default function OpenSourcePage() {
@@ -25,7 +25,7 @@ export default function OpenSourcePage() {
 
       <h2>License and attribution</h2>
       <p>
-        Doctor Pet by ResilIA preserves the applicable {platformBrand.sourceProject}
+        {platformBrand.displayName} preserves the applicable {platformBrand.sourceProject}
         {" "}attribution and the {platformBrand.license} license terms. Read the
         full license at <a href={platformBrand.licenseUrl}>GNU AGPLv3</a>.
       </p>
