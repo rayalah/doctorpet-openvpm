@@ -21,6 +21,7 @@ import {
 } from "@/lib/rate-limit";
 import { clientIpFromRequest } from "@/lib/request-ip";
 import { readJsonRequestBody } from "@/lib/request-json";
+import { PUBLIC_DEMO_HOSTNAME } from "@/lib/demo-url";
 
 const DEMO_ACCESS_BODY_MAX_BYTES = 2 * 1024;
 const DEMO_ACCESS_WINDOW_MS = 60 * 60 * 1000;
@@ -48,7 +49,7 @@ function funnelEventEndpoint(request: Request): URL {
 
   const requestUrl = new URL(request.url);
   const origin =
-    requestUrl.hostname === "demo.openvpm.com"
+    requestUrl.hostname === PUBLIC_DEMO_HOSTNAME
       ? "https://app.doctorpetapp.com"
       : requestUrl.origin;
   return new URL("/api/funnel-event", origin);

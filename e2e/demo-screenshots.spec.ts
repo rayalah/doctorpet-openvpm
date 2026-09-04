@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 
-const BASE = process.env.DEMO_URL ?? "https://demo.openvpm.com";
+const BASE = process.env.DEMO_URL ?? "https://demo.doctorpetapp.com";
 const OUT = path.resolve(__dirname, "../docs/screenshots");
 
 test.use({

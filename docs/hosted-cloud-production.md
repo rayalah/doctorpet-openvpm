@@ -34,8 +34,12 @@ Set the marketing deployment envs to:
 
 ```env
 NEXT_PUBLIC_APP_URL=https://app.doctorpetapp.com
-NEXT_PUBLIC_DEMO_URL=https://demo.openvpm.com
+NEXT_PUBLIC_DEMO_URL=https://demo.doctorpetapp.com
 ```
+
+DNS, TLS, VPS and deployment configuration for `demo.doctorpetapp.com` are
+outside this repository change and must be completed before the public demo is
+activated.
 
 ## Tenant Database Model
 

@@ -6,6 +6,7 @@
  */
 
 import { ACQUISITION_VALUE_MAX_LENGTH } from "@/lib/acquisition";
+import { PUBLIC_DEMO_ORIGIN } from "@/lib/demo-url";
 
 export const FUNNEL_EVENTS = {
   demoLand: "demo_land",
@@ -165,7 +166,7 @@ export function buildClinicFitDemoUrl(
   searchParams: SearchParamsReader,
 ): string {
   const params = clinicFitAttributionParams(searchParams);
-  return `https://demo.openvpm.com/login?${params.toString()}`;
+  return `${PUBLIC_DEMO_ORIGIN}/login?${params.toString()}`;
 }
 
 function clinicFitAttributionParams(

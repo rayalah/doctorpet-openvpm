@@ -125,22 +125,32 @@ describe("/api/funnel-event", () => {
           path: "/login",
           source: undefined,
         },
-        "https://demo.openvpm.com",
+        "https://demo.doctorpetapp.com",
       ),
     );
 
     expect(response.status).toBe(202);
     expect(response.headers.get("access-control-allow-origin")).toBe(
-      "https://demo.openvpm.com",
+      "https://demo.doctorpetapp.com",
     );
     expect(mocks.insertFunnelEvent).toHaveBeenCalledWith(
       {},
       expect.objectContaining({
         eventName: "demo_gate_viewed",
-        origin: "https://demo.openvpm.com",
+        origin: "https://demo.doctorpetapp.com",
         path: "/login",
       }),
     );
+  });
+
+  it("rejects the retired OpenVPM demo origin before writing", async () => {
+    const response = await POST(
+      request(validEvent, "https://demo.openvpm.com"),
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.rateLimit).not.toHaveBeenCalled();
+    expect(mocks.insertFunnelEvent).not.toHaveBeenCalled();
   });
 
   it("accepts only coarse onboarding dimensions", async () => {

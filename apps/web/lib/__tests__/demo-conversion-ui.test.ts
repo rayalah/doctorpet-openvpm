@@ -43,38 +43,32 @@ describe("demo conversion bridge UI", () => {
   });
 
   it("reveals a useful first day before asking for account security", () => {
-    expect(register).toContain("A platform truly built for your clinic.");
+    expect(register).toContain('t("auth.register.profileTitle")');
     expect(register).toContain("<ClinicIntentBuilder");
     expect(register).toContain(
       'type RegistrationStage = "profile" | "workflow" | "preview" | "account"',
     );
-    expect(register).toContain("Step 1 of 4");
-    expect(register).toContain("Step 2 of 4");
-    expect(register).toContain("Step 3 of 4");
-    expect(register).toContain("Step 4 of 4");
-    expect(register).toContain("What would you like to see?");
-    expect(register).toContain("Pick one useful workflow and we’ll shape");
-    expect(register).toContain("around it.");
+    expect(register).toContain('t("auth.register.step")');
+    expect(register).toContain('t("auth.register.stepOf")');
+    expect(register).toContain('t("auth.register.workflowLegend")');
     expect(register).not.toContain(
       "Just your practice name and work email for now.",
     );
-    expect(register).toContain('label="Practice name"');
-    expect(register).toContain('label="Work email"');
-    expect(register).toContain("See my first day");
-    expect(register).toContain("Your first day is ready.");
+    expect(register).toContain('t("auth.register.practiceName")');
+    expect(register).toContain('t("auth.register.workEmail")');
+    expect(register).toContain('t("auth.register.showWorkflows")');
+    expect(register).toContain('t("auth.register.previewTitle")');
     expect(register).toContain(
       "<FirstDayRecommendations primaryGoal={firstGoal} />",
     );
-    expect(register).toContain("Secure my workspace");
-    expect(register).toContain("Secure your workspace.");
-    expect(register.indexOf("Your first day is ready.")).toBeLessThan(
-      register.indexOf("Secure your workspace."),
+    expect(register).toContain('t("auth.register.secureWorkspace")');
+    expect(register).toContain('t("auth.register.secureTitle")');
+    expect(register.indexOf('t("auth.register.previewTitle")')).toBeLessThan(
+      register.indexOf('t("auth.register.secureTitle")'),
     );
     expect(firstDayRecommendations).toContain("FIRST_GOAL_RECOMMENDATIONS");
-    expect(firstDayRecommendations).toContain("Plan a safe first import");
-    expect(firstDayRecommendations).toContain("Explore a ready-made clinic");
-    expect(firstDayRecommendations).toContain("Review the self-hosted path");
-    expect(register).toContain('label="Password"');
+    expect(firstDayRecommendations).toContain("onboarding.recommendations");
+    expect(register).toContain('t("auth.register.password")');
     expect(register).not.toContain(
       "Two quick choices make the rest of setup feel like your clinic—not a generic software tour.",
     );
@@ -97,7 +91,7 @@ describe("demo conversion bridge UI", () => {
   it("mounts the demo bar and path tracker in the dashboard shell", () => {
     expect(layout).toContain("DemoConversionBar");
     expect(layout).toContain("DemoFunnelTracker");
-    expect(bar).toContain("Start my clinic");
+    expect(bar).toContain('t("onboarding.demo.start")');
     expect(bar).toContain("buildCloudSignupUrl");
     expect(tracker).toContain("FUNNEL_EVENTS.demoToolOpened");
   });

@@ -19,15 +19,13 @@ describe("shared UI localization", () => {
     const spanish = renderToStaticMarkup(
       React.createElement(
         I18nProvider,
-        { language: "es" },
-        React.createElement(PageLoading),
+        { language: "es", children: React.createElement(PageLoading) },
       ),
     );
     const english = renderToStaticMarkup(
       React.createElement(
         I18nProvider,
-        { language: "en" },
-        React.createElement(PageLoading),
+        { language: "en", children: React.createElement(PageLoading) },
       ),
     );
 

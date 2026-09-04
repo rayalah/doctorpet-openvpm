@@ -114,13 +114,15 @@ describe("post-gate demo role switcher", () => {
     const currentMarkup = renderToStaticMarkup(
       createElement(
         I18nProvider,
-        { language: "en" },
-        createElement(DemoRoleSwitcherView, {
-          currentRole: "front_desk",
-          pendingRole: null,
-          error: null,
-          onRoleChange: vi.fn(),
-        }),
+        {
+          language: "en",
+          children: createElement(DemoRoleSwitcherView, {
+            currentRole: "front_desk",
+            pendingRole: null,
+            error: null,
+            onRoleChange: vi.fn(),
+          }),
+        },
       ),
     );
     expect(currentMarkup).toContain("Explore as");
@@ -132,13 +134,15 @@ describe("post-gate demo role switcher", () => {
     const pendingMarkup = renderToStaticMarkup(
       createElement(
         I18nProvider,
-        { language: "en" },
-        createElement(DemoRoleSwitcherView, {
-          currentRole: "admin",
-          pendingRole: "technician",
-          error: null,
-          onRoleChange: vi.fn(),
-        }),
+        {
+          language: "en",
+          children: createElement(DemoRoleSwitcherView, {
+            currentRole: "admin",
+            pendingRole: "technician",
+            error: null,
+            onRoleChange: vi.fn(),
+          }),
+        },
       ),
     );
     expect(pendingMarkup).toContain(' disabled=""');
@@ -150,13 +154,15 @@ describe("post-gate demo role switcher", () => {
     const failureMarkup = renderToStaticMarkup(
       createElement(
         I18nProvider,
-        { language: "en" },
-        createElement(DemoRoleSwitcherView, {
-          currentRole: "admin",
-          pendingRole: null,
-          error: "Your current role is unchanged.",
-          onRoleChange: vi.fn(),
-        }),
+        {
+          language: "en",
+          children: createElement(DemoRoleSwitcherView, {
+            currentRole: "admin",
+            pendingRole: null,
+            error: "Your current role is unchanged.",
+            onRoleChange: vi.fn(),
+          }),
+        },
       ),
     );
     expect(failureMarkup).toContain('role="alert"');

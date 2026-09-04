@@ -2,6 +2,7 @@
 
 import { track } from "@vercel/analytics";
 import type { FunnelEventName } from "@/lib/funnel-analytics";
+import { PUBLIC_DEMO_HOSTNAME } from "@/lib/demo-url";
 import { getFunnelVisitorId } from "@/lib/funnel-visitor";
 
 type FunnelProps = Record<string, string | number | boolean | null | undefined>;
@@ -34,7 +35,7 @@ export function trackFunnelEvent(
     if (!anonymousId || !eventId || typeof window === "undefined") return;
 
     const hostedFunnelOrigin =
-      window.location.hostname === "demo.openvpm.com"
+      window.location.hostname === PUBLIC_DEMO_HOSTNAME
         ? "https://app.doctorpetapp.com"
         : window.location.origin;
     const configuredOrigin =

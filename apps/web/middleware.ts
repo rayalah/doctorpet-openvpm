@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
 
   // Unauthenticated visitors go to the demo login, which offers one-click
   // demo access. (Previously the root path bounced to the marketing site,
-  // which dead-ended anyone who came straight to demo.openvpm.com to try it.)
+  // which dead-ended anyone who came straight to the public demo to try it.)
   if (!token) {
     const loginUrl = new URL("/login", request.url);
     const nextPath = `${pathname}${requestUrl.search}`;

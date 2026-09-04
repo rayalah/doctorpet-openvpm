@@ -9,13 +9,14 @@ import {
   jsonRequestContentLengthTooLarge,
   readJsonRequestBody,
 } from "@/lib/request-json";
+import { PUBLIC_DEMO_ORIGIN } from "@/lib/demo-url";
 
 const EVENT_LIMIT = 120;
 const EVENT_WINDOW_MS = 5 * 60 * 1000;
 const ALLOWED_ORIGINS = new Set([
   "https://doctorpetapp.com",
   "https://www.doctorpetapp.com",
-  "https://demo.openvpm.com",
+  PUBLIC_DEMO_ORIGIN,
   "https://app.doctorpetapp.com",
   "http://localhost:3000",
 ]);

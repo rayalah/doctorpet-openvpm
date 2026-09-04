@@ -132,7 +132,7 @@ describe("buildClinicFitSignupUrl", () => {
     );
 
     expect(`${url.origin}${url.pathname}`).toBe(
-      "https://demo.openvpm.com/login",
+      "https://demo.doctorpetapp.com/login",
     );
     expect(Object.fromEntries(url.searchParams)).toEqual({
       source: "homepage_pricing",
