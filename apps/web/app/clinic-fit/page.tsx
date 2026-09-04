@@ -217,7 +217,7 @@ export default async function ClinicFitPage({
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild>
-              <a href="mailto:support@openvpm.com?subject=Doctor%20Pet%20clinic%20fit%20review">
+              <a href="mailto:soporte@doctorpetapp.com?subject=Doctor%20Pet%20clinic%20fit%20review">
                 Plan a clinic pilot
               </a>
             </Button>

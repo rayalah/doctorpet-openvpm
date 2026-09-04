@@ -106,7 +106,7 @@ describe("POST /api/demo-access", () => {
     expect(response.headers.get("set-cookie")).toContain("Secure");
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(mocks.fetchFunnel).toHaveBeenCalledWith(
-      new URL("https://app.openvpm.com/api/funnel-event"),
+      new URL("https://app.doctorpetapp.com/api/funnel-event"),
       expect.objectContaining({
         method: "POST",
         headers: {

@@ -26,8 +26,8 @@ vi.mock("@/lib/rate-limit", async (importOriginal) => {
 
 const { OPTIONS, POST } = await import("./route");
 
-function request(body: unknown, origin = "https://openvpm.com") {
-  return new Request("https://app.openvpm.com/api/funnel-event", {
+function request(body: unknown, origin = "https://doctorpetapp.com") {
+  return new Request("https://app.doctorpetapp.com/api/funnel-event", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -67,7 +67,7 @@ describe("/api/funnel-event", () => {
 
     expect(response.status).toBe(202);
     expect(response.headers.get("access-control-allow-origin")).toBe(
-      "https://openvpm.com",
+      "https://doctorpetapp.com",
     );
     expect(mocks.rateLimit).toHaveBeenCalledWith({
       key: "funnel-event:ip:203.0.113.10",
@@ -82,7 +82,7 @@ describe("/api/funnel-event", () => {
         anonymousId: validEvent.anonymousId,
         source: "homepage",
         path: "/patients/:id",
-        origin: "https://openvpm.com",
+        origin: "https://doctorpetapp.com",
         metadata: {
           placement: "hero",
         },
@@ -91,7 +91,7 @@ describe("/api/funnel-event", () => {
   });
 
   it("rejects untrusted origins before writing", async () => {
-    const response = await POST(request(validEvent, "https://evil.example"));
+    const response = await POST(request(validEvent, "https://app.openvpm.com"));
     expect(response.status).toBe(403);
     expect(mocks.rateLimit).not.toHaveBeenCalled();
     expect(mocks.insertFunnelEvent).not.toHaveBeenCalled();
@@ -105,14 +105,14 @@ describe("/api/funnel-event", () => {
 
   it("answers trusted preflight requests", async () => {
     const response = await OPTIONS(
-      new Request("https://app.openvpm.com/api/funnel-event", {
+      new Request("https://app.doctorpetapp.com/api/funnel-event", {
         method: "OPTIONS",
-        headers: { origin: "https://openvpm.com" },
+        headers: { origin: "https://doctorpetapp.com" },
       }),
     );
     expect(response.status).toBe(204);
     expect(response.headers.get("access-control-allow-origin")).toBe(
-      "https://openvpm.com",
+      "https://doctorpetapp.com",
     );
   });
 

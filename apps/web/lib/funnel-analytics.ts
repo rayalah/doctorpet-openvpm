@@ -104,7 +104,7 @@ function cleanFunnelId(value: string | null | undefined): string | undefined {
 }
 
 export type CloudSignupUrlOptions = {
-  /** Absolute app origin (e.g. https://app.openvpm.com). Empty → relative /register. */
+  /** Absolute app origin (e.g. https://app.doctorpetapp.com). Empty → relative /register. */
   appOrigin?: string | null;
   tool?: FunnelToolId | string | null;
   source?: string;

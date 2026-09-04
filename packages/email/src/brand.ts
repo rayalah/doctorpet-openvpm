@@ -31,11 +31,11 @@ function nonBlankEnv(name: string): string | undefined {
 export function doctorPetBrand(): Brand {
   return {
     name: "Doctor Pet App",
-    companyName: nonBlankEnv("EMAIL_COMPANY_NAME") ?? "ResilIA",
-    supportEmail: nonBlankEnv("EMAIL_SUPPORT_ADDRESS") ?? "support@openvpm.com",
+    companyName: nonBlankEnv("EMAIL_COMPANY_NAME") ?? "Estrategia Consulting",
+    supportEmail: nonBlankEnv("EMAIL_SUPPORT_ADDRESS") ?? "soporte@doctorpetapp.com",
     companyAddress: nonBlankEnv("EMAIL_COMPANY_ADDRESS"),
-    appUrl: nonBlankEnv("NEXT_PUBLIC_APP_URL") ?? "https://app.openvpm.com",
-    marketingUrl: "https://openvpm.com",
+    appUrl: nonBlankEnv("NEXT_PUBLIC_APP_URL") ?? "https://app.doctorpetapp.com",
+    marketingUrl: "https://doctorpetapp.com",
     logoUrl: nonBlankEnv("EMAIL_LOGO_URL"),
   };
 }

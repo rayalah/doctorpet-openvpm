@@ -13,10 +13,10 @@ import {
 const EVENT_LIMIT = 120;
 const EVENT_WINDOW_MS = 5 * 60 * 1000;
 const ALLOWED_ORIGINS = new Set([
-  "https://openvpm.com",
-  "https://www.openvpm.com",
+  "https://doctorpetapp.com",
+  "https://www.doctorpetapp.com",
   "https://demo.openvpm.com",
-  "https://app.openvpm.com",
+  "https://app.doctorpetapp.com",
   "http://localhost:3000",
 ]);
 const ALLOWED_PROP_KEYS = new Set([

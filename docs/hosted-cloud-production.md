@@ -13,7 +13,7 @@ This boundary is intentional. Do not add hosted-only requirements to the self-ho
 
 ## Public Website Flow
 
-`openvpm.com` should route clinics clearly:
+`doctorpetapp.com` should route clinics clearly:
 
 - `Start Cloud Trial` -> `${NEXT_PUBLIC_APP_URL}/register?intent=cloud`
 - `Try the Live Demo` -> `${NEXT_PUBLIC_DEMO_URL}/login`
@@ -22,7 +22,7 @@ This boundary is intentional. Do not add hosted-only requirements to the self-ho
 Cloud signup creates a practice, a primary location, the owner admin user, default configuration, and hosted first-run demo data. By default, signup grants a 14-day trial immediately with no card and the clinic lands in the product (adding a card converts to paid); email verification is a soft prompt, not a login gate. Set `HOSTED_NO_CARD_TRIAL=false` to reinstate the legacy card-collected checkout wall at signup.
 
 For a direct customer handoff, use
-`https://app.openvpm.com/register?next=%2Fsettings%3Ftab%3Dbilling`. After
+`https://app.doctorpetapp.com/register?next=%2Fsettings%3Ftab%3Dbilling`. After
 registration and automatic sign-in, the admin lands in **Settings → Plan &
 Billing**, chooses monthly or annual billing, and continues to Stripe. The top
 trial badge and dashboard activation checklist route to this same billing
@@ -33,7 +33,7 @@ First run greets the new admin (and every invited staff member, once) with the v
 Set the marketing deployment envs to:
 
 ```env
-NEXT_PUBLIC_APP_URL=https://app.openvpm.com
+NEXT_PUBLIC_APP_URL=https://app.doctorpetapp.com
 NEXT_PUBLIC_DEMO_URL=https://demo.openvpm.com
 ```
 
@@ -73,8 +73,8 @@ HOSTED_BILLING_ENABLED=true
 # cohort; the timestamp is the prospective closeout eligibility boundary.
 FIRST_CLINIC_WIN_ENABLED=false
 FIRST_CLINIC_WIN_ROLLOUT_AT=
-NEXTAUTH_URL=https://app.openvpm.com
-NEXT_PUBLIC_APP_URL=https://app.openvpm.com
+NEXTAUTH_URL=https://app.doctorpetapp.com
+NEXT_PUBLIC_APP_URL=https://app.doctorpetapp.com
 NEXTAUTH_SECRET=...
 DATABASE_URL=...
 
@@ -117,8 +117,8 @@ RESEND_WEBHOOK_SECRET=...
 EMAIL_PREFERENCE_IDENTITY_SECRET=... # stable `openssl rand -base64 32`; never rotate without migrating preference data
 EMAIL_PREFERENCE_SIGNING_SECRET=... # rotatable `openssl rand -base64 32`; do not reuse another secret
 EMAIL_PREFERENCE_SIGNING_SECRET_PREVIOUS= # comma-separated former signing keys retained for delivered links
-EMAIL_PREFERENCE_BASE_URL=https://app.openvpm.com
-EMAIL_SUPPORT_ADDRESS=support@openvpm.com
+EMAIL_PREFERENCE_BASE_URL=https://app.doctorpetapp.com
+EMAIL_SUPPORT_ADDRESS=soporte@doctorpetapp.com
 EMAIL_COMPANY_ADDRESS=...
 MESSAGING_PROVIDER=telnyx
 TELNYX_API_KEY=...
@@ -406,7 +406,7 @@ continue working. Keep both kinds of key separate from each other and from
 `NEXTAUTH_SECRET`.
 
 `EMAIL_PREFERENCE_BASE_URL` must be the canonical HTTPS origin
-`https://app.openvpm.com` in every hosted deployment. This ensures demo and
+`https://app.doctorpetapp.com` in every hosted deployment. This ensures demo and
 campaign email writes recipient choices to the canonical hosted database rather
 than a deployment-local database. Optional platform email fails closed when the
 required preference configuration is missing or invalid; security, receipt,
@@ -425,7 +425,7 @@ patient data and never asks a clinic to email an export or make it public.
 Webhook endpoint:
 
 ```text
-https://app.openvpm.com/api/webhooks/resend
+https://app.doctorpetapp.com/api/webhooks/resend
 ```
 
 Subscribe to:
@@ -472,7 +472,7 @@ Stripe Tax gates hosted readiness. Complete Stripe Tax registrations and origin-
 Client invoice payment webhook endpoint:
 
 ```text
-https://app.openvpm.com/api/webhooks/stripe
+https://app.doctorpetapp.com/api/webhooks/stripe
 ```
 
 Subscribe to:
@@ -494,7 +494,7 @@ complete.
 Enable Connect in the platform Stripe account, then add the Connect webhook:
 
 ```text
-https://app.openvpm.com/api/webhooks/stripe-connect
+https://app.doctorpetapp.com/api/webhooks/stripe-connect
 ```
 
 Subscribe to:
@@ -511,7 +511,7 @@ payments.
 Hosted subscription webhook endpoint:
 
 ```text
-https://app.openvpm.com/api/webhooks/stripe-subscription
+https://app.doctorpetapp.com/api/webhooks/stripe-subscription
 ```
 
 Subscribe to:
@@ -535,7 +535,7 @@ the other billing surface.
 Use:
 
 ```text
-GET https://app.openvpm.com/api/health
+GET https://app.doctorpetapp.com/api/health
 ```
 
 It checks database connectivity and required hosted configuration for auth, Stripe billing, storage, email, AI, and ops hooks. It never returns secret values. SMS provider setup is reported as advisory until the active provider is provisioned.
