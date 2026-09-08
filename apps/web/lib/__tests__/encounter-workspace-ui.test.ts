@@ -79,6 +79,11 @@ describe("clinic encounter workspace", () => {
     expect(recordsSource).toContain('t("clinicalRecords.recordingForVisit")');
     expect(recordsSource).toContain("Leave visit context");
     expect(recordsSource).toContain("visitContextMatchesPatient");
+    expect(recordsSource).toContain("function returnToLinkedVisit");
+    expect(recordsSource).toContain("returnToLinkedVisit();");
+    expect(recordsSource).toContain(
+      "`/encounters/${encodeURIComponent(linkedAppointmentId)}#${anchor}`",
+    );
     expect(recordsSource).toContain(
       "appointmentId: linkedAppointmentId || undefined",
     );
@@ -347,6 +352,11 @@ describe("clinic encounter workspace", () => {
     expect(guardSource).toContain("HISTORY_SENTINEL_KEY");
     expect(guardSource).toContain('pendingPopAction = "restore"');
     expect(guardSource).toContain('pendingPopAction = "leave"');
+    expect(guardSource).toContain("function clearSentinelMarker()");
+    expect(guardSource).toMatch(
+      /function detachListenersIfIdle\(\)[\s\S]*clearSentinelMarker\(\)[\s\S]*removeListeners\(\)/,
+    );
+    expect(guardSource).not.toContain('pendingPopAction = "cleanup"');
     expect(guardSource).toContain("isSameDocumentHashNavigation(");
     expect(guardSource).toContain('anchor.hasAttribute("download")');
     expect(guardSource).not.toContain("window.history.pushState =");

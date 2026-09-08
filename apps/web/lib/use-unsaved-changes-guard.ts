@@ -8,26 +8,21 @@ let listenersAttached = false;
 let originalPushState: History["pushState"] | null = null;
 let sentinelActive = false;
 let bypassBeforeUnload = false;
-let pendingPopAction: "leave" | "restore" | "cleanup" | null = null;
+let pendingPopAction: "leave" | "restore" | null = null;
 
 export type UnsavedPopEffect =
   | "allow"
-  | "cleanup"
-  | "rearm-sentinel"
   | "restore-sentinel"
   | "leave-page"
   | "go-back"
   | "go-forward";
 
 export function resolveUnsavedPopEffect(input: {
-  pendingAction: "leave" | "restore" | "cleanup" | null;
+  pendingAction: "leave" | "restore" | null;
   guardActive: boolean;
   sentinelActive: boolean;
   confirmed: boolean;
 }): UnsavedPopEffect {
-  if (input.pendingAction === "cleanup") {
-    return input.guardActive ? "rearm-sentinel" : "cleanup";
-  }
   if (input.pendingAction === "restore") return "restore-sentinel";
   if (input.pendingAction === "leave") return "leave-page";
   if (!input.guardActive || !input.sentinelActive) return "allow";
@@ -159,20 +154,6 @@ function handlePopState(event: PopStateEvent) {
     sentinelActive,
     confirmed: needsDecision ? window.confirm(activeMessage()) : false,
   });
-  if (effect === "cleanup") {
-    pendingPopAction = null;
-    sentinelActive = false;
-    event.stopImmediatePropagation();
-    removeListeners();
-    return;
-  }
-  if (effect === "rearm-sentinel") {
-    pendingPopAction = null;
-    sentinelActive = false;
-    event.stopImmediatePropagation();
-    pushSentinel();
-    return;
-  }
   if (effect === "restore-sentinel") {
     pendingPopAction = null;
     sentinelActive = true;
@@ -226,6 +207,17 @@ function pushSentinel() {
   sentinelActive = true;
 }
 
+function clearSentinelMarker() {
+  const currentState =
+    window.history.state && typeof window.history.state === "object"
+      ? window.history.state
+      : {};
+  const { [HISTORY_SENTINEL_KEY]: _sentinel, ...cleanState } = currentState;
+  window.history.replaceState(cleanState, "", window.location.href);
+  sentinelActive = false;
+  pendingPopAction = null;
+}
+
 function attachListeners() {
   if (listenersAttached || typeof window === "undefined") return;
   originalPushState = window.history.pushState;
@@ -239,9 +231,10 @@ function attachListeners() {
 function detachListenersIfIdle() {
   if (!listenersAttached || activeGuards.size > 0) return;
   if (sentinelActive) {
-    pendingPopAction = "cleanup";
-    window.history.back();
-    return;
+    // Never navigate while a successful mutation clears a dirty form. The
+    // prior cleanup used history.back(), which could make Next leave the
+    // encounter while React was committing the mutation result.
+    clearSentinelMarker();
   }
   removeListeners();
 }

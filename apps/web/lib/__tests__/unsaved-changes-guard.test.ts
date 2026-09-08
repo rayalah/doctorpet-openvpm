@@ -25,7 +25,7 @@ describe("unsaved changes history guard", () => {
     ).toBe("go-back");
   });
 
-  it("restores, leaves, and cleans up through explicit follow-up states", () => {
+  it("restores and leaves through explicit follow-up states", () => {
     expect(
       resolveUnsavedPopEffect({
         pendingAction: "restore",
@@ -42,22 +42,6 @@ describe("unsaved changes history guard", () => {
         confirmed: false,
       }),
     ).toBe("leave-page");
-    expect(
-      resolveUnsavedPopEffect({
-        pendingAction: "cleanup",
-        guardActive: false,
-        sentinelActive: true,
-        confirmed: false,
-      }),
-    ).toBe("cleanup");
-    expect(
-      resolveUnsavedPopEffect({
-        pendingAction: "cleanup",
-        guardActive: true,
-        sentinelActive: true,
-        confirmed: false,
-      }),
-    ).toBe("rearm-sentinel");
   });
 
   it("allows ordinary history when no dirty guard is active", () => {

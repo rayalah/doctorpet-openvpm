@@ -1068,12 +1068,20 @@ function RecordsPageContent() {
     ]);
   }
 
+  function returnToLinkedVisit(anchor = "clinical-work") {
+    if (!linkedAppointmentId) return;
+    router.replace(
+      `/encounters/${encodeURIComponent(linkedAppointmentId)}#${anchor}`,
+    );
+  }
+
   const createVaccination = trpc.records.createVaccination.useMutation({
     onSuccess: async () => {
       toast.success(t("clinicalRecords.vaccinationRecorded"));
       await Promise.all([refetchVaccinations(), refreshLinkedVisit()]);
       setShowVaccinationForm(false);
       setVaccinationForm(initialVaccinationForm());
+      returnToLinkedVisit();
     },
     onError: () => {
       toast.error(t("clinicalRecords.actionError"));
@@ -1121,6 +1129,8 @@ function RecordsPageContent() {
         router.replace(
           `/records?patientId=${replacementPatient.id}&tab=labResults#lab-result-${result.id}`
         );
+      } else {
+        returnToLinkedVisit();
       }
       setReplacementPatient(null);
       setReplacementPatientSearch("");
@@ -1161,6 +1171,7 @@ function RecordsPageContent() {
       await Promise.all([refetchProcedures(), refreshLinkedVisit()]);
       setShowProcedureForm(false);
       setProcedureForm(initialProcedureForm());
+      returnToLinkedVisit();
     },
     onError: () => {
       toast.error(t("clinicalRecords.actionError"));
@@ -1173,6 +1184,7 @@ function RecordsPageContent() {
       setShowPrescriptionForm(false);
       setPrescriptionForm(initialPrescriptionForm(recordsTimeZone));
       prescriptionOperationId.current = null;
+      returnToLinkedVisit();
     },
     onError: () => {
       toast.error(t("clinicalRecords.actionError"));
