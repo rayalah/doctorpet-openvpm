@@ -341,6 +341,23 @@ describe("visit work reconciliation", () => {
     );
   });
 
+  it("locks only the mutable dispense queue while reconciling prescription work", () => {
+    const router = readFileSync(
+      new URL("../routers/encounters.ts", import.meta.url),
+      "utf8",
+    );
+    const lockStart = router.indexOf("async function lockInitialDispenseCharge");
+    const lockEnd = router.indexOf("export const encountersRouter", lockStart);
+    const dispenseLock = router.slice(lockStart, lockEnd);
+
+    expect(lockStart).toBeGreaterThanOrEqual(0);
+    expect(lockEnd).toBeGreaterThan(lockStart);
+    expect(dispenseLock).toContain(
+      '.for("update", { of: dispenseChargeQueue })',
+    );
+    expect(dispenseLock).not.toContain('.for("update");');
+  });
+
   it("requires an administrator to waive dispensed medication from a visit", async () => {
     const prescriptionWork = {
       ...unresolvedWork,

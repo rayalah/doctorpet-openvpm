@@ -596,7 +596,9 @@ async function lockInitialDispenseCharge(
       )
     )
     .limit(1)
-    .for("update");
+    // prescription_events is immutable for the application role. Lock only
+    // the mutable queue row that guards its one-time reconciliation.
+    .for("update", { of: dispenseChargeQueue });
   return charge ?? null;
 }
 
