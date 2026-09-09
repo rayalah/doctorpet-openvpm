@@ -87,6 +87,20 @@ describe("authentication and onboarding i18n", () => {
     expect(source("lib/messaging/consent.ts")).not.toContain("onboarding.");
   });
 
+  it("keeps the initial React-owned document tree deterministic and protected from external translation", () => {
+    const client = source("lib/i18n/client.tsx");
+    const layout = source("app/layout.tsx");
+
+    expect(client).toContain("DOCTOR_PET_INITIAL_LANGUAGE");
+    expect(client).toContain("document.documentElement.lang = resolvedLanguage");
+    expect(client).not.toContain("useState<SupportedLanguage>(() =>\n    resolvePreAuthLanguage()");
+    expect(layout).toContain('lang="es"');
+    expect(layout).toContain('translate="no"');
+    expect(layout).toContain('className="light"');
+    expect(layout).toContain('colorScheme: "light"');
+    expect(layout).not.toContain("suppressHydrationWarning");
+  });
+
   it("retains the catalog fallback for unknown Spanish entries", () => {
     expect(translate("es", "auth.login.submit")).toBe("Iniciar sesión");
     expect(translate("es", "missing.phase2.key")).toBe("missing.phase2.key");

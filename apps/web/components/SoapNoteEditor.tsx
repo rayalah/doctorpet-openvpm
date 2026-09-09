@@ -26,6 +26,9 @@ export function SoapNoteEditor({
   const t = useTranslations();
   const [isEmpty, setIsEmpty] = useState(!value);
   const editor = useEditor({
+    // Tiptap must not render its editable DOM during SSR, otherwise it can
+    // diverge from React's hydrated tree before the client takes ownership.
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },

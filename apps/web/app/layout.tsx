@@ -32,7 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="es"
+      translate="no"
+      className="light"
+      style={{ colorScheme: "light" }}
+    >
       <body
         className={`${inter.variable} ${dmSans.variable} font-sans antialiased`}
       >

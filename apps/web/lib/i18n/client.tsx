@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import {
+  DOCTOR_PET_INITIAL_LANGUAGE,
   PLATFORM_FALLBACK_LANGUAGE,
   resolveLanguage,
   resolvePreAuthLanguage,
@@ -26,8 +27,14 @@ export function I18nProvider({
   children: React.ReactNode;
   language?: unknown;
 }) {
+  const resolvedLanguage = resolveLanguage(language);
+
+  useEffect(() => {
+    document.documentElement.lang = resolvedLanguage;
+  }, [resolvedLanguage]);
+
   return (
-    <LanguageContext.Provider value={resolveLanguage(language)}>
+    <LanguageContext.Provider value={resolvedLanguage}>
       {children}
     </LanguageContext.Provider>
   );
@@ -39,8 +46,10 @@ export function PreAuthI18nProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [language, setLanguage] = useState<SupportedLanguage>(() =>
-    resolvePreAuthLanguage(),
+  // The server cannot read navigator.language. Start from the same Doctor Pet
+  // default on both sides, then honor the browser after hydration.
+  const [language, setLanguage] = useState<SupportedLanguage>(
+    DOCTOR_PET_INITIAL_LANGUAGE,
   );
 
   useEffect(() => {

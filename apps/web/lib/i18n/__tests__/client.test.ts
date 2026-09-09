@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { I18nProvider, useTranslations } from "../client";
+import { I18nProvider, PreAuthI18nProvider, useTranslations } from "../client";
 
 function TranslationProbe() {
   const t = useTranslations();
@@ -29,5 +29,15 @@ describe("i18n client entry point", () => {
     );
 
     expect(output).toContain("Sign in");
+  });
+
+  it("renders the pre-auth shell with a deterministic Spanish first pass", () => {
+    const output = renderToStaticMarkup(
+      createElement(PreAuthI18nProvider, {
+        children: createElement(TranslationProbe),
+      }),
+    );
+
+    expect(output).toContain("Iniciar sesión");
   });
 });

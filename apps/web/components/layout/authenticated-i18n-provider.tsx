@@ -1,7 +1,10 @@
 "use client";
 
 import { I18nProvider } from "@/lib/i18n/client";
-import { resolveAuthenticatedPracticeLanguage } from "@/lib/i18n/language";
+import {
+  DOCTOR_PET_INITIAL_LANGUAGE,
+  resolveAuthenticatedPracticeLanguage,
+} from "@/lib/i18n/language";
 import { trpc } from "@/lib/trpc";
 
 /**
@@ -16,10 +19,11 @@ export function AuthenticatedI18nProvider({
   const practice = trpc.settings.getPractice.useQuery(undefined, {
     retry: false,
   });
+  const language = practice.data
+    ? resolveAuthenticatedPracticeLanguage(practice.data)
+    : DOCTOR_PET_INITIAL_LANGUAGE;
 
   return (
-    <I18nProvider language={resolveAuthenticatedPracticeLanguage(practice.data)}>
-      {children}
-    </I18nProvider>
+    <I18nProvider language={language}>{children}</I18nProvider>
   );
 }

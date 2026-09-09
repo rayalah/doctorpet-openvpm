@@ -8,6 +8,13 @@ export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 export const PLATFORM_FALLBACK_LANGUAGE: SupportedLanguage = "en";
 
+/**
+ * The application renders Spanish before a tenant or browser preference is
+ * available. Keeping this value deterministic prevents server/client locale
+ * drift during hydration while matching Doctor Pet's primary market.
+ */
+export const DOCTOR_PET_INITIAL_LANGUAGE: SupportedLanguage = "es";
+
 export type LanguagePreference = {
   language?: string | null;
 };
