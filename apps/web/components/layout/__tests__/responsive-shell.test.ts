@@ -2,6 +2,18 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("responsive dashboard shell", () => {
+  it("keeps the dashboard viewport constrained to one content scroll container", () => {
+    const source = readFileSync("app/(dashboard)/layout.tsx", "utf8");
+
+    expect(source).toContain('className="fixed inset-0 flex overflow-hidden"');
+    expect(source).toContain(
+      'className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden"',
+    );
+    expect(source).toContain(
+      'className="min-h-0 min-w-0 w-full max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-surface p-4 sm:p-6"',
+    );
+  });
+
   it("uses a desktop-only sidebar plus a mobile navigation dialog", () => {
     const source = readFileSync("app/(dashboard)/layout.tsx", "utf8");
 

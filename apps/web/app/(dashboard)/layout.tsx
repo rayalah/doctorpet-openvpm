@@ -54,7 +54,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     <TourProvider>
         <OnboardingJourneyProvider>
           <WelcomeProvider>
-        <div className="flex h-screen overflow-hidden">
+        <div className="fixed inset-0 flex overflow-hidden">
           <Sidebar className="hidden lg:flex" />
           {mobileNavOpen && (
             <div
@@ -87,7 +87,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           )}
-          <div className="flex min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden">
+          <div className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden">
             <TopBar
               onMenuOpen={() => setMobileNavOpen(true)}
               onSearchOpen={() => setSearchOpen(true)}
@@ -98,7 +98,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             <RecoveryReviewBanner />
             <main
               id="main-content"
-              className="min-w-0 w-full max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-surface p-4 sm:p-6"
+              className="min-h-0 min-w-0 w-full max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-surface p-4 sm:p-6"
             >
               <ErrorBoundary>{children}</ErrorBoundary>
             </main>
