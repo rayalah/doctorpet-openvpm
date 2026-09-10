@@ -6,7 +6,12 @@ import { createRouter, publicProcedure, protectedProcedure } from "../trpc";
 import { users, practices, locations } from "@openpims/db";
 import type { Database } from "@openpims/db/client";
 import { rateLimit } from "@/lib/rate-limit";
-import { seedPractice, seedDemoData } from "@/lib/onboarding/defaults";
+import {
+  practiceDefaults,
+  seedPractice,
+  seedDemoData,
+} from "@/lib/onboarding/defaults";
+import { resolveLanguage } from "@/lib/i18n/language";
 import {
   billingEnforced,
   cloudCheckoutPriceIds,
@@ -374,12 +379,15 @@ export const authRouter = createRouter({
               message: "Account setup failed.",
             });
           }
+          const practiceLanguage = resolveLanguage(createdPractice.language);
 
           const [createdLocation] = await tx
             .insert(locations)
             .values({
               practiceId: createdPractice.id,
-              name: input.locationName?.trim() || "Main Location",
+              name:
+                input.locationName?.trim() ||
+                practiceDefaults(practiceLanguage).locationName,
               isPrimary: true,
             })
             .returning();
@@ -417,11 +425,15 @@ export const authRouter = createRouter({
             await seedPractice(tx as unknown as Database, {
               practiceId: createdPractice.id,
               locationId: createdLocation.id,
+              language: practiceLanguage,
             });
             if (hostedBilling) {
               practiceSettings.demoData = await seedDemoData(
                 tx as unknown as Database,
-                { practiceId: createdPractice.id },
+                {
+                  practiceId: createdPractice.id,
+                  language: practiceLanguage,
+                },
               );
             }
             if (Object.keys(practiceSettings).length > 0) {

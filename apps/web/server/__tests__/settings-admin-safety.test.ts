@@ -1219,7 +1219,7 @@ describe("settings demo data cleanup scoping", () => {
     expect(DEMO_DATA_LIFECYCLE_SOURCE).toContain("pg_advisory_xact_lock");
     expect(DEMO_DATA_LIFECYCLE_SOURCE).toContain('.for("update")');
     expect(DEMO_DATA_LIFECYCLE_SOURCE).toContain(
-      "const latest = await seedDemoData(tx, { practiceId })",
+      "const latest = await seedDemoData(tx, {",
     );
     expect(SETTINGS_SOURCE).toContain(
       "clearSeededDemoData(ctx.db, ctx.practiceId)",

@@ -37,6 +37,9 @@ const mocks = vi.hoisted(() => ({
   })),
   seedPractice: vi.fn(async () => undefined),
   seedDemoData: vi.fn(async () => ({})),
+  practiceDefaults: vi.fn((language: "en" | "es") => ({
+    locationName: language === "es" ? "Ubicación principal" : "Main Location",
+  })),
   billingEnforced: vi.fn(() => false),
   noCardTrialEnabled: vi.fn(() => false),
   recordAuditLog: vi.fn(async () => undefined),
@@ -65,6 +68,7 @@ vi.mock("@/lib/email-lifecycle", () => ({
 }));
 
 vi.mock("@/lib/onboarding/defaults", () => ({
+  practiceDefaults: mocks.practiceDefaults,
   seedPractice: mocks.seedPractice,
   seedDemoData: mocks.seedDemoData,
 }));
@@ -191,7 +195,7 @@ function createRegistrationDb(opts?: { insertRows?: unknown[] }) {
   const insertRows = opts?.insertRows
     ? [...opts.insertRows]
     : [
-        { id: "practice-1" },
+        { id: "practice-1", language: "en" },
         { id: "location-1" },
         { id: "user-1", email: "owner@example.com", name: "Dr Owner" },
       ];
@@ -501,7 +505,13 @@ describe("auth router input validation", () => {
   });
 
   it("accepts Costa Rica only with an explicit tax rate and persists its profile", async () => {
-    const { db, insertValues } = createRegistrationDb();
+    const { db, insertValues } = createRegistrationDb({
+      insertRows: [
+        { id: "practice-1", language: "es" },
+        { id: "location-1" },
+        { id: "user-1", email: "costa-rica@example.com", name: "Dr Costa Rica" },
+      ],
+    });
 
     await expect(
       callerWithDb(db).register({
@@ -525,6 +535,39 @@ describe("auth router input validation", () => {
         regulatoryProfile: "CR_NEUTRAL",
         fiscalProvider: "none",
       }),
+    );
+    expect(insertValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ name: "Ubicación principal" }),
+    );
+    expect(mocks.seedPractice).toHaveBeenCalledWith(db, {
+      practiceId: "practice-1",
+      locationId: "location-1",
+      language: "es",
+    });
+  });
+
+  it("preserves a custom initial location name", async () => {
+    const { db, insertValues } = createRegistrationDb({
+      insertRows: [
+        { id: "practice-1", language: "es" },
+        { id: "location-1" },
+        { id: "user-1", email: "owner@example.com", name: "Owner" },
+      ],
+    });
+
+    await callerWithDb(db).register({
+      email: "owner@example.com",
+      password: "password123",
+      practiceName: "Clínica Sintética",
+      country: "CR",
+      taxRatePercent: "0.00",
+      locationName: "Sede Cartago",
+    });
+
+    expect(insertValues).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ name: "Sede Cartago" }),
     );
   });
 
@@ -632,9 +675,11 @@ describe("auth router input validation", () => {
     expect(mocks.seedPractice).toHaveBeenCalledWith(db, {
       practiceId: "practice-1",
       locationId: "location-1",
+      language: "en",
     });
     expect(mocks.seedDemoData).toHaveBeenCalledWith(db, {
       practiceId: "practice-1",
+      language: "en",
     });
     expect(mocks.createAuthToken).not.toHaveBeenCalled();
     expect(mocks.sendTrackedVerificationEmail).not.toHaveBeenCalled();
@@ -837,9 +882,11 @@ describe("auth router input validation", () => {
     expect(mocks.seedPractice).toHaveBeenCalledWith(db, {
       practiceId: "practice-1",
       locationId: "location-1",
+      language: "en",
     });
     expect(mocks.seedDemoData).toHaveBeenCalledWith(db, {
       practiceId: "practice-1",
+      language: "en",
     });
     expect(updateSet).toHaveBeenCalledWith({
       settings: {

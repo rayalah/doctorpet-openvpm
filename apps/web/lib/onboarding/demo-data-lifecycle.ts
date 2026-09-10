@@ -13,6 +13,7 @@ import {
   vaccinationRecords,
 } from "@openpims/db";
 import type { Database } from "@openpims/db/client";
+import { resolveLanguage } from "@/lib/i18n/language";
 import { seedDemoData, type DemoDataIds } from "./defaults";
 
 export interface DemoDataProvenance extends DemoDataIds {
@@ -95,7 +96,7 @@ export async function clearSeededDemoData(
     await lockDemoLifecycle(tx, practiceId);
 
     const [practice] = await tx
-      .select({ settings: practices.settings })
+      .select({ settings: practices.settings, language: practices.language })
       .from(practices)
       .where(activePracticeWhere(practiceId))
       .for("update");
@@ -278,18 +279,24 @@ export async function reseedSampleClinic(
     await lockDemoLifecycle(tx, practiceId);
 
     const [practice] = await tx
-      .select({ settings: practices.settings })
+      .select({ settings: practices.settings, language: practices.language })
       .from(practices)
       .where(activePracticeWhere(practiceId))
       .for("update");
     if (!practice) return { found: false, alreadyPresent: false };
 
-    const settings = (practice.settings ?? {}) as PracticeSettingsWithDemo;
+    const practiceWithLanguage = practice as typeof practice & {
+      language?: unknown;
+    };
+    const settings = (practiceWithLanguage.settings ?? {}) as PracticeSettingsWithDemo;
     if (hasLiveDemoData(settings.demoData)) {
       return { found: true, alreadyPresent: true };
     }
 
-    const latest = await seedDemoData(tx, { practiceId });
+    const latest = await seedDemoData(tx, {
+      practiceId,
+      language: resolveLanguage(practiceWithLanguage.language),
+    });
     const preserved = mergeDemoDataProvenance(settings.demoData, latest);
     const [updated] = await tx
       .update(practices)

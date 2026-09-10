@@ -18,6 +18,7 @@ import {
 } from "@openpims/db";
 import { centsToMoney, moneyToCents } from "@/lib/billing/invoice-balance";
 import { calculateInvoiceTaxTotals } from "@/lib/billing/invoice-tax";
+import type { SupportedLanguage } from "@/lib/i18n/language";
 import { finalizedSoapInsertValues } from "@/lib/records/soap-lifecycle";
 
 /**
@@ -27,6 +28,7 @@ import { finalizedSoapInsertValues } from "@/lib/records/soap-lifecycle";
  */
 
 export interface DefaultAppointmentType {
+  key: "wellness" | "sick" | "vaccination" | "surgery" | "dental" | "recheck";
   name: string;
   durationMinutes: number;
   color: string;
@@ -34,48 +36,88 @@ export interface DefaultAppointmentType {
   defaultRoomType: "exam" | "surgery" | "treatment" | "boarding";
 }
 
-export const DEFAULT_APPOINTMENT_TYPES: DefaultAppointmentType[] = [
-  { name: "Wellness Exam", durationMinutes: 30, color: "#0d9488", requiresDoctor: 1, defaultRoomType: "exam" },
-  { name: "Sick Visit", durationMinutes: 30, color: "#dc2626", requiresDoctor: 1, defaultRoomType: "exam" },
-  { name: "Vaccination", durationMinutes: 15, color: "#2563eb", requiresDoctor: 0, defaultRoomType: "exam" },
-  { name: "Surgery", durationMinutes: 120, color: "#7c3aed", requiresDoctor: 1, defaultRoomType: "surgery" },
-  { name: "Dental Cleaning", durationMinutes: 90, color: "#0891b2", requiresDoctor: 1, defaultRoomType: "surgery" },
-  { name: "Recheck / Follow-up", durationMinutes: 15, color: "#65a30d", requiresDoctor: 1, defaultRoomType: "exam" },
-];
-
 export interface DefaultRoom {
+  key: "exam-1" | "exam-2" | "surgery" | "treatment";
   name: string;
   type: "exam" | "surgery" | "treatment" | "boarding";
 }
 
-export const DEFAULT_ROOMS: DefaultRoom[] = [
-  { name: "Exam Room 1", type: "exam" },
-  { name: "Exam Room 2", type: "exam" },
-  { name: "Surgery Suite", type: "surgery" },
-  { name: "Treatment Area", type: "treatment" },
-];
-
 export interface DefaultService {
+  key: string;
   name: string;
   category: string;
   defaultPrice: string; // numeric column stores as string
   taxable: boolean;
 }
 
-export const DEFAULT_SERVICES: DefaultService[] = [
-  { name: "Wellness Exam", category: "Exam", defaultPrice: "65.00", taxable: false },
-  { name: "Sick / Problem Exam", category: "Exam", defaultPrice: "75.00", taxable: false },
-  { name: "Recheck Exam", category: "Exam", defaultPrice: "45.00", taxable: false },
-  { name: "Rabies Vaccine", category: "Vaccination", defaultPrice: "35.00", taxable: true },
-  { name: "DHPP Vaccine", category: "Vaccination", defaultPrice: "40.00", taxable: true },
-  { name: "Bordetella Vaccine", category: "Vaccination", defaultPrice: "38.00", taxable: true },
-  { name: "FVRCP Vaccine", category: "Vaccination", defaultPrice: "40.00", taxable: true },
-  { name: "Microchip", category: "Procedure", defaultPrice: "55.00", taxable: true },
-  { name: "Nail Trim", category: "Procedure", defaultPrice: "20.00", taxable: true },
-  { name: "Dental Cleaning", category: "Surgery", defaultPrice: "450.00", taxable: false },
-  { name: "Spay / Neuter", category: "Surgery", defaultPrice: "350.00", taxable: false },
-  { name: "Heartworm Test", category: "Diagnostics", defaultPrice: "45.00", taxable: false },
-];
+export interface PracticeDefaults {
+  locationName: string;
+  appointmentTypes: DefaultAppointmentType[];
+  rooms: DefaultRoom[];
+  services: DefaultService[];
+}
+
+const APPOINTMENT_TYPE_DETAILS = [
+  { key: "wellness", durationMinutes: 30, color: "#0d9488", requiresDoctor: 1, defaultRoomType: "exam" },
+  { key: "sick", durationMinutes: 30, color: "#dc2626", requiresDoctor: 1, defaultRoomType: "exam" },
+  { key: "vaccination", durationMinutes: 15, color: "#2563eb", requiresDoctor: 0, defaultRoomType: "exam" },
+  { key: "surgery", durationMinutes: 120, color: "#7c3aed", requiresDoctor: 1, defaultRoomType: "surgery" },
+  { key: "dental", durationMinutes: 90, color: "#0891b2", requiresDoctor: 1, defaultRoomType: "surgery" },
+  { key: "recheck", durationMinutes: 15, color: "#65a30d", requiresDoctor: 1, defaultRoomType: "exam" },
+] as const satisfies Omit<DefaultAppointmentType, "name">[];
+
+const ROOM_DETAILS = [
+  { key: "exam-1", type: "exam" },
+  { key: "exam-2", type: "exam" },
+  { key: "surgery", type: "surgery" },
+  { key: "treatment", type: "treatment" },
+] as const satisfies Omit<DefaultRoom, "name">[];
+
+const SERVICE_DETAILS = [
+  { key: "wellness", category: "Exam", defaultPrice: "65.00", taxable: false },
+  { key: "sick", category: "Exam", defaultPrice: "75.00", taxable: false },
+  { key: "recheck", category: "Exam", defaultPrice: "45.00", taxable: false },
+  { key: "rabies", category: "Vaccination", defaultPrice: "35.00", taxable: true },
+  { key: "dhpp", category: "Vaccination", defaultPrice: "40.00", taxable: true },
+  { key: "bordetella", category: "Vaccination", defaultPrice: "38.00", taxable: true },
+  { key: "fvrcp", category: "Vaccination", defaultPrice: "40.00", taxable: true },
+  { key: "microchip", category: "Procedure", defaultPrice: "55.00", taxable: true },
+  { key: "nail-trim", category: "Procedure", defaultPrice: "20.00", taxable: true },
+  { key: "dental", category: "Surgery", defaultPrice: "450.00", taxable: false },
+  { key: "spay-neuter", category: "Surgery", defaultPrice: "350.00", taxable: false },
+  { key: "heartworm", category: "Diagnostics", defaultPrice: "45.00", taxable: false },
+] as const satisfies Omit<DefaultService, "name">[];
+
+const SEEDED_DISPLAY_NAMES = {
+  en: {
+    locationName: "Main Location",
+    appointmentTypes: ["Wellness Exam", "Sick Visit", "Vaccination", "Surgery", "Dental Cleaning", "Recheck / Follow-up"],
+    rooms: ["Exam Room 1", "Exam Room 2", "Surgery Suite", "Treatment Area"],
+    services: ["Wellness Exam", "Sick / Problem Exam", "Recheck Exam", "Rabies Vaccine", "DHPP Vaccine", "Bordetella Vaccine", "FVRCP Vaccine", "Microchip", "Nail Trim", "Dental Cleaning", "Spay / Neuter", "Heartworm Test"],
+  },
+  es: {
+    locationName: "Ubicación principal",
+    appointmentTypes: ["Consulta de bienestar", "Consulta por enfermedad", "Vacunación", "Cirugía", "Limpieza dental", "Control / seguimiento"],
+    rooms: ["Consultorio 1", "Consultorio 2", "Quirófano", "Área de tratamiento"],
+    services: ["Consulta de bienestar", "Consulta por enfermedad", "Consulta de control", "Vacuna antirrábica", "Vacuna DHPP", "Vacuna contra Bordetella", "Vacuna FVRCP", "Microchip", "Corte de uñas", "Limpieza dental", "Esterilización", "Prueba de dirofilariosis"],
+  },
+} as const;
+
+/** Display copy is localized once at provisioning; persisted catalog semantics stay stable. */
+export function practiceDefaults(language: SupportedLanguage): PracticeDefaults {
+  const copy = SEEDED_DISPLAY_NAMES[language];
+  return {
+    locationName: copy.locationName,
+    appointmentTypes: APPOINTMENT_TYPE_DETAILS.map((details, index) => ({ ...details, name: copy.appointmentTypes[index]! })),
+    rooms: ROOM_DETAILS.map((details, index) => ({ ...details, name: copy.rooms[index]! })),
+    services: SERVICE_DETAILS.map((details, index) => ({ ...details, name: copy.services[index]! })),
+  };
+}
+
+// Kept for existing consumers and as the explicit English compatibility baseline.
+export const DEFAULT_APPOINTMENT_TYPES = practiceDefaults("en").appointmentTypes;
+export const DEFAULT_ROOMS = practiceDefaults("en").rooms;
+export const DEFAULT_SERVICES = practiceDefaults("en").services;
 
 /**
  * Insert the default catalog for a freshly created practice. Idempotency is the
@@ -83,10 +125,11 @@ export const DEFAULT_SERVICES: DefaultService[] = [
  */
 export async function seedPractice(
   db: Database,
-  opts: { practiceId: string; locationId: string }
+  opts: { practiceId: string; locationId: string; language: SupportedLanguage }
 ): Promise<void> {
+  const defaults = practiceDefaults(opts.language);
   await db.insert(appointmentTypes).values(
-    DEFAULT_APPOINTMENT_TYPES.map((t) => ({
+    defaults.appointmentTypes.map(({ key: _key, ...t }) => ({
       practiceId: opts.practiceId,
       name: t.name,
       durationMinutes: t.durationMinutes,
@@ -97,7 +140,7 @@ export async function seedPractice(
   );
 
   await db.insert(rooms).values(
-    DEFAULT_ROOMS.map((r) => ({
+    defaults.rooms.map(({ key: _key, ...r }) => ({
       practiceId: opts.practiceId,
       locationId: opts.locationId,
       name: r.name,
@@ -106,7 +149,7 @@ export async function seedPractice(
   );
 
   await db.insert(services).values(
-    DEFAULT_SERVICES.map((s) => ({
+    defaults.services.map(({ key: _key, ...s }) => ({
       practiceId: opts.practiceId,
       name: s.name,
       category: s.category,
@@ -137,7 +180,7 @@ export interface DemoDataIds {
  */
 export async function seedDemoData(
   db: Database,
-  opts: { practiceId: string }
+  opts: { practiceId: string; language: SupportedLanguage }
 ): Promise<DemoDataIds> {
   const insertedClients = await db
     .insert(clients)
@@ -189,12 +232,15 @@ export async function seedDemoData(
     )
     .limit(1);
 
-  const typeByName = (name: string) =>
-    seededTypes.find((t) => t.name === name)?.id ?? null;
-  const wellnessTypeId = typeByName("Wellness Exam");
-  const vaccineTypeId = typeByName("Vaccination");
-  const sickTypeId = typeByName("Sick Visit");
-  const recheckTypeId = typeByName("Recheck / Follow-up");
+  const defaults = practiceDefaults(opts.language);
+  const typeByKey = (key: DefaultAppointmentType["key"]) => {
+    const expectedName = defaults.appointmentTypes.find((type) => type.key === key)?.name;
+    return seededTypes.find((type) => type.name === expectedName)?.id ?? null;
+  };
+  const wellnessTypeId = typeByKey("wellness");
+  const vaccineTypeId = typeByKey("vaccination");
+  const sickTypeId = typeByKey("sick");
+  const recheckTypeId = typeByKey("recheck");
   const doctorId = owner?.id ?? null;
   const room1 = seededRooms[0]?.id ?? null;
   const room2 = seededRooms[1]?.id ?? room1;
@@ -448,8 +494,10 @@ export async function seedDemoData(
     .returning({ id: problemList.id });
 
   // Two invoices with line items from the seeded services: one paid, one sent.
-  const serviceByName = (name: string) =>
-    seededServices.find((s) => s.name === name) ?? null;
+  const serviceByKey = (key: DefaultService["key"]) => {
+    const expectedName = defaults.services.find((service) => service.key === key)?.name;
+    return seededServices.find((service) => service.name === expectedName) ?? null;
+  };
   const invoiceIds: string[] = [];
   const invoiceItemIds: string[] = [];
 
@@ -457,12 +505,12 @@ export async function seedDemoData(
     clientIdx: number;
     patientIdx: number;
     status: "paid" | "sent";
-    serviceNames: string[];
+    serviceKeys: DefaultService["key"][];
   }) => {
     // Resolve line items from the catalog; fall back to a simple line if a name
     // is missing so we never end up with a blank invoice.
-    const lines = cfg.serviceNames
-      .map((name) => serviceByName(name))
+    const lines = cfg.serviceKeys
+      .map((key) => serviceByKey(key))
       .filter((s): s is NonNullable<typeof s> => s != null);
     const safeLines =
       lines.length > 0
@@ -515,13 +563,13 @@ export async function seedDemoData(
     clientIdx: 0,
     patientIdx: 0,
     status: "paid",
-    serviceNames: ["Wellness Exam", "Rabies Vaccine", "DHPP Vaccine"],
+    serviceKeys: ["wellness", "rabies", "dhpp"],
   });
   await buildInvoice({
     clientIdx: 1,
     patientIdx: 1,
     status: "sent",
-    serviceNames: ["Wellness Exam", "Nail Trim"],
+    serviceKeys: ["wellness", "nail-trim"],
   });
 
   // A few inbound messages so the Inbox has real conversations to show in the
