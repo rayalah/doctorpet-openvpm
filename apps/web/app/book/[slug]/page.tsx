@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { EmptyState } from "@/components/common/empty-state";
 import { BOOKING_REASON_MAX_LENGTH } from "@/lib/booking/page-config";
 import { useTranslations } from "@/lib/i18n/client";
+import { PublicBookingI18nProvider } from "@/lib/i18n/public-booking-provider";
 
 const SPECIES_OPTIONS = [
   "canine", "feline", "avian", "rabbit", "reptile", "equine", "other",
@@ -19,9 +20,18 @@ function dateInputValue(d: Date): string {
 }
 
 export default function PublicBookingPage() {
-  const t = useTranslations();
   const params = useParams();
   const slug = (params.slug as string) ?? "";
+
+  return (
+    <PublicBookingI18nProvider slug={slug}>
+      <PublicBookingPageContent slug={slug} />
+    </PublicBookingI18nProvider>
+  );
+}
+
+function PublicBookingPageContent({ slug }: { slug: string }) {
+  const t = useTranslations();
   const formId = useId();
   const typeFieldId = `${formId}-type`;
   const locationFieldId = `${formId}-location`;

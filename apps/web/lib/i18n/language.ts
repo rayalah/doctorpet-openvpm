@@ -56,8 +56,9 @@ export function dateLocaleForLanguage(language: SupportedLanguage): string {
  */
 export function resolvePublicTenantLanguage(
   tenant: LanguagePreference | null | undefined,
+  fallback: SupportedLanguage = PLATFORM_FALLBACK_LANGUAGE,
 ): SupportedLanguage {
-  return resolveLanguage(tenant?.language);
+  return isSupportedLanguage(tenant?.language) ? tenant.language : fallback;
 }
 
 /**

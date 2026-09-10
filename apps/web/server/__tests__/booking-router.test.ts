@@ -74,7 +74,10 @@ function practiceRow(overrides?: Record<string, unknown>) {
   };
 }
 
-function pageRow(config?: Record<string, unknown>) {
+function pageRow(
+  config?: Record<string, unknown>,
+  practiceOverrides?: Record<string, unknown>,
+) {
   return {
     page: {
       id: "00000000-0000-0000-0000-0000000000cc",
@@ -88,7 +91,7 @@ function pageRow(config?: Record<string, unknown>) {
         ...config,
       },
     },
-    practice: practiceRow(),
+    practice: practiceRow(practiceOverrides),
   };
 }
 
@@ -250,7 +253,18 @@ describe("public booking page", () => {
     });
     const result = await publicCaller(db).getPage({ slug: "test-clinic" });
     expect(result.practice.name).toBe("Test Clinic");
+    expect(result.practice.language).toBe("es");
     expect(result.types).toEqual([types[0]]);
+  });
+
+  it("returns an explicit English locale for an English practice", async () => {
+    const types = [{ id: TYPE_A, name: "Wellness Exam", durationMinutes: 30 }];
+    const { db } = createDb({
+      selectResults: [[pageRow(undefined, { language: "en" })], types],
+    });
+
+    await expect(publicCaller(db).getPage({ slug: "test-clinic" })).resolves
+      .toMatchObject({ practice: { language: "en" } });
   });
 
   it("hides a published page with no configured active requestable type", async () => {

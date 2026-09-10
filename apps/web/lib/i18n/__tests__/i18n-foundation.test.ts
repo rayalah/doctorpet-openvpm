@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  DOCTOR_PET_INITIAL_LANGUAGE,
   PLATFORM_FALLBACK_LANGUAGE,
   resolveAuthenticatedPracticeLanguage,
   resolveLanguage,
@@ -29,6 +30,8 @@ describe("i18n foundation", () => {
   it("uses a public tenant's persisted language only", () => {
     expect(resolvePublicTenantLanguage({ language: "es" })).toBe("es");
     expect(resolvePublicTenantLanguage(null)).toBe("en");
+    expect(resolvePublicTenantLanguage(null, DOCTOR_PET_INITIAL_LANGUAGE)).toBe("es");
+    expect(resolvePublicTenantLanguage({ language: "invalid" }, DOCTOR_PET_INITIAL_LANGUAGE)).toBe("es");
   });
 
   it("keeps pre-auth routes on the explicit platform fallback", () => {

@@ -45,6 +45,10 @@ import {
   resolveAppointmentLocation,
   takeAppointmentSchedulingLock,
 } from "@/lib/scheduling/location";
+import {
+  DOCTOR_PET_INITIAL_LANGUAGE,
+  resolvePublicTenantLanguage,
+} from "@/lib/i18n/language";
 
 const bookingSlugInput = z
   .string()
@@ -324,6 +328,10 @@ export const bookingRouter = createRouter({
       return {
         practice: {
           name: practice.name,
+          language: resolvePublicTenantLanguage(
+            practice,
+            DOCTOR_PET_INITIAL_LANGUAGE,
+          ),
           logoUrl: practice.logoUrl,
           address: practice.address,
           phone: practice.phone,
