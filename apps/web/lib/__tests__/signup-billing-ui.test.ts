@@ -34,10 +34,10 @@ describe("signup billing copy", () => {
       expect(source).not.toContain("card-collected trial");
       expect(source).not.toContain("billing secured through Stripe");
     }
-    expect(registerSource).toContain("No credit card required");
+    expect(registerSource).toContain('t("auth.register.trialTerms")');
     expect(welcomeEmailSource).toContain("no credit card");
     expect(readmeSource).toContain("no credit card required");
-    expect(activationChecklistSource).toContain("Confirm billing is connected");
+    expect(activationChecklistSource).toContain('t("activation.billing.label")');
   });
 
   it("keeps the safe card-checkout path for conversion", () => {

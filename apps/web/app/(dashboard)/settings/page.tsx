@@ -69,6 +69,7 @@ import {
 } from "@/lib/locale/clinic-regions";
 import { useCurrencyFormatter } from "@/lib/locale/useCurrency";
 import { useTranslations } from "@/lib/i18n/client";
+import type { Translator } from "@/lib/i18n/messages";
 import { formatDateInputForTimeZone } from "@/lib/date-input";
 import { isSafeCheckoutRedirectUrl } from "@/lib/checkout-redirect";
 import { trialCalendarDaysLeft } from "@/lib/billing/trial-days";
@@ -162,19 +163,19 @@ type Tab =
   | "booking"
   | "billing";
 
-const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: "practice", label: "Practice Info", icon: Settings },
-  { id: "locations", label: "Locations", icon: MapPin },
-  { id: "staff", label: "Staff", icon: Users },
-  { id: "appointmentTypes", label: "Appointment Types", icon: Calendar },
-  { id: "rooms", label: "Rooms", icon: DoorOpen },
-  { id: "services", label: "Services & Pricing", icon: ReceiptText },
-  { id: "data", label: "Data", icon: Database },
-  { id: "templates", label: "Templates", icon: Layers },
-  { id: "wellness", label: "Wellness Plans", icon: HeartPulse },
-  { id: "messaging", label: "Messaging", icon: MessageSquare },
-  { id: "booking", label: "Online Booking", icon: Globe },
-  { id: "billing", label: "Plan & Billing", icon: CreditCard },
+const tabs: { id: Tab; labelKey: keyof typeof import("@/lib/i18n/messages").enMessages; icon: React.ElementType }[] = [
+  { id: "practice", labelKey: "settings.tab.practice", icon: Settings },
+  { id: "locations", labelKey: "settings.tab.locations", icon: MapPin },
+  { id: "staff", labelKey: "settings.tab.staff", icon: Users },
+  { id: "appointmentTypes", labelKey: "settings.tab.appointmentTypes", icon: Calendar },
+  { id: "rooms", labelKey: "settings.tab.rooms", icon: DoorOpen },
+  { id: "services", labelKey: "settings.tab.services", icon: ReceiptText },
+  { id: "data", labelKey: "settings.tab.data", icon: Database },
+  { id: "templates", labelKey: "settings.tab.templates", icon: Layers },
+  { id: "wellness", labelKey: "settings.tab.wellness", icon: HeartPulse },
+  { id: "messaging", labelKey: "settings.tab.messaging", icon: MessageSquare },
+  { id: "booking", labelKey: "settings.tab.booking", icon: Globe },
+  { id: "billing", labelKey: "settings.tab.billing", icon: CreditCard },
 ];
 
 const PRESET_COLORS = [
@@ -271,19 +272,20 @@ function requireSettingsExportData<T>(
 
 function SettingsLoadError({
   message,
-  title = "Could not load settings",
+  title,
   onRetry,
 }: {
   message: string;
   title?: string;
   onRetry?: () => void;
 }) {
+  const t = useTranslations();
   return (
     <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
         <div>
-          <p className="font-medium">{title}</p>
+          <p className="font-medium">{title ?? t("settings.loadError")}</p>
           <p className="mt-1">{message}</p>
           {onRetry ? (
             <Button
@@ -292,7 +294,7 @@ function SettingsLoadError({
               onClick={onRetry}
               className="mt-3"
             >
-              Retry
+              {t("settings.retry")}
             </Button>
           ) : null}
         </div>
@@ -330,7 +332,7 @@ function SettingsPageInner() {
     return (
       <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Checking settings access...
+        {t("settings.loadingAccess")}
       </div>
     );
   }
@@ -339,9 +341,9 @@ function SettingsPageInner() {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <ShieldAlert className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="font-heading text-xl font-semibold">Access Denied</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("settings.accessDenied")}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Only administrators can access practice settings.
+          {t("settings.accessDeniedDescription")}
         </p>
       </div>
     );
@@ -351,9 +353,9 @@ function SettingsPageInner() {
     <div className="min-w-0 w-full max-w-full overflow-hidden">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-heading text-xl font-semibold">Settings</h2>
+          <h2 className="font-heading text-xl font-semibold">{t("settings.title")}</h2>
           <p className="text-sm text-muted-foreground">
-            Practice configuration and staff management
+            {t("settings.subtitle")}
           </p>
         </div>
         <Button
@@ -371,7 +373,7 @@ function SettingsPageInner() {
         {/* Section nav: horizontal scroll on small screens, vertical on lg+ */}
         <nav
           className="min-w-0 max-w-full overflow-hidden lg:w-56 lg:shrink-0"
-          aria-label="Settings sections"
+          aria-label={t("settings.sections")}
         >
           <div className="flex w-full max-w-full gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
             {tabs.map((tab) => {
@@ -388,7 +390,7 @@ function SettingsPageInner() {
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </button>
               );
             })}
@@ -417,6 +419,7 @@ function SettingsPageInner() {
 
 // ── Practice Info ───────────────────────────────────────────
 function PracticeInfoTab() {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const {
     data: practice,
@@ -438,8 +441,8 @@ function PracticeInfoTab() {
       ]);
       toast.success("Practice info updated");
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: () => {
+      toast.error(t("settings.wellness.createError"));
     },
   });
 
@@ -451,8 +454,8 @@ function PracticeInfoTab() {
       utils.settings.getBranding.invalidate();
       toast.success("Branding updated");
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: () => {
+      toast.error(t("settings.wellness.updateError"));
     },
   });
   const marketingEmailMutation =
@@ -621,14 +624,14 @@ function PracticeInfoTab() {
         {/* ── Practice details ── */}
         <div className="space-y-6 rounded-lg border border-border bg-card p-6">
           <div className="space-y-1">
-            <h3 className="text-sm font-semibold">Practice details</h3>
+            <h3 className="text-sm font-semibold">{t("settings.practice.details")}</h3>
             <p className="text-xs text-muted-foreground">
-              Your practice name, contact info, and timezone.
+              {t("settings.practice.detailsDescription")}
             </p>
           </div>
           <div className="grid gap-4">
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Practice Name</span>
+              <span className="text-sm font-medium">{t("settings.practice.name")}</span>
               <Input
                 maxLength={PRACTICE_NAME_MAX_LENGTH}
                 value={current.name}
@@ -636,7 +639,7 @@ function PracticeInfoTab() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Address</span>
+              <span className="text-sm font-medium">{t("settings.practice.address")}</span>
               <Input
                 maxLength={SETTINGS_ADDRESS_MAX_LENGTH}
                 value={current.address}
@@ -645,7 +648,7 @@ function PracticeInfoTab() {
             </label>
             <div className="grid grid-cols-2 gap-4">
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Phone</span>
+                <span className="text-sm font-medium">{t("settings.practice.phone")}</span>
                 <Input
                   maxLength={SETTINGS_PHONE_MAX_LENGTH}
                   value={current.phone}
@@ -653,7 +656,7 @@ function PracticeInfoTab() {
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Email</span>
+                <span className="text-sm font-medium">{t("settings.practice.email")}</span>
                 <Input
                   type="email"
                   maxLength={SETTINGS_EMAIL_MAX_LENGTH}
@@ -663,7 +666,7 @@ function PracticeInfoTab() {
               </label>
             </div>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Website</span>
+              <span className="text-sm font-medium">{t("settings.practice.website")}</span>
               <Input
                 maxLength={SETTINGS_WEBSITE_MAX_LENGTH}
                 value={current.website}
@@ -671,7 +674,7 @@ function PracticeInfoTab() {
               />
             </label>
             <label className="space-y-1.5">
-              <span className="text-sm font-medium">Timezone</span>
+              <span className="text-sm font-medium">{t("settings.practice.timezone")}</span>
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={current.timezone}
@@ -690,7 +693,7 @@ function PracticeInfoTab() {
         {/* ── Region & Tax ── */}
         <div className="space-y-6 rounded-lg border border-border bg-card p-6">
           <div className="space-y-1">
-            <h3 className="text-sm font-semibold">Region &amp; Tax</h3>
+            <h3 className="text-sm font-semibold">{t("settings.practice.regionTax")}</h3>
             <p className="text-xs text-muted-foreground">
               Controls invoice currency, tax rate, and date formatting. Costa
               Rica requires an explicit tax rate; no local rate is assumed.
@@ -699,14 +702,14 @@ function PracticeInfoTab() {
           <div className="grid gap-4">
             <div className="grid grid-cols-2 gap-4">
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Country</span>
+                <span className="text-sm font-medium">{t("settings.practice.country")}</span>
                 <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={current.country}
                   onChange={(e) => handleCountryChange(e.target.value)}
                   required
                 >
-                  <option value="">Choose your clinic country</option>
+                  <option value="">{t("settings.practice.chooseCountry")}</option>
                   {CLINIC_REGION_OPTIONS.map((c) => (
                     <option key={c.code} value={c.code}>
                       {c.label}
@@ -715,7 +718,7 @@ function PracticeInfoTab() {
                 </select>
               </label>
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Currency</span>
+                <span className="text-sm font-medium">{t("settings.practice.currency")}</span>
                 <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={current.currency}
@@ -731,7 +734,7 @@ function PracticeInfoTab() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <label className="space-y-1.5">
-                <span className="text-sm font-medium">Tax / VAT rate (%)</span>
+                <span className="text-sm font-medium">{t("settings.practice.taxRate")}</span>
                 <Input
                   type="number"
                   step="0.01"
@@ -745,7 +748,7 @@ function PracticeInfoTab() {
               </label>
               <label className="space-y-1.5">
                 <span className="text-sm font-medium">
-                  VAT number (optional)
+                  {t("settings.practice.vatNumber")}
                 </span>
                 <Input
                   maxLength={SETTINGS_VAT_NUMBER_MAX_LENGTH}
@@ -760,7 +763,7 @@ function PracticeInfoTab() {
         {/* ── Branding ── */}
         <div className="space-y-6 rounded-lg border border-border bg-card p-6">
           <div className="space-y-1">
-            <h3 className="text-sm font-semibold">Branding</h3>
+            <h3 className="text-sm font-semibold">{t("settings.practice.branding")}</h3>
             <p className="text-xs text-muted-foreground">
               Your logo and accent color appear across {platformBrand.productName}. Changes save
               immediately.
@@ -769,7 +772,7 @@ function PracticeInfoTab() {
           <div className="grid gap-5">
             {/* Logo */}
             <div className="space-y-2">
-              <span className="text-sm font-medium">Logo</span>
+              <span className="text-sm font-medium">{t("settings.practice.logo")}</span>
               <div className="flex items-center gap-4">
                 {practice.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -806,10 +809,10 @@ function PracticeInfoTab() {
                     ) : (
                       <Upload className="mr-2 h-4 w-4" />
                     )}
-                    {practice.logoUrl ? "Replace logo" : "Upload logo"}
+                    {practice.logoUrl ? t("settings.practice.replaceLogo") : t("settings.practice.uploadLogo")}
                   </Button>
                   <p className="mt-1.5 text-xs text-muted-foreground">
-                    PNG, JPG, or WebP. Square images work best.
+                    {t("settings.practice.logoHelp")}
                   </p>
                   {logoUploadError ? (
                     <div className="mt-2 flex items-center gap-2 text-xs text-destructive">
@@ -832,7 +835,7 @@ function PracticeInfoTab() {
 
             {/* Accent color */}
             <div className="space-y-2">
-              <span className="text-sm font-medium">Accent color</span>
+              <span className="text-sm font-medium">{t("settings.practice.accent")}</span>
               <AccentColorPicker
                 value={currentBrandColor}
                 onChange={(c) => brandingMutation.mutate({ brandColor: c })}
@@ -962,7 +965,7 @@ function PracticeInfoTab() {
         ) : (
           <Save className="mr-2 h-4 w-4" />
         )}
-        Save Changes
+        {t("settings.practice.save")}
       </Button>
     </div>
   );
@@ -977,6 +980,7 @@ type LocationForm = {
 };
 
 function LocationsTab() {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const {
     data: locationList,
@@ -997,32 +1001,32 @@ function LocationsTab() {
       invalidateLocationState();
       setShowAdd(false);
       setAddForm({ name: "", address: "", phone: "", isPrimary: false });
-      toast.success("Location created");
+      toast.success(t("settings.locations.created"));
     },
-    onError: (err) => toast.error(err.message),
+    onError: () => toast.error(t("settings.locations.loadError")),
   });
   const updateMutation = trpc.settings.updateLocation.useMutation({
     onSuccess: () => {
       invalidateLocationState();
       setEditingId(null);
-      toast.success("Location updated");
+      toast.success(t("settings.locations.updated"));
     },
-    onError: (err) => toast.error(err.message),
+    onError: () => toast.error(t("settings.locations.loadError")),
   });
   const setPrimaryMutation = trpc.settings.setPrimaryLocation.useMutation({
     onSuccess: () => {
       invalidateLocationState();
-      toast.success("Primary location updated");
+      toast.success(t("settings.locations.primaryUpdated"));
     },
-    onError: (err) => toast.error(err.message),
+    onError: () => toast.error(t("settings.locations.loadError")),
   });
   const deleteMutation = trpc.settings.deleteLocation.useMutation({
     onSuccess: () => {
       invalidateLocationState();
       setConfirmDelete(null);
-      toast.success("Location retired");
+      toast.success(t("settings.locations.retired"));
     },
-    onError: (err) => toast.error(err.message),
+    onError: () => toast.error(t("settings.locations.loadError")),
   });
 
   const [showAdd, setShowAdd] = useState(false);
@@ -1066,8 +1070,8 @@ function LocationsTab() {
   if (locationsMissing) {
     return (
       <SettingsLoadError
-        title="Could not load locations"
-        message="The locations request finished without returning data. Try loading it again before editing practice locations."
+        title={t("settings.locations.loadError")}
+        message={t("settings.locations.loadDescription")}
         onRetry={() => void refetchLocations()}
       />
     );
@@ -1103,10 +1107,9 @@ function LocationsTab() {
     <div className="max-w-4xl space-y-4">
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-semibold">Practice Locations</h3>
+          <h3 className="text-sm font-semibold">{t("settings.locations.title")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Locations power texting setup, room assignment, reminders, and
-            hosted billing quantity.
+            {t("settings.locations.description")}
           </p>
         </div>
         <Button
@@ -1119,22 +1122,22 @@ function LocationsTab() {
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
-          Add Location
+          {t("settings.locations.add")}
         </Button>
       </div>
 
       {showAdd ? (
         <div className="rounded-lg border border-border bg-card p-4">
-          <h3 className="text-sm font-semibold">New Location</h3>
+          <h3 className="text-sm font-semibold">{t("settings.locations.new")}</h3>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Input
-              placeholder="Location name"
+              placeholder={t("settings.locations.name")}
               maxLength={LOCATION_NAME_MAX_LENGTH}
               value={addForm.name}
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
             />
             <Input
-              placeholder="Phone"
+              placeholder={t("settings.practice.phone")}
               maxLength={SETTINGS_PHONE_MAX_LENGTH}
               value={addForm.phone}
               onChange={(e) =>
@@ -1142,7 +1145,7 @@ function LocationsTab() {
               }
             />
             <Input
-              placeholder="Address"
+              placeholder={t("settings.practice.address")}
               maxLength={SETTINGS_ADDRESS_MAX_LENGTH}
               value={addForm.address}
               onChange={(e) =>
@@ -1159,7 +1162,7 @@ function LocationsTab() {
                 setAddForm({ ...addForm, isPrimary: e.target.checked })
               }
             />
-            Make this the primary location
+            {t("settings.locations.makePrimary")}
           </label>
           <div className="mt-4 flex gap-2">
             <Button
@@ -1174,10 +1177,10 @@ function LocationsTab() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              Create
+              {t("settings.locations.create")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
-              Cancel
+              {t("settings.locations.cancel")}
             </Button>
           </div>
         </div>
@@ -1187,9 +1190,9 @@ function LocationsTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">Location</th>
-              <th className="px-4 py-3 text-left font-medium">Contact</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.locations.title")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.locations.contact")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("billing.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -1214,7 +1217,7 @@ function LocationsTab() {
                         />
                         <Input
                           value={editForm.address}
-                          placeholder="Address"
+                          placeholder={t("settings.practice.address")}
                           maxLength={SETTINGS_ADDRESS_MAX_LENGTH}
                           onChange={(e) =>
                             setEditForm({
@@ -1231,12 +1234,12 @@ function LocationsTab() {
                           {location.isPrimary ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                               <Star className="h-3 w-3" />
-                              Primary
+                              {t("settings.locations.primary")}
                             </span>
                           ) : null}
                         </div>
                         <p className="mt-1 text-muted-foreground">
-                          {location.address || "No address on file"}
+                          {location.address || t("settings.locations.noAddress")}
                         </p>
                       </div>
                     )}
@@ -1245,14 +1248,14 @@ function LocationsTab() {
                     {isEditing ? (
                       <Input
                         value={editForm.phone}
-                        placeholder="Phone"
+                        placeholder={t("settings.practice.phone")}
                         maxLength={SETTINGS_PHONE_MAX_LENGTH}
                         onChange={(e) =>
                           setEditForm({ ...editForm, phone: e.target.value })
                         }
                       />
                     ) : (
-                      location.phone || "No phone"
+                      location.phone || t("settings.locations.noPhone")
                     )}
                   </td>
                   <td className="px-4 py-3 align-top">
@@ -1336,8 +1339,8 @@ function LocationsTab() {
                   <EmptyState
                     className="border-0 bg-transparent p-8"
                     icon={MapPin}
-                    title="No active locations configured"
-                    description="Add a location to power rooms, reminders, texting setup, and hosted billing quantities."
+                    title={t("settings.locations.empty")}
+                    description={t("settings.locations.emptyDescription")}
                   />
                 </td>
               </tr>
@@ -1347,7 +1350,7 @@ function LocationsTab() {
       </div>
       {activeLocationCount <= 1 ? (
         <p className="text-xs text-muted-foreground">
-          A practice must keep at least one active location.
+          {t("settings.locations.minimum")}
         </p>
       ) : null}
     </div>
@@ -1355,34 +1358,49 @@ function LocationsTab() {
 }
 
 // ── Plan & Billing ──────────────────────────────────────────
-const FEATURE_LABELS: Record<string, string> = {
-  agent: "Doctor Pet Agent (AI)",
-  sms: "SMS sending",
-  advancedReporting: "Advanced reporting",
-  apiAccess: "API access + webhooks",
-  multiLocation: "Multi-location",
-  integrations: "Supported integrations",
-};
-
-function redirectToHostedBillingUrl(url: unknown) {
+function redirectToHostedBillingUrl(url: unknown, unavailableMessage: string) {
   if (!isSafeCheckoutRedirectUrl(url)) {
-    toast.error("Billing checkout is unavailable. Please try again.");
+    toast.error(unavailableMessage);
     return;
   }
 
   window.location.href = url;
 }
 
-function redirectToClientPaymentUrl(url: unknown) {
+function redirectToClientPaymentUrl(url: unknown, unavailableMessage: string) {
   if (!isSafeCheckoutRedirectUrl(url)) {
-    toast.error("Client payment setup is unavailable. Please try again.");
+    toast.error(unavailableMessage);
     return;
   }
 
   window.location.href = url;
+}
+
+function billingStatusLabel(t: Translator, status: string) {
+  switch (status) {
+    case "active": return t("settings.billing.status.active");
+    case "past_due": return t("settings.billing.status.pastDue");
+    case "unpaid": return t("settings.billing.status.unpaid");
+    case "canceled": return t("settings.billing.status.canceled");
+    case "none": return t("settings.billing.status.none");
+    default: return status.replace("_", " ");
+  }
+}
+
+function billingFeatureLabel(t: Translator, feature: string) {
+  switch (feature) {
+    case "agent": return t("settings.billing.feature.agent");
+    case "sms": return t("settings.billing.feature.sms");
+    case "advancedReporting": return t("settings.billing.feature.advancedReporting");
+    case "apiAccess": return t("settings.billing.feature.apiAccess");
+    case "multiLocation": return t("settings.billing.feature.multiLocation");
+    case "integrations": return t("settings.billing.feature.integrations");
+    default: return feature;
+  }
 }
 
 function BillingTab() {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const searchParams = useSearchParams();
   const [selectedCadence, setSelectedCadence] = useState<BillingCadence>(() =>
@@ -1399,43 +1417,43 @@ function BillingTab() {
   });
   const checkout = trpc.subscription.createCheckout.useMutation({
     onSuccess: (r) => {
-      redirectToHostedBillingUrl(r.url);
+      redirectToHostedBillingUrl(r.url, t("settings.billing.checkoutUnavailable"));
     },
-    onError: (e) => toast.error(e.message),
+    onError: () => toast.error(t("settings.billing.checkoutUnavailable")),
   });
   const setupPaymentAccount =
     trpc.billing.createPaymentAccountOnboarding.useMutation({
       onSuccess: (r) => {
-        redirectToClientPaymentUrl(r.url);
+      redirectToClientPaymentUrl(r.url, t("settings.billing.paymentSetupUnavailable"));
       },
-      onError: (e) => toast.error(e.message),
+      onError: () => toast.error(t("settings.billing.paymentSetupUnavailable")),
     });
   const refreshPaymentAccount = trpc.billing.refreshPaymentAccount.useMutation({
     onSuccess: () => {
       utils.billing.paymentAccountStatus.invalidate();
-      toast.success("Client payment status refreshed");
+      toast.success(t("settings.billing.paymentStatusRefreshed"));
     },
-    onError: (e) => toast.error(e.message),
+    onError: () => toast.error(t("settings.billing.paymentStatusError")),
   });
   const openPaymentAccountDashboard =
     trpc.billing.openPaymentAccountDashboard.useMutation({
       onSuccess: (r) => {
-        redirectToClientPaymentUrl(r.url);
+      redirectToClientPaymentUrl(r.url, t("settings.billing.paymentSetupUnavailable"));
       },
-      onError: (e) => toast.error(e.message),
+      onError: () => toast.error(t("settings.billing.paymentSetupUnavailable")),
     });
   const portal = trpc.subscription.openBillingPortal.useMutation({
     onSuccess: (r) => {
-      redirectToHostedBillingUrl(r.url);
+      redirectToHostedBillingUrl(r.url, t("settings.billing.checkoutUnavailable"));
     },
-    onError: (e) => toast.error(e.message),
+    onError: () => toast.error(t("settings.billing.checkoutUnavailable")),
   });
 
   if (billingError) {
     return (
       <SettingsLoadError
-        title="Could not load billing details"
-        message={billingError.message}
+        title={t("settings.billing.loadError")}
+        message={t("settings.billing.loadFailure")}
         onRetry={() => void refetchBilling()}
       />
     );
@@ -1452,8 +1470,8 @@ function BillingTab() {
   if (!data) {
     return (
       <SettingsLoadError
-        title="Could not load billing details"
-        message="The billing details request finished without returning data. Try loading it again."
+        title={t("settings.billing.loadError")}
+        message={t("settings.billing.loadDescription")}
         onRetry={() => void refetchBilling()}
       />
     );
@@ -1468,14 +1486,11 @@ function BillingTab() {
             <div className="flex items-center gap-3">
               <Check className="h-5 w-5 text-green-600" />
               <h3 className="font-heading text-lg font-semibold">
-                Self-hosted — all features unlocked
+                {t("settings.billing.selfHostedTitle")}
               </h3>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              You&apos;re running {platformBrand.productName} on your own infrastructure. Every
-              feature is available and there&apos;s no subscription — free
-              forever. Plans below are how the managed {platformBrand.productName} service is priced,
-              for reference.
+              {t("settings.billing.selfHostedDescription")}
             </p>
           </div>
           <ClientPaymentProcessingSection
@@ -1519,16 +1534,16 @@ function BillingTab() {
     <div className="min-w-0 w-full max-w-full space-y-6">
       {checkoutStatus === "cancelled" ? (
         <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm">
-          <p className="font-medium">Checkout was canceled</p>
+          <p className="font-medium">{t("settings.billing.checkoutCancelled")}</p>
           <p className="mt-1 text-muted-foreground">
-            Nothing changed. Choose a schedule whenever you are ready.
+            {t("settings.billing.checkoutCancelledDescription")}
           </p>
         </div>
       ) : null}
       {checkoutStatus === "success" ? (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-          <p className="font-medium">Your billing details were received</p>
-          <p className="mt-1">{platformBrand.productName} is confirming the subscription now.</p>
+          <p className="font-medium">{t("settings.billing.checkoutReceived")}</p>
+          <p className="mt-1">{t("settings.billing.checkoutReceivedDescription")}</p>
         </div>
       ) : null}
 
@@ -1547,19 +1562,19 @@ function BillingTab() {
                   variant={data.billingStatus === "active" ? "success" : "info"}
                 >
                   {data.billingStatus === "trialing"
-                    ? `${daysLeft} trial day${daysLeft === 1 ? "" : "s"} left`
-                    : data.billingStatus.replace("_", " ")}
+                    ? `${daysLeft} ${t(daysLeft === 1 ? "settings.billing.trialDayLeft" : "settings.billing.trialDaysLeft")}`
+                    : billingStatusLabel(t, data.billingStatus)}
                 </Badge>
               </div>
               <h3 className="mt-2 font-heading text-2xl font-semibold tracking-tight">
                 {firstActivation
-                  ? "Activate your account"
-                  : "Your Cloud subscription"}
+                  ? t("settings.billing.activateAccount")
+                  : t("settings.billing.cloudSubscription")}
               </h3>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                 {firstActivation
-                  ? "Choose a billing schedule, then add your payment details in secure Stripe Checkout. Your workspace and trial stay exactly as they are."
-                  : `${currentPlan?.name ?? "Cloud"} keeps your clinic workspace active with unlimited staff.`}
+                  ? t("settings.billing.activateDescription")
+                  : `${currentPlan?.name ?? "Cloud"} ${t("settings.billing.cloudDescription")}`}
               </p>
             </div>
           </div>
@@ -1570,8 +1585,7 @@ function BillingTab() {
             <div className="mb-5 flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
-                Cloud is in read-only mode. Activating billing restores full
-                access without changing your records.
+                {t("settings.billing.readOnly")}
               </p>
             </div>
           ) : null}
@@ -1580,9 +1594,7 @@ function BillingTab() {
             <div className="mb-5 flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
-                Stripe is retrying this payment. Your clinic remains writable
-                during the retry window; review billing to avoid an unpaid,
-                read-only account.
+                {t("settings.billing.pastDue")}
               </p>
             </div>
           ) : null}
@@ -1601,13 +1613,13 @@ function BillingTab() {
                 <div>
                   <p className="text-sm font-medium">
                     {selectedCadence === "year"
-                      ? `$${data.estimatedAnnualBase} billed once per year`
-                      : `$${data.estimatedMonthlyBase} billed monthly`}
+                      ? `$${data.estimatedAnnualBase} ${t("settings.billing.yearlyBilled")}`
+                      : `$${data.estimatedMonthlyBase} ${t("settings.billing.monthlyBilled")}`}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {data.billingStatus === "trialing"
-                      ? `No charge today. ${daysLeft} trial day${daysLeft === 1 ? "" : "s"} remaining.`
-                      : "Stripe securely collects and stores your payment method."}
+                      ? `${t("settings.billing.noChargeToday")} ${daysLeft} ${t(daysLeft === 1 ? "settings.billing.trialDayLeft" : "settings.billing.trialDaysLeft")} ${t("settings.billing.remaining")}`
+                      : t("settings.billing.paymentMethodStored")}
                   </p>
                 </div>
                 <Button
@@ -1628,7 +1640,7 @@ function BillingTab() {
                   ) : (
                     <CreditCard className="size-4" />
                   )}
-                  Continue to secure checkout
+                  {t("settings.billing.secureCheckout")}
                 </Button>
               </div>
             </>
@@ -1637,12 +1649,11 @@ function BillingTab() {
               <div>
                 <p className="text-sm font-medium">
                   {data.currentBillingCadence === "year"
-                    ? `$${data.estimatedAnnualBase} per year`
-                    : `$${data.estimatedMonthlyBase} per month`}
+                    ? `$${data.estimatedAnnualBase} ${t("settings.billing.perYear")}`
+                    : `$${data.estimatedMonthlyBase} ${t("settings.billing.perMonth")}`}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Update payment details, invoices, or cancellation securely in
-                  Stripe.
+                  {t("settings.billing.manageDescription")}
                 </p>
               </div>
               <Button
@@ -1655,16 +1666,16 @@ function BillingTab() {
                 ) : (
                   <CreditCard className="mr-2 h-4 w-4" />
                 )}
-                Manage billing
+                {t("settings.billing.manage")}
               </Button>
             </div>
           )}
 
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
             {[
-              "Powered by Stripe",
-              "Cancel anytime",
-              "Unlimited staff included",
+              t("settings.billing.poweredByStripe"),
+              t("settings.billing.cancelAnytime"),
+              t("settings.billing.unlimitedStaff"),
             ].map((item) => (
               <span key={item} className="inline-flex items-center gap-1.5">
                 <Check className="size-3.5 text-primary" aria-hidden="true" />
@@ -1676,11 +1687,9 @@ function BillingTab() {
           {(currentPlan?.includedSmsPerMonth != null ||
             currentPlan?.includedAiRunsPerMonth != null) && (
             <p className="mt-5 border-t border-border pt-4 text-xs text-muted-foreground">
-              This month: {data.usage.sms} of{" "}
-              {currentPlan?.includedSmsPerMonth?.toLocaleString()} included
-              texts · {data.usage.aiRuns} of{" "}
-              {currentPlan?.includedAiRunsPerMonth?.toLocaleString()} included
-              AI actions
+              {t("settings.billing.thisMonth")} {data.usage.sms} of{" "}
+              {currentPlan?.includedSmsPerMonth?.toLocaleString()} {t("settings.billing.includedTexts")} · {data.usage.aiRuns} of{" "}
+              {currentPlan?.includedAiRunsPerMonth?.toLocaleString()} {t("settings.billing.includedAiActions")}
             </p>
           )}
 
@@ -1693,7 +1702,7 @@ function BillingTab() {
                   : "border-amber-200 bg-amber-50 text-amber-800",
               )}
             >
-              <span className="font-medium">Billing sync: </span>
+              <span className="font-medium">{t("settings.billing.sync")} </span>
               {data.billingSyncStatus!.message}
             </div>
           ) : null}
@@ -1756,15 +1765,16 @@ function ClientPaymentProcessingSection({
   onRefresh: () => void;
   onDashboard: () => void;
 }) {
+  const t = useTranslations();
   const status = data?.enabled
-    ? "ready"
+    ? t("settings.billing.paymentStatus.ready")
     : data?.status === "action_required" || data?.status === "disabled"
-      ? "action required"
+      ? t("settings.billing.paymentStatus.actionRequired")
       : data?.connectRequired
-        ? "setup needed"
+        ? t("settings.billing.paymentStatus.setupNeeded")
         : data?.stripeConfigured
-          ? "configured"
-          : "not configured";
+          ? t("settings.billing.paymentStatus.configured")
+          : t("settings.billing.paymentStatus.notConfigured");
   const statusClass = data?.enabled
     ? "bg-green-100 text-green-700"
     : data?.status === "action_required" || data?.status === "disabled"
@@ -1785,7 +1795,7 @@ function ClientPaymentProcessingSection({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-heading text-lg font-semibold">
-              Client payment processing
+              {t("settings.billing.paymentProcessing")}
             </h3>
             <span
               className={cn(
@@ -1798,8 +1808,8 @@ function ClientPaymentProcessingSection({
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
             {data?.connectRequired
-              ? "Stripe Connect lets the clinic collect card payments from pet owners into its own Stripe account."
-              : `This installation can use its configured Stripe key for client invoice payments. Stripe Connect is required for hosted ${platformBrand.productName} clinics.`}
+              ? t("settings.billing.connectDescription")
+              : t("settings.billing.directPaymentDescription")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1810,7 +1820,9 @@ function ClientPaymentProcessingSection({
               ) : (
                 <CreditCard className="mr-2 h-4 w-4" />
               )}
-              {data?.status === "not_started" ? "Set up" : "Resume setup"}
+              {data?.status === "not_started"
+                ? t("settings.billing.setUp")
+                : t("settings.billing.resumeSetup")}
             </Button>
           )}
           {data?.connectRequired && (
@@ -1825,7 +1837,7 @@ function ClientPaymentProcessingSection({
               ) : (
                 <Check className="mr-2 h-4 w-4" />
               )}
-              Refresh
+              {t("settings.billing.refresh")}
             </Button>
           )}
           {canOpenDashboard && (
@@ -1840,7 +1852,7 @@ function ClientPaymentProcessingSection({
               ) : (
                 <CreditCard className="mr-2 h-4 w-4" />
               )}
-              Open Stripe
+              {t("settings.billing.openStripe")}
             </Button>
           )}
         </div>
@@ -1849,48 +1861,52 @@ function ClientPaymentProcessingSection({
       {isLoading && (
         <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Loading client payment status
+          {t("settings.billing.loadingPaymentStatus")}
         </div>
       )}
-      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      {error && <p className="mt-4 text-sm text-destructive">{t("settings.billing.paymentStatusError")}</p>}
       {!isLoading && !error && data && (
         <div className="mt-4 grid gap-3 border-t border-border pt-4 text-sm sm:grid-cols-3">
           <div>
-            <p className="text-muted-foreground">Stripe API</p>
+            <p className="text-muted-foreground">{t("settings.billing.stripeApi")}</p>
             <p className="font-medium">
-              {data.stripeConfigured ? "Configured" : "Missing"}
+              {data.stripeConfigured
+                ? t("settings.billing.paymentStatus.configured")
+                : t("settings.billing.missing")}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Card payments</p>
+            <p className="text-muted-foreground">{t("settings.billing.cardPayments")}</p>
             <p className="font-medium">
               {data.enabled || data.status === "not_required"
-                ? "Enabled"
-                : "Disabled"}
+                ? t("settings.billing.enabled")
+                : t("settings.billing.disabled")}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground">Payouts</p>
+            <p className="text-muted-foreground">{t("settings.billing.payouts")}</p>
             <p className="font-medium">
               {data.payoutsEnabled
-                ? "Enabled"
+                ? t("settings.billing.enabled")
                 : data.connectRequired
-                  ? "Pending"
-                  : "N/A"}
+                  ? t("settings.billing.pending")
+                  : t("settings.billing.notApplicable")}
             </p>
           </div>
           {data.requirementsCurrentlyDue?.length ? (
             <div className="sm:col-span-3">
-              <p className="text-muted-foreground">Stripe requirements</p>
+              <p className="text-muted-foreground">{t("settings.billing.requirements")}</p>
               <p className="font-medium">
-                {data.requirementsCurrentlyDue.length} item
-                {data.requirementsCurrentlyDue.length === 1 ? "" : "s"} due
+                {data.requirementsCurrentlyDue.length}{" "}
+                {t(data.requirementsCurrentlyDue.length === 1
+                  ? "settings.billing.itemDue"
+                  : "settings.billing.itemsDue")}
               </p>
             </div>
           ) : null}
           {data.requirementsDisabledReason ? (
             <div className="sm:col-span-3">
-              <p className="text-muted-foreground">Disabled reason</p>
+              <p className="text-muted-foreground">{t("settings.billing.disabledReason")}</p>
               <p className="font-medium">{data.requirementsDisabledReason}</p>
             </div>
           ) : null}
@@ -1928,6 +1944,7 @@ function PlanGrid({
   onChoose: (tier: "cloud") => void;
   busyTier: string | null;
 }) {
+  const t = useTranslations();
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       {plans.map((p) => {
@@ -1947,19 +1964,19 @@ function PlanGrid({
             <h4 className="font-heading text-base font-semibold">{p.name}</h4>
             <p className="mt-1 text-2xl font-bold">
               {p.locationUnitPriceMonthlyUsd === null ? (
-                "Custom"
+                t("settings.billing.custom")
               ) : p.locationUnitPriceMonthlyUsd === 0 ? (
-                "Free"
+                t("settings.billing.free")
               ) : (
                 <>
                   ${p.locationUnitPriceMonthlyUsd}
                   <span className="text-sm font-normal text-muted-foreground">
-                    /location
+                    {t("settings.billing.perLocation")}
                   </span>
                   <span className="block text-sm font-normal text-muted-foreground">
                     {p.seatUnitPriceMonthlyUsd && p.seatUnitPriceMonthlyUsd > 0
-                      ? `+ $${p.seatUnitPriceMonthlyUsd}/staff/mo`
-                      : "unlimited staff"}
+                      ? `+ $${p.seatUnitPriceMonthlyUsd}${t("settings.billing.perStaffMonth")}`
+                      : t("settings.billing.unlimitedStaff")}
                   </span>
                 </>
               )}
@@ -1967,28 +1984,28 @@ function PlanGrid({
             <p className="mt-2 text-xs text-muted-foreground">{p.blurb}</p>
             <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
               <li>
-                {p.seatLimit === null ? "All" : p.seatLimit} staff roles
-                included
+                {p.seatLimit === null ? t("settings.billing.all") : p.seatLimit}{" "}
+                {t("settings.billing.staffRolesIncluded")}
               </li>
               <li>
-                {p.locationLimit === null ? "Unlimited" : p.locationLimit}{" "}
-                location
-                {p.locationLimit === 1 ? "" : "s"}
+                {p.locationLimit === null ? t("settings.billing.unlimited") : p.locationLimit}{" "}
+                {p.locationLimit === 1
+                  ? t("settings.billing.location")
+                  : t("settings.billing.locations")}
               </li>
               {p.includedSmsPerMonth ? (
                 <li>
-                  {p.includedSmsPerMonth.toLocaleString()} SMS/mo included
+                  {p.includedSmsPerMonth.toLocaleString()} {t("settings.billing.smsIncluded")}
                   {p.smsOveragePriceUsd
-                    ? `, then $${p.smsOveragePriceUsd}/SMS`
+                    ? `, ${t("settings.billing.then")} $${p.smsOveragePriceUsd}${t("settings.billing.perSms")}`
                     : ""}
                 </li>
               ) : null}
               {p.includedAiRunsPerMonth ? (
                 <li>
-                  {p.includedAiRunsPerMonth.toLocaleString()} AI actions/mo
-                  included
+                  {p.includedAiRunsPerMonth.toLocaleString()} {t("settings.billing.aiActionsIncluded")}
                   {p.aiOveragePriceUsd
-                    ? `, then $${p.aiOveragePriceUsd}/action`
+                    ? `, ${t("settings.billing.then")} $${p.aiOveragePriceUsd}${t("settings.billing.perAction")}`
                     : ""}
                 </li>
               ) : null}
@@ -1996,17 +2013,17 @@ function PlanGrid({
                 p.features.map((f) => (
                   <li key={f} className="flex items-center gap-1">
                     <Check className="h-3 w-3 text-green-600" />
-                    {FEATURE_LABELS[f] ?? f}
+                    {billingFeatureLabel(t, f)}
                   </li>
                 ))
               ) : (
-                <li>Full core PIMS</li>
+                <li>{t("settings.billing.fullPims")}</li>
               )}
             </ul>
             <div className="mt-4 pt-2">
               {isCurrent ? (
                 <span className="text-xs font-medium text-primary">
-                  Current plan
+                  {t("settings.billing.currentPlan")}
                 </span>
               ) : canBuy ? (
                 <Button
@@ -2018,7 +2035,7 @@ function PlanGrid({
                   {busyTier === p.tier ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
-                  Choose {p.name}
+                  {t("settings.billing.choose")} {p.name}
                 </Button>
               ) : !p.selfServe ? (
                 <a
@@ -2030,8 +2047,8 @@ function PlanGrid({
                   className="text-xs font-medium text-primary hover:underline"
                 >
                   {platformOperationalConfig.supportEmail
-                    ? "Contact sales"
-                    : "Sales contact pending"}
+                    ? t("settings.billing.contactSales")
+                    : t("settings.billing.salesContactPending")}
                 </a>
               ) : null}
             </div>
@@ -2044,6 +2061,7 @@ function PlanGrid({
 
 // ── Staff ───────────────────────────────────────────────────
 function StaffTab() {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const {
     data: staffList,
@@ -2056,41 +2074,33 @@ function StaffTab() {
       utils.settings.listUsers.invalidate();
       setShowAdd(false);
       resetAddForm();
-      toast.success("Staff member added");
+      toast.success(t("settings.staff.created"));
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: () => toast.error(t("settings.staff.loadError")),
   });
   const updateMutation = trpc.settings.updateUser.useMutation({
     onSuccess: () => {
       utils.settings.listUsers.invalidate();
       setEditingId(null);
-      toast.success("Staff member updated");
+      toast.success(t("settings.staff.updated"));
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: () => toast.error(t("settings.staff.loadError")),
   });
   const deactivateMutation = trpc.settings.deactivateUser.useMutation({
     onSuccess: () => {
       utils.settings.listUsers.invalidate();
-      toast.success("Staff member deactivated");
+      toast.success(t("settings.staff.deactivated"));
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: () => toast.error(t("settings.staff.loadError")),
   });
   const inviteMutation = trpc.settings.inviteStaff.useMutation({
     onSuccess: (res) => {
       utils.settings.listUsers.invalidate();
       setInviteForm({ email: "", name: "", role: "front_desk" });
       setInviteUrl(res.inviteUrl ?? null);
-      toast.success("Invite sent");
+      toast.success(t("settings.staff.inviteSent"));
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: () => toast.error(t("settings.staff.loadError")),
   });
 
   const [showInvite, setShowInvite] = useState(false);
@@ -2189,8 +2199,8 @@ function StaffTab() {
   if (staffMissing) {
     return (
       <SettingsLoadError
-        title="Could not load staff"
-        message="The staff list request finished without returning data. Try loading it again before adding or editing staff."
+        title={t("settings.staff.loadError")}
+        message={t("settings.staff.loadDescription")}
         onRetry={() => void refetchStaff()}
       />
     );
@@ -2209,7 +2219,7 @@ function StaffTab() {
           variant="outline"
         >
           <Mail className="mr-2 h-4 w-4" />
-          Invite by email
+          {t("settings.staff.invite")}
         </Button>
         <Button
           onClick={() => {
@@ -2220,20 +2230,19 @@ function StaffTab() {
           size="sm"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Staff
+          {t("settings.staff.add")}
         </Button>
       </div>
 
       {showInvite && (
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <h3 className="text-sm font-semibold">Invite a teammate</h3>
+          <h3 className="text-sm font-semibold">{t("settings.staff.inviteTitle")}</h3>
           <p className="text-xs text-muted-foreground">
-            They&apos;ll get an email to set their own password and activate
-            their account.
+            {t("settings.staff.inviteDescription")}
           </p>
           <div className="grid grid-cols-2 gap-3">
             <Input
-              placeholder="Email"
+              placeholder={t("settings.practice.email")}
               type="email"
               maxLength={SETTINGS_EMAIL_MAX_LENGTH}
               value={inviteForm.email}
@@ -2242,7 +2251,7 @@ function StaffTab() {
               }
             />
             <Input
-              placeholder="Name (optional)"
+              placeholder={`${t("settings.staff.name")} (${t("booking.public.optional")})`}
               maxLength={STAFF_NAME_MAX_LENGTH}
               value={inviteForm.name}
               onChange={(e) =>
@@ -2259,11 +2268,11 @@ function StaffTab() {
                 })
               }
             >
-              <option value="front_desk">Front Desk</option>
-              <option value="viewer">Viewer (read-only)</option>
-              <option value="technician">Technician</option>
-              <option value="veterinarian">Veterinarian</option>
-              <option value="admin">Admin</option>
+              <option value="front_desk">{t("settings.staff.frontDesk")}</option>
+              <option value="viewer">{t("settings.staff.viewer")}</option>
+              <option value="technician">{t("settings.staff.technician")}</option>
+              <option value="veterinarian">{t("settings.staff.veterinarian")}</option>
+              <option value="admin">{t("settings.staff.admin")}</option>
             </select>
           </div>
           <div className="flex gap-2">
@@ -2283,14 +2292,14 @@ function StaffTab() {
               {inviteMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Send invite
+              {t("settings.staff.send")}
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => setShowInvite(false)}
             >
-              Cancel
+              {t("settings.staff.cancel")}
             </Button>
           </div>
           {inviteUrl && (
@@ -2307,7 +2316,7 @@ function StaffTab() {
                   variant="ghost"
                   onClick={() => {
                     navigator.clipboard.writeText(inviteUrl);
-                    toast.success("Copied");
+                    toast.success(t("settings.staff.copied"));
                   }}
                 >
                   <Copy className="h-4 w-4" />
@@ -2325,16 +2334,16 @@ function StaffTab() {
 
       {showAdd && (
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <h3 className="text-sm font-semibold">New Staff Member</h3>
+          <h3 className="text-sm font-semibold">{t("settings.staff.new")}</h3>
           <div className="grid grid-cols-2 gap-3">
             <Input
-              placeholder="Full name"
+              placeholder={t("settings.staff.name")}
               maxLength={STAFF_NAME_MAX_LENGTH}
               value={addForm.name}
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
             />
             <Input
-              placeholder="Email"
+              placeholder={t("settings.practice.email")}
               type="email"
               maxLength={SETTINGS_EMAIL_MAX_LENGTH}
               value={addForm.email}
@@ -2343,7 +2352,7 @@ function StaffTab() {
               }
             />
             <Input
-              placeholder={`Password (min ${AUTH_PASSWORD_MIN_LENGTH} chars)`}
+              placeholder={t("settings.staff.passwordHint").replace("{min}", String(AUTH_PASSWORD_MIN_LENGTH))}
               type="password"
               maxLength={AUTH_PASSWORD_MAX_LENGTH}
               value={addForm.password}
@@ -2363,14 +2372,14 @@ function StaffTab() {
                 })
               }
             >
-              <option value="front_desk">Front Desk</option>
-              <option value="viewer">Viewer (read-only)</option>
-              <option value="technician">Technician</option>
-              <option value="veterinarian">Veterinarian</option>
-              <option value="admin">Admin</option>
+              <option value="front_desk">{t("settings.staff.frontDesk")}</option>
+              <option value="viewer">{t("settings.staff.viewer")}</option>
+              <option value="technician">{t("settings.staff.technician")}</option>
+              <option value="veterinarian">{t("settings.staff.veterinarian")}</option>
+              <option value="admin">{t("settings.staff.admin")}</option>
             </select>
             <Input
-              placeholder="Phone (optional)"
+              placeholder={t("settings.staff.phone")}
               maxLength={SETTINGS_PHONE_MAX_LENGTH}
               value={addForm.phone}
               onChange={(e) =>
@@ -2378,7 +2387,7 @@ function StaffTab() {
               }
             />
             <Input
-              placeholder="License # (optional)"
+              placeholder={t("settings.staff.license")}
               maxLength={STAFF_LICENSE_NUMBER_MAX_LENGTH}
               value={addForm.licenseNumber}
               onChange={(e) =>
@@ -2399,8 +2408,7 @@ function StaffTab() {
                 }
               />
               <span>
-                Veterinarian provider — appears in doctor lists and can sign
-                doctor-required visits.
+                {t("settings.staff.providerDescription")}
               </span>
             </label>
           </div>
@@ -2421,10 +2429,10 @@ function StaffTab() {
               {createMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create
+              {t("settings.staff.create")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
-              Cancel
+              {t("settings.staff.cancel")}
             </Button>
           </div>
           {createMutation.error && (
@@ -2439,13 +2447,13 @@ function StaffTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Email</th>
-              <th className="px-4 py-3 text-left font-medium">Role</th>
-              <th className="px-4 py-3 text-left font-medium">Provider</th>
-              <th className="px-4 py-3 text-left font-medium">Phone</th>
-              <th className="px-4 py-3 text-left font-medium">License #</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.staff.name")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.practice.email")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.staff.role")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.staff.provider")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.practice.phone")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.staff.license")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("settings.staff.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -2483,11 +2491,11 @@ function StaffTab() {
                           })
                         }
                       >
-                        <option value="front_desk">Front Desk</option>
-                        <option value="viewer">Viewer (read-only)</option>
-                        <option value="technician">Technician</option>
-                        <option value="veterinarian">Veterinarian</option>
-                        <option value="admin">Admin</option>
+                        <option value="front_desk">{t("settings.staff.frontDesk")}</option>
+                        <option value="viewer">{t("settings.staff.viewer")}</option>
+                        <option value="technician">{t("settings.staff.technician")}</option>
+                        <option value="veterinarian">{t("settings.staff.veterinarian")}</option>
+                        <option value="admin">{t("settings.staff.admin")}</option>
                       </select>
                     </td>
                     <td className="px-4 py-2">
@@ -2504,7 +2512,7 @@ function StaffTab() {
                             })
                           }
                         />
-                        Veterinarian
+                        {t("settings.staff.veterinarian")}
                       </label>
                     </td>
                     <td className="px-4 py-2">
@@ -2576,11 +2584,11 @@ function StaffTab() {
                           ROLE_BADGE[user.role] ?? ROLE_BADGE.front_desk,
                         )}
                       >
-                        {user.role.replace("_", " ")}
+                        {t(`settings.staff.${user.role === "front_desk" ? "frontDesk" : user.role}` as keyof typeof import("@/lib/i18n/messages").enMessages)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {user.isVeterinarian ? "Veterinarian" : "—"}
+                      {user.isVeterinarian ? t("settings.staff.veterinarian") : "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {user.phone ?? "-"}
@@ -2651,8 +2659,8 @@ function StaffTab() {
                   <EmptyState
                     className="border-0 bg-transparent p-8"
                     icon={Users}
-                    title="No staff members found"
-                    description="Invite teammates or create a staff login to finish practice setup."
+                    title={t("settings.staff.empty")}
+                    description={t("settings.staff.emptyDescription")}
                   />
                 </td>
               </tr>
@@ -2667,6 +2675,7 @@ function StaffTab() {
 
 // ── Appointment Types ───────────────────────────────────────
 function AppointmentTypesTab() {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const {
     data: types,
@@ -2765,23 +2774,23 @@ function AppointmentTypesTab() {
           size="sm"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Type
+          {t("settings.types.add")}
         </Button>
       </div>
 
       {showAdd && (
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <h3 className="text-sm font-semibold">New Appointment Type</h3>
+          <h3 className="text-sm font-semibold">{t("settings.types.new")}</h3>
           <div className="grid grid-cols-2 gap-3">
             <Input
-              placeholder="Type name"
+              placeholder={t("settings.types.name")}
               maxLength={APPOINTMENT_TYPE_NAME_MAX_LENGTH}
               value={addForm.name}
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
             />
             <Input
               type="number"
-              placeholder="Duration (minutes)"
+              placeholder={t("settings.types.durationPlaceholder")}
               min={APPOINTMENT_TYPE_DURATION_MIN_MINUTES}
               max={APPOINTMENT_TYPE_DURATION_MAX_MINUTES}
               value={addForm.durationMinutes}
@@ -2793,7 +2802,7 @@ function AppointmentTypesTab() {
               }
             />
             <div className="space-y-1.5">
-              <span className="text-sm font-medium">Color</span>
+              <span className="text-sm font-medium">{t("settings.types.color")}</span>
               <div className="flex gap-1.5">
                 {PRESET_COLORS.map((c) => (
                   <button
@@ -2821,9 +2830,9 @@ function AppointmentTypesTab() {
                 })
               }
             >
-              {ROOM_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
+              {ROOM_TYPES.map((roomType) => (
+                <option key={roomType} value={roomType}>
+                  {t(`settings.types.room.${roomType}`)}
                 </option>
               ))}
             </select>
@@ -2841,10 +2850,10 @@ function AppointmentTypesTab() {
               {createMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create
+              {t("settings.types.create")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
-              Cancel
+              {t("settings.types.cancel")}
             </Button>
           </div>
         </div>
@@ -2854,11 +2863,11 @@ function AppointmentTypesTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Duration</th>
-              <th className="px-4 py-3 text-left font-medium">Color</th>
-              <th className="px-4 py-3 text-left font-medium">Room Type</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.types.name")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.types.duration")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.types.color")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.types.roomType")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("settings.staff.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -2925,9 +2934,9 @@ function AppointmentTypesTab() {
                           })
                         }
                       >
-                        {ROOM_TYPES.map((t) => (
-                          <option key={t} value={t}>
-                            {t.charAt(0).toUpperCase() + t.slice(1)}
+                        {ROOM_TYPES.map((roomType) => (
+                          <option key={roomType} value={roomType}>
+                            {t(`settings.types.room.${roomType}`)}
                           </option>
                         ))}
                       </select>
@@ -2965,7 +2974,7 @@ function AppointmentTypesTab() {
                   <>
                     <td className="px-4 py-3 font-medium">{type.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {type.durationMinutes} min
+                      {type.durationMinutes} {t("settings.types.minutes")}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -2974,7 +2983,7 @@ function AppointmentTypesTab() {
                       />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground capitalize">
-                      {type.defaultRoomType ?? "-"}
+                      {type.defaultRoomType ? t(`settings.types.room.${type.defaultRoomType}`) : "-"}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-1">
@@ -3013,8 +3022,8 @@ function AppointmentTypesTab() {
                   <EmptyState
                     className="border-0 bg-transparent p-8"
                     icon={Calendar}
-                    title="No appointment types configured"
-                    description="Add appointment types so scheduling can use default durations, colors, and room types."
+                    title={t("settings.types.empty")}
+                    description={t("settings.types.emptyDescription")}
                   />
                 </td>
               </tr>
@@ -3076,7 +3085,6 @@ type ImportPreview = {
   errors: string[];
 };
 type ImportMode = MigrationImportMode;
-const IMPORT_CSV_SIZE_MESSAGE = "CSV imports must be 5 MB or less.";
 function importPreviewRequestKey(
   mode: ImportMode,
   source: string,
@@ -3092,6 +3100,7 @@ function importPreviewRequestKey(
 }
 // ── Data Tab ─────────────────────────────────────────────────
 function DataTab() {
+  const t = useTranslations();
   const [exportingType, setExportingType] = useState<string | null>(null);
   const [importMode, setImportMode] = useState<ImportMode | null>(null);
   const [migrationSource, setMigrationSource] = useState<
@@ -3162,11 +3171,11 @@ function DataTab() {
         });
         setRestoreResult(null);
         if (data.missingSections.length > 0) {
-          toast.error("Backup is missing required sections");
+          toast.error(t("settings.data.backupMissing"));
         } else if (data.restoreErrors.length > 0) {
-          toast.error("Backup has invalid restore data");
+          toast.error(t("settings.data.backupInvalid"));
         } else {
-          toast.success("Backup verified");
+          toast.success(t("settings.data.backupVerified"));
         }
         return;
       }
@@ -3176,7 +3185,7 @@ function DataTab() {
         totalRows: data.totalRows,
       });
       setConfirmFreshPractice(false);
-      toast.success(`Restored ${data.totalRows} rows`);
+      toast.success(t("settings.data.restoredRows").replace("{count}", String(data.totalRows)));
     },
     onError: (err) => {
       toast.error(err.message);
@@ -3207,9 +3216,9 @@ function DataTab() {
       importRequestKeyRef.current = null;
       setImportPreview(null);
       setImportRecoveryMessage(
-        "This preview expired or the clinic data changed. Nothing new was imported by this attempt. Check the same file again.",
+        t("settings.data.previewExpired"),
       );
-      toast.error("Check the CSV again before importing.");
+      toast.error(t("settings.data.checkCsvAgain"));
       return;
     }
     toast.error(err.message);
@@ -3235,7 +3244,7 @@ function DataTab() {
         });
         setImportRecoveryMessage("");
         setImportResult(null);
-        toast.success("Client CSV checked");
+        toast.success(t("settings.data.clientsChecked"));
         return;
       }
 
@@ -3248,7 +3257,7 @@ function DataTab() {
       setCsvText("");
       setCsvFileName("");
       setImportRecoveryMessage("");
-      toast.success("Clients imported");
+      toast.success(t("settings.data.clientsImported"));
     },
     onError: handleCsvImportError,
   });
@@ -3273,7 +3282,7 @@ function DataTab() {
         });
         setImportRecoveryMessage("");
         setImportResult(null);
-        toast.success("Patient CSV checked");
+        toast.success(t("settings.data.patientsChecked"));
         return;
       }
 
@@ -3286,7 +3295,7 @@ function DataTab() {
       setCsvText("");
       setCsvFileName("");
       setImportRecoveryMessage("");
-      toast.success("Patients imported");
+      toast.success(t("settings.data.patientsImported"));
     },
     onError: handleCsvImportError,
   });
@@ -3310,7 +3319,7 @@ function DataTab() {
         });
         setImportRecoveryMessage("");
         setImportResult(null);
-        toast.success("Vaccination CSV checked");
+        toast.success(t("settings.data.vaccinationsChecked"));
         return;
       }
 
@@ -3319,7 +3328,7 @@ function DataTab() {
       setCsvText("");
       setCsvFileName("");
       setImportRecoveryMessage("");
-      toast.success("Vaccine history imported");
+      toast.success(t("settings.data.vaccinationsImported"));
     },
     onError: handleCsvImportError,
   });
@@ -3343,7 +3352,7 @@ function DataTab() {
         });
         setImportRecoveryMessage("");
         setImportResult(null);
-        toast.success("Medical history CSV checked");
+        toast.success(t("settings.data.historyChecked"));
         return;
       }
 
@@ -3352,7 +3361,7 @@ function DataTab() {
       setCsvText("");
       setCsvFileName("");
       setImportRecoveryMessage("");
-      toast.success("Medical history imported");
+      toast.success(t("settings.data.historyImported"));
     },
     onError: handleCsvImportError,
   });
@@ -3381,14 +3390,14 @@ function DataTab() {
   const clearDemo = trpc.settings.clearDemoData.useMutation({
     onSuccess: () => {
       utils.settings.onboardingStatus.invalidate();
-      toast.success("Sample data removed");
+      toast.success(t("settings.data.sampleRemoved"));
     },
     onError: (err) => toast.error(err.message),
   });
   const reseedDemo = trpc.settings.reseedDemoData.useMutation({
     onSuccess: () => {
       utils.settings.onboardingStatus.invalidate();
-      toast.success("Sample data added");
+      toast.success(t("settings.data.sampleAdded"));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -3436,7 +3445,7 @@ function DataTab() {
         downloadCSV(data, `${type}-export.csv`);
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Could not export data",
+          err instanceof Error ? err.message : t("settings.data.exportError"),
         );
       } finally {
         setExportingType(null);
@@ -3449,7 +3458,7 @@ function DataTab() {
     setExportingType("full-backup");
     try {
       if (!verifiedPracticeSettings) {
-        throw new Error("Could not load practice settings for backup export");
+        throw new Error(t("settings.data.backupSettingsError"));
       }
       const result = await exportFullBackup.refetch();
       const backup = requireSettingsExportData(
@@ -3460,7 +3469,7 @@ function DataTab() {
       downloadJSON(backup, `doctor-pet-full-backup-${date}.json`);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Could not export full backup",
+        err instanceof Error ? err.message : t("settings.data.exportError"),
       );
     } finally {
       setExportingType(null);
@@ -3509,13 +3518,13 @@ function DataTab() {
           setBackupFileName("");
           setBackupPayload(null);
           toast.error(
-            err instanceof Error ? err.message : "Could not read backup JSON",
+            err instanceof Error ? err.message : t("settings.data.backupReadError"),
           );
         }
       };
       reader.onerror = () => {
         clearBackupFile();
-        toast.error("Could not read backup JSON");
+        toast.error(t("settings.data.backupReadError"));
       };
       reader.readAsText(file);
     },
@@ -3605,7 +3614,7 @@ function DataTab() {
 
       if (file.size > IMPORT_CSV_MAX_BYTES) {
         clearImportFile();
-        toast.error(IMPORT_CSV_SIZE_MESSAGE);
+        toast.error(t("settings.data.csvTooLarge"));
         return;
       }
 
@@ -3620,12 +3629,12 @@ function DataTab() {
         const text = String(e.target?.result ?? "");
         if (!text.trim()) {
           setCsvFileName("");
-          toast.error("CSV file is empty");
+          toast.error(t("settings.data.csvEmpty"));
           return;
         }
         if (!isImportCsvSizeValid(text)) {
           clearImportFile();
-          toast.error(IMPORT_CSV_SIZE_MESSAGE);
+          toast.error(t("settings.data.csvTooLarge"));
           return;
         }
 
@@ -3635,7 +3644,7 @@ function DataTab() {
       reader.onerror = () => {
         if (importFileReadVersionRef.current !== readVersion) return;
         setCsvFileName("");
-        toast.error("Could not read CSV file");
+        toast.error(t("settings.data.csvReadError"));
       };
       reader.readAsText(file);
     },
@@ -3657,7 +3666,7 @@ function DataTab() {
   const handleImportConfirm = useCallback(() => {
     if (!csvText || !importMode || !importPreview) return;
     if (!isImportCsvSizeValid(csvText)) {
-      toast.error(IMPORT_CSV_SIZE_MESSAGE);
+      toast.error(t("settings.data.csvTooLarge"));
       return;
     }
     const currentRequestKey = importPreviewRequestKey(
@@ -3668,7 +3677,7 @@ function DataTab() {
     if (importPreview.requestKey !== currentRequestKey) {
       importRequestKeyRef.current = null;
       setImportPreview(null);
-      toast.error("The file or source changed. Check the CSV again.");
+      toast.error(t("settings.data.fileChanged"));
       return;
     }
     if (importMode === "clients") {
@@ -3759,7 +3768,7 @@ function DataTab() {
     <div className="space-y-8">
       {/* Sample data */}
       <div>
-        <h3 className="text-sm font-semibold mb-1">Sample data</h3>
+        <h3 className="text-sm font-semibold mb-1">{t("settings.data.sample")}</h3>
         <p className="text-sm text-muted-foreground mb-4">
           A practice full of made up clients and pets so you can explore. Add it
           any time, and remove it when you are ready to work for real.
@@ -3783,19 +3792,19 @@ function DataTab() {
             reseedDemo.isPending
           }
         >
-          {hasDemo ? "Remove sample data" : "Add sample data"}
+          {hasDemo ? t("settings.data.removeSample") : t("settings.data.addSample")}
         </Button>
         {onboarding.error || onboardingMissing ? (
           <p className="mt-2 text-xs text-destructive">
             {onboarding.error?.message ??
-              "Unable to load sample data status. Please retry."}
+              t("settings.data.sampleStatusError")}
           </p>
         ) : null}
       </div>
 
       {/* Export Section */}
       <div>
-        <h3 className="text-sm font-semibold mb-1">Export Data</h3>
+        <h3 className="text-sm font-semibold mb-1">{t("settings.data.export")}</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Download your practice data.
         </p>
@@ -3823,7 +3832,7 @@ function DataTab() {
           {practiceSettingsError || practiceSettingsMissing ? (
             <p className="mt-2 text-xs text-destructive">
               {practiceSettingsError?.message ??
-                "Unable to load practice settings for backup export."}
+                t("settings.data.backupSettingsError")}
             </p>
           ) : null}
           <p className="mt-2 text-xs text-muted-foreground">
@@ -3834,20 +3843,20 @@ function DataTab() {
         <div className="grid grid-cols-2 gap-3 max-w-2xl">
           {(
             [
-              { key: "clients", label: "Export Clients", icon: Users },
+              { key: "clients", label: t("settings.data.exportClients"), icon: Users },
               {
                 key: "patients",
-                label: "Export Patients",
+                label: t("settings.data.exportPatients"),
                 icon: FileSpreadsheet,
               },
               {
                 key: "appointments",
-                label: "Export Appointments",
+                label: t("settings.data.exportAppointments"),
                 icon: Calendar,
               },
               {
                 key: "invoices",
-                label: "Export Invoices",
+                label: t("settings.data.exportInvoices"),
                 icon: FileSpreadsheet,
               },
             ] as const
@@ -3873,7 +3882,7 @@ function DataTab() {
 
       {/* Database backup restore */}
       <div>
-        <h3 className="text-sm font-semibold mb-1">Restore Database Backup</h3>
+        <h3 className="text-sm font-semibold mb-1">{t("settings.data.restore")}</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Restore structured data into an empty practice. Existing clients,
           patients, appointments, or invoices block the restore. A backup with
@@ -3940,8 +3949,8 @@ function DataTab() {
                       {backupSummary.missingSections.length > 0
                         ? "Missing sections"
                         : backupSummary.restoreErrors.length > 0
-                          ? "Invalid backup data"
-                          : "Verified"}
+                          ? t("settings.data.invalidBackup")
+                          : t("settings.data.verified")}
                     </Badge>
                     <span className="text-muted-foreground">
                       {backupSummary.totalRows.toLocaleString()} rows detected
@@ -4150,7 +4159,7 @@ function DataTab() {
 
       {/* Import Section */}
       <div>
-        <h3 className="text-sm font-semibold mb-1">Import Data</h3>
+        <h3 className="text-sm font-semibold mb-1">{t("settings.data.import")}</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Moving from another system? Import clients first, then patients, then
           vaccine history, then medical history (visit notes). Every file is
@@ -4164,7 +4173,7 @@ function DataTab() {
         {/* Where the data is coming from (export instructions per source) */}
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-muted-foreground">
-            Coming from:
+            {t("settings.data.importFrom")}
           </span>
           {MIGRATION_SOURCES.map((source) => (
             <button
@@ -4206,7 +4215,7 @@ function DataTab() {
           </div>
         ) : (
           <p className="mb-4 text-xs font-medium text-amber-700">
-            Choose the system you are moving from before selecting an import.
+            {t("settings.data.chooseSource")}
           </p>
         )}
 
@@ -4238,7 +4247,7 @@ function DataTab() {
           <div className="max-w-2xl space-y-4">
             {/* Expected columns hint */}
             <p className="text-xs text-muted-foreground">
-              Expected columns:{" "}
+              {t("settings.data.expectedColumns")} {" "}
               {
                 MIGRATION_STEPS.find((step) => step.mode === importMode)!
                   .columnHint
@@ -4263,7 +4272,7 @@ function DataTab() {
             >
               <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">
-                Drag and drop a CSV file here, or click to select
+                {t("settings.data.dropCsv")}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 CSV files must be 5 MB or less. The file is dry-run first; no
@@ -4330,16 +4339,16 @@ function DataTab() {
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <ImportStat
-                      label="Rows parsed"
+                      label={t("settings.data.rowsParsed")}
                       value={importPreview.total}
                     />
                     <ImportStat
-                      label="Will import"
+                      label={t("settings.data.willImport")}
                       value={importPreview.willInsert}
                     />
                     {typeof importPreview.duplicates === "number" && (
                       <ImportStat
-                        label="Duplicates"
+                        label={t("settings.data.duplicates")}
                         value={importPreview.duplicates ?? 0}
                       />
                     )}
@@ -4364,7 +4373,7 @@ function DataTab() {
                       />
                     )}
                     <ImportStat
-                      label="Row issues"
+                      label={t("settings.data.rowIssues")}
                       value={importPreview.errors.length}
                     />
                   </div>
@@ -4409,7 +4418,7 @@ function DataTab() {
                     ) : (
                       <Check className="mr-2 h-4 w-4" />
                     )}
-                    Confirm Import (
+                    {t("settings.data.confirmImport")} (
                     {importPreview.willInsert +
                       (importPreview.willReconcile ?? 0)}{" "}
                     changes)
@@ -4426,7 +4435,7 @@ function DataTab() {
                       setImportRecoveryMessage("");
                     }}
                   >
-                    Cancel
+                    {t("settings.data.cancel")}
                   </Button>
                 </div>
               </div>
@@ -4487,6 +4496,7 @@ function ImportStat({ label, value }: { label: string; value: number }) {
 
 // ── Rooms ───────────────────────────────────────────────────
 function RoomsTab() {
+  const t = useTranslations();
   const utils = trpc.useUtils();
   const locationsQuery = trpc.settings.listLocations.useQuery();
   const {
@@ -4507,20 +4517,16 @@ function RoomsTab() {
           locationsQuery.data?.[0]?.id ??
           "",
       });
-      toast.success("Room created");
+      toast.success(t("settings.rooms.created"));
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: () => toast.error(t("settings.rooms.loadError")),
   });
   const deleteMutation = trpc.settings.deleteRoom.useMutation({
     onSuccess: () => {
       utils.settings.listRooms.invalidate();
-      toast.success("Room deleted");
+      toast.success(t("settings.rooms.deleted"));
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: () => toast.error(t("settings.rooms.loadError")),
   });
 
   const [showAdd, setShowAdd] = useState(false);
@@ -4558,8 +4564,8 @@ function RoomsTab() {
   if (roomsMissing) {
     return (
       <SettingsLoadError
-        title="Could not load rooms"
-        message="The room list request finished without returning data. Try loading it again before editing rooms."
+        title={t("settings.rooms.loadError")}
+        message={t("settings.rooms.loadDescription")}
         onRetry={() => void refetchRooms()}
       />
     );
@@ -4570,16 +4576,16 @@ function RoomsTab() {
       <div className="flex justify-end">
         <Button onClick={() => setShowAdd(!showAdd)} size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Add Room
+          {t("settings.rooms.add")}
         </Button>
       </div>
 
       {showAdd && (
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <h3 className="text-sm font-semibold">New Room</h3>
+          <h3 className="text-sm font-semibold">{t("settings.rooms.new")}</h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Input
-              placeholder="Room name"
+              placeholder={t("settings.rooms.name")}
               maxLength={ROOM_NAME_MAX_LENGTH}
               value={addForm.name}
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
@@ -4594,14 +4600,14 @@ function RoomsTab() {
                 })
               }
             >
-              {ROOM_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
+              {ROOM_TYPES.map((roomType) => (
+                <option key={roomType} value={roomType}>
+                  {t(`settings.types.room.${roomType}`)}
                 </option>
               ))}
             </select>
             <select
-              aria-label="Clinic location"
+              aria-label={t("settings.rooms.location")}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={addForm.locationId}
               onChange={(event) =>
@@ -4609,7 +4615,7 @@ function RoomsTab() {
               }
               disabled={locationsQuery.isLoading || roomLocations.length === 0}
             >
-              <option value="">Select location</option>
+              <option value="">{t("settings.rooms.selectLocation")}</option>
               {roomLocations.map((location) => (
                 <option key={location.id} value={location.id}>
                   {location.name}
@@ -4630,10 +4636,10 @@ function RoomsTab() {
               {createMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create
+              {t("settings.rooms.create")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
-              Cancel
+              {t("settings.rooms.cancel")}
             </Button>
           </div>
         </div>
@@ -4643,10 +4649,10 @@ function RoomsTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Type</th>
-              <th className="px-4 py-3 text-left font-medium">Location</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.types.name")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.rooms.type")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.rooms.location")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("settings.staff.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -4657,12 +4663,12 @@ function RoomsTab() {
               >
                 <td className="px-4 py-3 font-medium">{room.name}</td>
                 <td className="px-4 py-3 text-muted-foreground capitalize">
-                  {room.type}
+                  {t(`settings.types.room.${room.type}`)}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {roomLocations.find(
                     (location) => location.id === room.locationId,
-                  )?.name ?? "Unassigned"}
+                  )?.name ?? t("settings.rooms.unassigned")}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Button
@@ -4681,8 +4687,8 @@ function RoomsTab() {
                   <EmptyState
                     className="border-0 bg-transparent p-8"
                     icon={DoorOpen}
-                    title="No rooms configured"
-                    description="Add rooms so appointments can reserve exam, treatment, surgery, or boarding spaces."
+                    title={t("settings.rooms.empty")}
+                    description={t("settings.rooms.emptyDescription")}
                   />
                 </td>
               </tr>
@@ -4696,6 +4702,7 @@ function RoomsTab() {
 
 // ── Wellness Plans ──────────────────────────────────────────
 function WellnessPlansTab() {
+  const t = useTranslations();
   const formatCurrency = useCurrencyFormatter();
   const utils = trpc.useUtils();
   const {
@@ -4714,10 +4721,10 @@ function WellnessPlansTab() {
         price: "",
         billingInterval: "monthly",
       });
-      toast.success("Wellness plan created");
+      toast.success(t("settings.wellness.created"));
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: () => {
+      toast.error(t("settings.wellness.createError"));
     },
   });
   const setPlanActive = trpc.wellness.setPlanActive.useMutation({
@@ -4726,12 +4733,12 @@ function WellnessPlansTab() {
       utils.wellness.listDue.invalidate();
       toast.success(
         variables.active
-          ? "Wellness plan reactivated"
-          : "Wellness plan deactivated",
+          ? t("settings.wellness.reactivated")
+          : t("settings.wellness.deactivated"),
       );
     },
-    onError: (err) => {
-      toast.error(err.message);
+    onError: () => {
+      toast.error(t("settings.wellness.updateError"));
     },
   });
 
@@ -4764,13 +4771,13 @@ function WellnessPlansTab() {
     );
   }
   if (wellnessError) {
-    return <SettingsLoadError message={wellnessError.message} />;
+    return <SettingsLoadError message={t("settings.wellness.loadFailure")} />;
   }
   if (wellnessPlansMissing) {
     return (
       <SettingsLoadError
-        title="Could not load wellness plans"
-        message="The wellness plan request finished without returning data. Try loading it again before editing membership plans."
+        title={t("settings.wellness.loadError")}
+        message={t("settings.wellness.loadDescription")}
         onRetry={() => void refetchWellnessPlans()}
       />
     );
@@ -4781,26 +4788,25 @@ function WellnessPlansTab() {
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold">Scheduled invoice billing</h3>
-            <Badge variant="secondary">No auto-charge</Badge>
+            <h3 className="text-sm font-semibold">{t("settings.wellness.scheduledBilling")}</h3>
+            <Badge variant="secondary">{t("settings.wellness.noAutoCharge")}</Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Wellness plans generate due invoices by cadence; Stripe checkout is
-            collected on each invoice.
+            {t("settings.wellness.scheduledBillingDescription")}
           </p>
         </div>
         <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Plan
+          {t("settings.wellness.add")}
         </Button>
       </div>
 
       {showAdd && (
         <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-          <h3 className="text-sm font-semibold">New Wellness Plan</h3>
+          <h3 className="text-sm font-semibold">{t("settings.wellness.new")}</h3>
           <div className="grid gap-3 md:grid-cols-[1fr_9rem_9rem]">
             <Input
-              placeholder="Plan name"
+              placeholder={t("settings.wellness.name")}
               maxLength={WELLNESS_PLAN_NAME_MAX_LENGTH}
               value={addForm.name}
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
@@ -4810,7 +4816,7 @@ function WellnessPlansTab() {
               min={WELLNESS_PLAN_PRICE_MIN}
               max={WELLNESS_PLAN_PRICE_MAX}
               step={10 ** -WELLNESS_PLAN_PRICE_SCALE}
-              placeholder="Price"
+              placeholder={t("settings.wellness.price")}
               value={addForm.price}
               onChange={(e) =>
                 setAddForm({ ...addForm, price: e.target.value })
@@ -4827,12 +4833,12 @@ function WellnessPlansTab() {
                 })
               }
             >
-              <option value="monthly">Monthly</option>
-              <option value="annual">Annual</option>
+              <option value="monthly">{t("settings.wellness.monthly")}</option>
+              <option value="annual">{t("settings.wellness.annual")}</option>
             </select>
           </div>
           <Input
-            placeholder="Description (optional)"
+            placeholder={t("settings.wellness.description")}
             maxLength={WELLNESS_PLAN_DESCRIPTION_MAX_LENGTH}
             value={addForm.description}
             onChange={(e) =>
@@ -4855,10 +4861,10 @@ function WellnessPlansTab() {
               {createMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create
+              {t("settings.wellness.create")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
-              Cancel
+              {t("settings.wellness.cancel")}
             </Button>
           </div>
         </div>
@@ -4868,11 +4874,11 @@ function WellnessPlansTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Interval</th>
-              <th className="px-4 py-3 text-right font-medium">Price</th>
-              <th className="px-4 py-3 text-left font-medium">Status</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.wellness.table.name")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.wellness.table.interval")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("settings.wellness.price")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.wellness.table.status")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("settings.wellness.table.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -4890,11 +4896,13 @@ function WellnessPlansTab() {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="capitalize text-muted-foreground">
-                    {plan.billingInterval}
+                  <div className="text-muted-foreground">
+                    {plan.billingInterval === "monthly"
+                      ? t("settings.wellness.monthly")
+                      : t("settings.wellness.annual")}
                   </div>
                   <Badge variant="outline" className="mt-1">
-                    Invoice schedule
+                    {t("settings.wellness.invoiceSchedule")}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
@@ -4902,7 +4910,9 @@ function WellnessPlansTab() {
                 </td>
                 <td className="px-4 py-3">
                   <Badge variant={plan.active ? "default" : "secondary"}>
-                    {plan.active ? "Active" : "Inactive"}
+                    {plan.active
+                      ? t("settings.wellness.active")
+                      : t("settings.wellness.inactive")}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -4917,7 +4927,9 @@ function WellnessPlansTab() {
                       })
                     }
                   >
-                    {plan.active ? "Deactivate" : "Reactivate"}
+                    {plan.active
+                      ? t("settings.wellness.deactivate")
+                      : t("settings.wellness.reactivate")}
                   </Button>
                 </td>
               </tr>
@@ -4928,8 +4940,8 @@ function WellnessPlansTab() {
                   <EmptyState
                     className="border-0 bg-transparent p-8"
                     icon={HeartPulse}
-                    title="No wellness plans configured"
-                    description="Create a plan to package preventive care into scheduled invoice memberships."
+                    title={t("settings.wellness.empty")}
+                    description={t("settings.wellness.emptyDescription")}
                   />
                 </td>
               </tr>
@@ -4952,6 +4964,23 @@ const TEMPLATE_CATEGORIES = [
 ] as const;
 
 type TemplateCategory = (typeof TEMPLATE_CATEGORIES)[number];
+
+function templateCategoryLabelKey(category: string | null | undefined) {
+  switch (category) {
+    case "surgery":
+      return "settings.templates.category.surgery" as const;
+    case "wellness":
+      return "settings.templates.category.wellness" as const;
+    case "dental":
+      return "settings.templates.category.dental" as const;
+    case "preventive":
+      return "settings.templates.category.preventive" as const;
+    case "emergency":
+      return "settings.templates.category.emergency" as const;
+    default:
+      return "settings.templates.category.other" as const;
+  }
+}
 
 const CATEGORY_BADGE: Record<string, string> = {
   surgery: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
@@ -4976,6 +5005,7 @@ interface TemplateItem {
 }
 
 function TemplatesTab() {
+  const t = useTranslations();
   const formatCurrency = useCurrencyFormatter();
   const utils = trpc.useUtils();
   const [showAdd, setShowAdd] = useState(false);
@@ -4991,7 +5021,7 @@ function TemplatesTab() {
       utils.templates.list.invalidate();
       setShowAdd(false);
       resetAddForm();
-      toast.success("Template created");
+      toast.success(t("settings.templates.created"));
     },
     onError: (err) => {
       toast.error(err.message);
@@ -5000,7 +5030,7 @@ function TemplatesTab() {
   const updateMutation = trpc.templates.update.useMutation({
     onSuccess: () => {
       utils.templates.list.invalidate();
-      toast.success("Template updated");
+      toast.success(t("settings.templates.updated"));
     },
     onError: (err) => {
       toast.error(err.message);
@@ -5149,7 +5179,7 @@ function TemplatesTab() {
     !createMutation.isPending;
 
   const selectedTemplate = templateList?.find(
-    (t) => t.id === selectedTemplateId,
+    (template) => template.id === selectedTemplateId,
   );
   const {
     data: selectedTemplateDetail,
@@ -5180,8 +5210,8 @@ function TemplatesTab() {
   if (templatesMissing) {
     return (
       <SettingsLoadError
-        title="Could not load templates"
-        message="The template list request finished without returning data. Try loading it again before editing treatment templates."
+        title={t("settings.templates.loadError")}
+        message={t("settings.templates.loadDescription")}
         onRetry={() => void refetchTemplates()}
       />
     );
@@ -5198,7 +5228,7 @@ function TemplatesTab() {
             onClick={() => setSelectedTemplateId(null)}
           >
             <X className="mr-2 h-4 w-4" />
-            Back
+            {t("settings.templates.back")}
           </Button>
           <h3 className="text-sm font-semibold">{selectedTemplate.name}</h3>
           <span
@@ -5209,7 +5239,9 @@ function TemplatesTab() {
                 : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
             )}
           >
-            {selectedTemplate.isActive !== false ? "Active" : "Inactive"}
+            {selectedTemplate.isActive !== false
+              ? t("settings.templates.active")
+              : t("settings.templates.inactive")}
           </span>
           <Button
             size="sm"
@@ -5225,7 +5257,9 @@ function TemplatesTab() {
             {updateMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {selectedTemplate.isActive !== false ? "Deactivate" : "Activate"}
+            {selectedTemplate.isActive !== false
+              ? t("settings.templates.deactivate")
+              : t("settings.templates.activate")}
           </Button>
         </div>
 
@@ -5239,10 +5273,10 @@ function TemplatesTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium">Description</th>
-                <th className="px-4 py-3 text-left font-medium">Type</th>
-                <th className="px-4 py-3 text-left font-medium">Quantity</th>
-                <th className="px-4 py-3 text-right font-medium">Unit Price</th>
+                <th className="px-4 py-3 text-left font-medium">{t("settings.templates.table.description")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("settings.templates.type")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("settings.templates.quantity")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("settings.templates.table.unitPrice")}</th>
               </tr>
             </thead>
             <tbody>
@@ -5261,15 +5295,15 @@ function TemplatesTab() {
                     className="px-4 py-8 text-center text-muted-foreground"
                   >
                     <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
-                    Loading template items...
+                    {t("settings.templates.loadingItems")}
                   </td>
                 </tr>
               ) : selectedTemplateMissing ? (
                 <tr>
                   <td colSpan={4} className="p-4">
                     <SettingsLoadError
-                      title="Could not load template items"
-                      message="The template detail request finished without returning data. Try loading it again before using this treatment template."
+                      title={t("settings.templates.itemsLoadError")}
+                      message={t("settings.templates.itemsLoadDescription")}
                       onRetry={() => void refetchSelectedTemplate()}
                     />
                   </td>
@@ -5281,12 +5315,15 @@ function TemplatesTab() {
                       {item.description}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      <span className="capitalize">{item.itemType}</span>
+                      <span>
+                        {item.itemType === "product"
+                          ? t("settings.templates.product")
+                          : t("settings.templates.service")}
+                      </span>
                       {item.itemType === "product" &&
                       item.hasActiveProductLink !== true ? (
                         <p className="mt-1 max-w-xs text-xs text-amber-700 dark:text-amber-400">
-                          Missing or archived inventory product — recreate this
-                          template before use.
+                          {t("settings.templates.missingProduct")}
                         </p>
                       ) : null}
                     </td>
@@ -5304,8 +5341,8 @@ function TemplatesTab() {
                     <EmptyState
                       className="border-0 bg-transparent p-8"
                       icon={Layers}
-                      title="No items in this template"
-                      description="Add default services or products when creating a new treatment template."
+                      title={t("settings.templates.noItems")}
+                      description={t("settings.templates.noItemsDescription")}
                     />
                   </td>
                 </tr>
@@ -5328,16 +5365,16 @@ function TemplatesTab() {
           size="sm"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Template
+          {t("settings.templates.add")}
         </Button>
       </div>
 
       {showAdd && (
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <h3 className="text-sm font-semibold">New Treatment Template</h3>
+          <h3 className="text-sm font-semibold">{t("settings.templates.new")}</h3>
           <div className="grid grid-cols-2 gap-3">
             <Input
-              placeholder="Template name"
+              placeholder={t("settings.templates.name")}
               maxLength={TREATMENT_TEMPLATE_NAME_MAX_LENGTH}
               value={addForm.name}
               onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
@@ -5352,15 +5389,15 @@ function TemplatesTab() {
                 })
               }
             >
-              {TEMPLATE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c.charAt(0).toUpperCase() + c.slice(1)}
+              {TEMPLATE_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {t(templateCategoryLabelKey(category))}
                 </option>
               ))}
             </select>
           </div>
           <Input
-            placeholder="Description (optional)"
+            placeholder={t("settings.templates.description")}
             maxLength={TREATMENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}
             value={addForm.description}
             onChange={(e) =>
@@ -5370,7 +5407,7 @@ function TemplatesTab() {
 
           {/* Items */}
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Items</h4>
+            <h4 className="text-sm font-medium">{t("settings.templates.items")}</h4>
             {addItems.map((item, index) => (
               <div
                 key={item.draftId}
@@ -5396,7 +5433,7 @@ function TemplatesTab() {
                   />
                 </div>
                 <select
-                  aria-label={`Item type ${index + 1}`}
+                  aria-label={`${t("settings.templates.itemType")} ${index + 1}`}
                   className="h-10 rounded-md border border-input bg-background px-2 text-sm"
                   value={item.itemType}
                   onChange={(e) =>
@@ -5406,12 +5443,12 @@ function TemplatesTab() {
                     )
                   }
                 >
-                  <option value="service">Service</option>
-                  <option value="product">Product</option>
+                  <option value="service">{t("settings.templates.service")}</option>
+                  <option value="product">{t("settings.templates.product")}</option>
                 </select>
                 <Input
                   type="number"
-                  placeholder="Qty"
+                  placeholder={t("settings.templates.quantity")}
                   min={TREATMENT_TEMPLATE_ITEM_QUANTITY_MIN}
                   max={TREATMENT_TEMPLATE_ITEM_QUANTITY_MAX}
                   step={1}
@@ -5427,7 +5464,7 @@ function TemplatesTab() {
                 />
                 <Input
                   type="number"
-                  placeholder="Price"
+                  placeholder={t("settings.templates.price")}
                   min={0}
                   max={TREATMENT_TEMPLATE_UNIT_PRICE_MAX}
                   step="0.01"
@@ -5440,7 +5477,7 @@ function TemplatesTab() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  aria-label={`Remove item ${index + 1}`}
+                  aria-label={`${t("settings.templates.removeItem")} ${index + 1}`}
                   disabled={addItems.length <= 1}
                   onClick={() => removeItemRow(index)}
                 >
@@ -5450,8 +5487,7 @@ function TemplatesTab() {
             ))}
             {hasUnlinkedCatalogRows ? (
               <p className="text-sm text-muted-foreground">
-                Search for and select an active service or inventory product for
-                every template row.
+                {t("settings.templates.catalogRequired")}
               </p>
             ) : null}
             <Button
@@ -5461,7 +5497,7 @@ function TemplatesTab() {
               onClick={addItemRow}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Add Item
+              {t("settings.templates.addItem")}
             </Button>
           </div>
 
@@ -5481,10 +5517,10 @@ function TemplatesTab() {
               {createMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create
+              {t("settings.templates.create")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
-              Cancel
+              {t("settings.templates.cancel")}
             </Button>
           </div>
           {createMutation.error && (
@@ -5499,11 +5535,11 @@ function TemplatesTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Category</th>
-              <th className="px-4 py-3 text-left font-medium">Items</th>
-              <th className="px-4 py-3 text-left font-medium">Status</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.templates.table.name")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.templates.table.category")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.templates.items")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.templates.table.status")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("settings.templates.table.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -5522,7 +5558,7 @@ function TemplatesTab() {
                         CATEGORY_BADGE.other,
                     )}
                   >
-                    {template.category}
+                    {t(templateCategoryLabelKey(template.category))}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">—</td>
@@ -5535,7 +5571,9 @@ function TemplatesTab() {
                         : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
                     )}
                   >
-                    {template.isActive !== false ? "Active" : "Inactive"}
+                    {template.isActive !== false
+                      ? t("settings.templates.active")
+                      : t("settings.templates.inactive")}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -5565,8 +5603,8 @@ function TemplatesTab() {
                   <EmptyState
                     className="border-0 bg-transparent p-8"
                     icon={Layers}
-                    title="No templates configured"
-                    description="Create reusable treatment templates for common service and product bundles."
+                    title={t("settings.templates.empty")}
+                    description={t("settings.templates.emptyDescription")}
                   />
                 </td>
               </tr>

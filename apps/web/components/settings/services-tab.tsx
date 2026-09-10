@@ -26,6 +26,7 @@ import {
 } from "@/lib/billing/policy";
 import { useCurrencyFormatter } from "@/lib/locale/useCurrency";
 import { trpc } from "@/lib/trpc";
+import { useTranslations } from "@/lib/i18n/client";
 
 type ServiceForm = {
   name: string;
@@ -89,6 +90,7 @@ function expectedServiceSnapshot(service: ServiceRow) {
 type ServiceSnapshot = ReturnType<typeof expectedServiceSnapshot>;
 
 export function ServicesTab() {
+  const t = useTranslations();
   const formatCurrency = useCurrencyFormatter();
   const utils = trpc.useUtils();
   const activeQuery = trpc.billing.listServices.useQuery();
@@ -125,7 +127,7 @@ export function ServicesTab() {
       void refreshCatalog();
       setCreateForm(EMPTY_FORM);
       setShowCreate(false);
-      toast.success("Service created");
+      toast.success(t("settings.services.create"));
     },
     onError: handleMutationError,
   });
@@ -133,7 +135,7 @@ export function ServicesTab() {
     onSuccess: () => {
       void refreshCatalog();
       resetEditState();
-      toast.success("Service updated");
+      toast.success(t("settings.services.save"));
     },
     onError: (error) => {
       if (error.data?.code === "CONFLICT") {
@@ -146,14 +148,14 @@ export function ServicesTab() {
     onSuccess: () => {
       void refreshCatalog();
       resetEditState();
-      toast.success("Service archived");
+      toast.success(t("settings.services.archive"));
     },
     onError: handleMutationError,
   });
   const restoreMutation = trpc.billing.restoreService.useMutation({
     onSuccess: () => {
       void refreshCatalog();
-      toast.success("Service restored");
+      toast.success(t("settings.services.restore"));
     },
     onError: handleMutationError,
   });
@@ -196,10 +198,10 @@ export function ServicesTab() {
         <div className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
-            <p className="font-medium">Unable to load services</p>
+            <p className="font-medium">{t("settings.services.loadError")}</p>
             <p className="mt-1">
               {loadError?.message ??
-                "The service catalog request finished without returning data."}
+                t("settings.services.loadDescription")}
             </p>
             <Button
               className="mt-3"
@@ -210,7 +212,7 @@ export function ServicesTab() {
                 void archivedQuery.refetch();
               }}
             >
-              Retry
+              {t("settings.retry")}
             </Button>
           </div>
         </div>
@@ -223,12 +225,10 @@ export function ServicesTab() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <ReceiptText className="h-5 w-5" /> Services &amp; Pricing
+            <ReceiptText className="h-5 w-5" /> {t("settings.services.title")}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage the services available in encounter and invoice charge
-            pickers. Mark each service taxable according to your local rules;
-            invoices preserve that choice as a historical snapshot.
+            {t("settings.services.description")}
           </p>
         </div>
         <Button
@@ -237,13 +237,13 @@ export function ServicesTab() {
           onClick={() => setShowCreate((visible) => !visible)}
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add service
+          {t("settings.services.add")}
         </Button>
       </div>
 
       {showCreate && (
         <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-          <h3 className="text-sm font-semibold">New service</h3>
+          <h3 className="text-sm font-semibold">{t("settings.services.new")}</h3>
           <ServiceFields form={createForm} onChange={setCreateForm} />
           <div className="flex gap-2">
             <Button
@@ -254,7 +254,7 @@ export function ServicesTab() {
               {createMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create service
+              {t("settings.services.create")}
             </Button>
             <Button
               size="sm"
@@ -265,7 +265,7 @@ export function ServicesTab() {
                 setShowCreate(false);
               }}
             >
-              Cancel
+              {t("settings.services.cancel")}
             </Button>
           </div>
         </div>
@@ -274,9 +274,9 @@ export function ServicesTab() {
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          aria-label="Search services"
+          aria-label={t("settings.services.searchLabel")}
           className="pl-9"
-          placeholder="Search name, code, or category"
+          placeholder={t("settings.services.search")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -286,12 +286,12 @@ export function ServicesTab() {
         <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left font-medium">Service</th>
-              <th className="px-4 py-3 text-left font-medium">Code</th>
-              <th className="px-4 py-3 text-left font-medium">Category</th>
-              <th className="px-4 py-3 text-right font-medium">Price</th>
-              <th className="px-4 py-3 text-left font-medium">Tax</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.services.service")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.services.code")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.services.category")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("settings.services.price")}</th>
+              <th className="px-4 py-3 text-left font-medium">{t("settings.services.tax")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("billing.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -327,7 +327,7 @@ export function ServicesTab() {
                           ) : (
                             <Save className="mr-2 h-4 w-4" />
                           )}
-                          Save
+                          {t("settings.services.save")}
                         </Button>
                         <Button
                           size="sm"
@@ -335,7 +335,7 @@ export function ServicesTab() {
                           disabled={mutationPending}
                           onClick={resetEditState}
                         >
-                          <X className="mr-2 h-4 w-4" /> Cancel
+                          <X className="mr-2 h-4 w-4" /> {t("settings.services.cancel")}
                         </Button>
                       </div>
                     </td>
@@ -359,12 +359,12 @@ export function ServicesTab() {
                     {formatCurrency(service.defaultPrice)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {service.taxable ? "Taxable" : "Not taxable"}
+                    {service.taxable ? t("settings.services.taxable") : t("settings.services.notTaxable")}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
                       <Button
-                        aria-label={`Edit ${service.name}`}
+                        aria-label={`${t("settings.services.edit")}: ${service.name}`}
                         size="icon"
                         variant="ghost"
                         disabled={mutationPending}
@@ -377,13 +377,13 @@ export function ServicesTab() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
-                        aria-label={`Archive ${service.name}`}
+                        aria-label={`${t("settings.services.archive")}: ${service.name}`}
                         size="icon"
                         variant="ghost"
                         disabled={mutationPending}
                         onClick={() => {
                           const confirmed = window.confirm(
-                            `Archive ${service.name}? It will be removed from future charge pickers. Existing invoices stay unchanged, and treatment templates that reference it must be updated before use.`
+                            t("settings.services.archiveConfirm")
                           );
                           if (!confirmed) return;
                           archiveMutation.mutate({
@@ -405,8 +405,8 @@ export function ServicesTab() {
                   <EmptyState
                     className="border-0 bg-transparent p-8"
                     icon={ReceiptText}
-                    title="No services configured"
-                    description="Add your first service so the clinic can capture charges during encounters and invoicing."
+                    title={t("settings.services.noServices")}
+                    description={t("settings.services.noServicesDescription")}
                   />
                 </td>
               </tr>
@@ -417,7 +417,7 @@ export function ServicesTab() {
                   colSpan={6}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
-                  No services match your search.
+                  {t("settings.services.noSearch")}
                 </td>
               </tr>
             )}
@@ -427,12 +427,12 @@ export function ServicesTab() {
 
       <details className="rounded-lg border border-border bg-card">
         <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
-          Archived services ({availableArchivedServices.length})
+          {t("settings.services.archived")} ({availableArchivedServices.length})
         </summary>
         <div className="border-t border-border">
           {availableArchivedServices.length === 0 ? (
             <p className="px-4 py-5 text-sm text-muted-foreground">
-              No archived services.
+              {t("settings.services.noArchived")}
             </p>
           ) : (
             <div className="divide-y divide-border">
@@ -446,7 +446,7 @@ export function ServicesTab() {
                     <p className="text-xs text-muted-foreground">
                       {[service.code, service.category]
                         .filter(Boolean)
-                        .join(" · ") || "No code or category"}
+                        .join(" · ") || t("settings.services.noCodeOrCategory")}
                     </p>
                   </div>
                   <Button
@@ -465,7 +465,7 @@ export function ServicesTab() {
                     ) : (
                       <ArchiveRestore className="mr-2 h-4 w-4" />
                     )}
-                    Restore
+                    {t("settings.services.restore")}
                   </Button>
                 </div>
               ))}
@@ -484,38 +484,39 @@ function ServiceFields({
   form: ServiceForm;
   onChange: (form: ServiceForm) => void;
 }) {
+  const t = useTranslations();
   return (
     <div className="grid gap-3 md:grid-cols-[minmax(12rem,2fr)_minmax(8rem,1fr)_minmax(10rem,1fr)_9rem_auto] md:items-center">
       <Input
-        aria-label="Service name"
+        aria-label={t("settings.services.service")}
         maxLength={BILLING_SERVICE_NAME_MAX_LENGTH}
-        placeholder="Service name"
+        placeholder={t("settings.services.namePlaceholder")}
         value={form.name}
         onChange={(event) => onChange({ ...form, name: event.target.value })}
       />
       <Input
-        aria-label="Service code"
+        aria-label={t("settings.services.code")}
         maxLength={BILLING_SERVICE_CODE_MAX_LENGTH}
-        placeholder="Code (optional)"
+        placeholder={t("settings.services.codePlaceholder")}
         value={form.code}
         onChange={(event) => onChange({ ...form, code: event.target.value })}
       />
       <Input
-        aria-label="Service category"
+        aria-label={t("settings.services.category")}
         maxLength={BILLING_SERVICE_CATEGORY_MAX_LENGTH}
-        placeholder="Category (optional)"
+        placeholder={t("settings.services.categoryPlaceholder")}
         value={form.category}
         onChange={(event) =>
           onChange({ ...form, category: event.target.value })
         }
       />
       <Input
-        aria-label="Default price"
+        aria-label={t("settings.services.price")}
         type="number"
         min={0}
         max={BILLING_UNIT_PRICE_MAX}
         step="0.01"
-        placeholder="Price"
+        placeholder={t("settings.services.pricePlaceholder")}
         value={form.defaultPrice}
         onChange={(event) =>
           onChange({ ...form, defaultPrice: event.target.value })
@@ -529,7 +530,7 @@ function ServiceFields({
             onChange({ ...form, taxable: event.target.checked })
           }
         />
-        Taxable
+        {t("settings.services.taxable")}
       </label>
     </div>
   );

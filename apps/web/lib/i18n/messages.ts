@@ -35,6 +35,11 @@ import {
   enOnboardingMessages,
   esOnboardingMessages,
 } from "./messages/onboarding";
+import {
+  enPublicBookingMessages,
+  esPublicBookingMessages,
+} from "./messages/public-booking";
+import { enSettingsMessages, esSettingsMessages } from "./messages/settings";
 
 export const enMessages = {
   ...enCommonMessages,
@@ -58,6 +63,8 @@ export const enMessages = {
   ...enMessagingMessages,
   ...enSharedUiMessages,
   ...enOnboardingMessages,
+  ...enPublicBookingMessages,
+  ...enSettingsMessages,
 } as const;
 
 export type TranslationKey = keyof typeof enMessages;
@@ -88,6 +95,8 @@ const messages: Record<SupportedLanguage, LocalizedMessages> = {
     ...esMessagingMessages,
     ...esSharedUiMessages,
     ...esOnboardingMessages,
+    ...esPublicBookingMessages,
+    ...esSettingsMessages,
   },
 };
 

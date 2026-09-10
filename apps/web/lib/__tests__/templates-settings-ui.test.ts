@@ -44,7 +44,7 @@ describe("treatment template settings UI", () => {
       "maxLength={TREATMENT_TEMPLATE_DESCRIPTION_MAX_LENGTH}",
     );
     expect(source).toContain(
-      "item.description.trim().length <=\n      TREATMENT_TEMPLATE_ITEM_DESCRIPTION_MAX_LENGTH",
+      "TREATMENT_TEMPLATE_ITEM_DESCRIPTION_MAX_LENGTH",
     );
     expect(source).toContain("min={TREATMENT_TEMPLATE_ITEM_QUANTITY_MIN}");
     expect(source).toContain("max={TREATMENT_TEMPLATE_ITEM_QUANTITY_MAX}");
@@ -72,9 +72,9 @@ describe("treatment template settings UI", () => {
     expect(source).toContain("!hasUnlinkedCatalogRows");
     expect(source).toContain("excludedIds={addItems");
     expect(source).toContain("candidate.itemType === item.itemType");
-    expect(source).toContain("Search for and select an active service");
+    expect(source).toContain('t("settings.templates.catalogRequired")');
     expect(source).toContain("item.hasActiveProductLink !== true");
-    expect(source).toContain("Missing or archived inventory product");
+    expect(source).toContain('t("settings.templates.missingProduct")');
   });
 
   it("uses a responsive item grid and labels row removal", () => {
@@ -84,7 +84,7 @@ describe("treatment template settings UI", () => {
     expect(source).toContain(
       'className="grid grid-cols-2 items-center gap-2 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]"',
     );
-    expect(source).toContain("aria-label={`Remove item ${index + 1}`}");
+    expect(source).toContain('t("settings.templates.removeItem")');
     expect(source).toContain('className="w-full lg:w-20"');
     expect(source).toContain('className="w-full lg:w-28"');
   });

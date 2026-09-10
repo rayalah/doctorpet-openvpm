@@ -53,13 +53,13 @@ describe("wellness settings UI", () => {
   it("lets admins retire and restore wellness plans from the settings table", () => {
     const source = readFileSync("app/(dashboard)/settings/page.tsx", "utf8");
 
-    expect(source).toContain("Deactivate");
-    expect(source).toContain("Reactivate");
+    expect(source).toContain('t("settings.wellness.deactivate")');
+    expect(source).toContain('t("settings.wellness.reactivate")');
     expect(source).toContain("disabled={setPlanActive.isPending}");
     expect(source).toContain("planId: plan.id");
     expect(source).toContain("active: !plan.active");
-    expect(source).toContain("Wellness plan deactivated");
-    expect(source).toContain("Wellness plan reactivated");
+    expect(source).toContain('t("settings.wellness.deactivated")');
+    expect(source).toContain('t("settings.wellness.reactivated")');
     expect(source).toContain("colSpan={5}");
   });
 });

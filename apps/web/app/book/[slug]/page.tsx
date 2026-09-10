@@ -6,24 +6,20 @@ import { AlertCircle, CalendarX2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { EmptyState } from "@/components/common/empty-state";
 import { BOOKING_REASON_MAX_LENGTH } from "@/lib/booking/page-config";
+import { useTranslations } from "@/lib/i18n/client";
 
 const SPECIES_OPTIONS = [
-  { value: "canine", label: "Dog" },
-  { value: "feline", label: "Cat" },
-  { value: "avian", label: "Bird" },
-  { value: "rabbit", label: "Rabbit" },
-  { value: "reptile", label: "Reptile" },
-  { value: "equine", label: "Horse" },
-  { value: "other", label: "Other" },
+  "canine", "feline", "avian", "rabbit", "reptile", "equine", "other",
 ] as const;
 
-type SpeciesValue = (typeof SPECIES_OPTIONS)[number]["value"];
+type SpeciesValue = (typeof SPECIES_OPTIONS)[number];
 
 function dateInputValue(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
 export default function PublicBookingPage() {
+  const t = useTranslations();
   const params = useParams();
   const slug = (params.slug as string) ?? "";
   const formId = useId();
@@ -89,8 +85,8 @@ export default function PublicBookingPage() {
       <EmptyState
         className="py-16"
         icon={AlertCircle}
-        title="This appointment request page isn't available"
-        description="The link may be incorrect, or online appointment requests may be turned off. Please contact the clinic directly."
+        title={t("booking.public.unavailable.title")}
+        description={t("booking.public.unavailable.description")}
       />
     );
   }
@@ -152,29 +148,29 @@ export default function PublicBookingPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
-        <h1 className="text-xl font-bold text-gray-900 mb-2">Request sent!</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">{t("booking.public.success.title")}</h1>
         <p className="text-gray-600 max-w-sm mx-auto">{book.data.message}</p>
         <div className="mx-auto mt-5 max-w-sm rounded-xl border border-gray-200 bg-gray-50 p-4 text-left text-sm">
           <p className="mb-3 font-semibold text-gray-900">
-            Requested — not yet confirmed
+            {t("booking.public.success.pending")}
           </p>
           <dl className="space-y-2 text-gray-600">
             <div className="flex justify-between gap-4">
-              <dt>Pet</dt>
+              <dt>{t("booking.public.success.pet")}</dt>
               <dd className="font-medium text-gray-900">{petName}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt>Visit</dt>
+              <dt>{t("booking.public.success.visit")}</dt>
               <dd className="font-medium text-gray-900">
-                {selectedType?.name ?? "Appointment"}
+                {selectedType?.name ?? t("booking.public.request")}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt>Preferred time</dt>
-              <dd className="font-medium text-gray-900">{date} at {time}</dd>
+              <dt>{t("booking.public.success.preferredTime")}</dt>
+              <dd className="font-medium text-gray-900">{date} {t("booking.public.success.at")} {time}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt>Clinic</dt>
+              <dt>{t("booking.public.success.clinic")}</dt>
               <dd className="text-right font-medium text-gray-900">
                 {selectedLocation?.name ?? data.practice.name}
               </dd>
@@ -182,8 +178,8 @@ export default function PublicBookingPage() {
           </dl>
         </div>
         <p className="text-gray-500 text-sm mt-4">
-          We sent the details to the clinic. Questions?{" "}
-          {data.practice.phone ? `Call ${data.practice.phone}.` : "Contact the clinic."}
+          {t("booking.public.success.questions")} {" "}
+          {data.practice.phone ? `${t("booking.public.success.call")} ${data.practice.phone}.` : t("booking.public.success.contact")}
         </p>
       </div>
     );
@@ -228,11 +224,10 @@ export default function PublicBookingPage() {
       <form onSubmit={submit} className="rounded-2xl bg-white p-6 shadow-sm space-y-5">
         <div>
           <h2 className="text-base font-semibold text-gray-900">
-            Request an appointment
+            {t("booking.public.title")}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Choose a preferred time. The clinic will review your request and
-            confirm the appointment with you.
+            {t("booking.public.description")}
           </p>
         </div>
 
@@ -242,7 +237,7 @@ export default function PublicBookingPage() {
               htmlFor={locationFieldId}
               className="block text-sm font-medium text-gray-700 mb-1.5"
             >
-              Clinic location
+              {t("booking.public.location")}
             </label>
             <select
               id={locationFieldId}
@@ -255,7 +250,7 @@ export default function PublicBookingPage() {
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               <option value="" disabled>
-                Choose a location
+                {t("booking.public.selectLocation")}
               </option>
               {data.locations.map((location) => (
                 <option key={location.id} value={location.id}>
@@ -283,7 +278,7 @@ export default function PublicBookingPage() {
             htmlFor={typeFieldId}
             className="block text-sm font-medium text-gray-700 mb-1.5"
           >
-            What do you need?
+            {t("booking.public.need")}
           </label>
           <select
             id={typeFieldId}
@@ -296,11 +291,11 @@ export default function PublicBookingPage() {
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
           >
             <option value="" disabled>
-              Choose a visit type
+              {t("booking.public.selectType")}
             </option>
-            {data.types.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} ({t.durationMinutes} min)
+            {data.types.map((appointmentType) => (
+              <option key={appointmentType.id} value={appointmentType.id}>
+                {appointmentType.name} ({appointmentType.durationMinutes} {t("booking.public.minutes")})
               </option>
             ))}
           </select>
@@ -311,7 +306,7 @@ export default function PublicBookingPage() {
             htmlFor={dateFieldId}
             className="block text-sm font-medium text-gray-700 mb-1.5"
           >
-            Pick a day
+            {t("booking.public.pickDay")}
           </label>
           <input
             id={dateFieldId}
@@ -331,20 +326,20 @@ export default function PublicBookingPage() {
         {date && typeId && locationId && (
           <fieldset>
             <legend className="text-sm font-medium text-gray-700 mb-2">
-              Pick a time
+              {t("booking.public.pickTime")}
             </legend>
             {slots.isLoading && (
-              <p className="text-xs text-gray-500">Checking suggested times…</p>
+              <p className="text-xs text-gray-500">{t("booking.public.loadingSlots")}</p>
             )}
             {!slots.isLoading && slots.error && (
               <p className="text-xs text-red-600">
-                Suggested times could not be loaded. Please try again.
+                {t("booking.public.slotsError")}
               </p>
             )}
             {!slots.isLoading && !slots.error && slots.data && slots.data.length === 0 && (
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <CalendarX2 className="h-4 w-4" />
-                No suggested request times that day. Try another date.
+                {t("booking.public.noSlots")}
               </div>
             )}
             {!slots.isLoading && !slots.error && slots.data && slots.data.length > 0 && (
@@ -385,14 +380,14 @@ export default function PublicBookingPage() {
         )}
 
         <div className="border-t border-gray-100 pt-5 space-y-4">
-          <p className="text-sm font-semibold text-gray-900">About you</p>
+          <p className="text-sm font-semibold text-gray-900">{t("booking.public.about")}</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
                 htmlFor={firstNameFieldId}
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                First name
+                {t("booking.public.firstName")}
               </label>
               <input
                 id={firstNameFieldId}
@@ -409,7 +404,7 @@ export default function PublicBookingPage() {
                 htmlFor={lastNameFieldId}
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Last name
+                {t("booking.public.lastName")}
               </label>
               <input
                 id={lastNameFieldId}
@@ -428,7 +423,7 @@ export default function PublicBookingPage() {
                 htmlFor={emailFieldId}
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Email
+                {t("booking.public.email")}
               </label>
               <input
                 id={emailFieldId}
@@ -446,7 +441,7 @@ export default function PublicBookingPage() {
                 htmlFor={phoneFieldId}
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Phone <span className="text-gray-400 font-normal">(optional)</span>
+                {t("booking.public.phone")} <span className="text-gray-400 font-normal">({t("booking.public.optional")})</span>
               </label>
               <input
                 id={phoneFieldId}
@@ -480,7 +475,7 @@ export default function PublicBookingPage() {
                 htmlFor={petNameFieldId}
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Pet's name
+                {t("booking.public.petName")}
               </label>
               <input
                 id={petNameFieldId}
@@ -496,7 +491,7 @@ export default function PublicBookingPage() {
                 htmlFor={speciesFieldId}
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Pet type
+                {t("booking.public.petType")}
               </label>
               <select
                 id={speciesFieldId}
@@ -504,9 +499,9 @@ export default function PublicBookingPage() {
                 onChange={(e) => setSpecies(e.target.value as SpeciesValue)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
               >
-                {SPECIES_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
+                {SPECIES_OPTIONS.map((speciesValue) => (
+                  <option key={speciesValue} value={speciesValue}>
+                    {t(`booking.public.species.${speciesValue}`)}
                   </option>
                 ))}
               </select>
@@ -518,7 +513,7 @@ export default function PublicBookingPage() {
               htmlFor={reasonFieldId}
               className="block text-sm font-medium text-gray-700 mb-1.5"
             >
-              What's this visit about?
+              {t("booking.public.reason")}
             </label>
             <textarea
               id={reasonFieldId}
@@ -527,7 +522,7 @@ export default function PublicBookingPage() {
               required
               rows={3}
               maxLength={BOOKING_REASON_MAX_LENGTH}
-              placeholder="Tell us a little about what your pet needs"
+              placeholder={t("booking.public.reasonPlaceholder")}
               className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
           </div>
@@ -542,14 +537,14 @@ export default function PublicBookingPage() {
           style={{ backgroundColor: accent }}
         >
           {book.isPending
-            ? "Sending request…"
+            ? t("booking.public.sending")
             : selectedType
-              ? `Request ${selectedType.name}`
-              : "Request appointment"}
+              ? `${t("booking.public.requestType")} ${selectedType.name}`
+              : t("booking.public.request")}
         </button>
         <p className="text-center text-xs text-gray-400">
-          Prefer to talk to a person?
-          {data.practice.phone ? ` Call ${data.practice.phone}.` : " Contact the clinic."}
+          {t("booking.public.talkToPerson")}
+          {data.practice.phone ? ` ${t("booking.public.success.call")} ${data.practice.phone}.` : ` ${t("booking.public.success.contact")}`}
         </p>
       </form>
     </div>

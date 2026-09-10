@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { translate } from "../i18n/messages";
 
 describe("request-only booking UI", () => {
   const publicPage = readFileSync("app/book/[slug]/page.tsx", "utf8");
@@ -22,21 +23,22 @@ describe("request-only booking UI", () => {
   );
 
   it("describes every public submission as a request that the clinic confirms", () => {
-    expect(publicPage).toContain("Request an appointment");
-    expect(publicPage).toContain("Request sent!");
-    expect(publicPage).toContain("Request appointment");
-    expect(publicPage).toContain("The clinic will review your request");
+    expect(publicPage).toContain('t("booking.public.title")');
+    expect(publicPage).toContain('t("booking.public.success.title")');
+    expect(publicPage).toContain('t("booking.public.request")');
+    expect(publicPage).toContain('t("booking.public.description")');
+    expect(translate("en", "booking.public.title")).toBe("Request an appointment");
+    expect(translate("es", "booking.public.title")).toBe("Solicitá una cita");
     expect(publicPage).not.toContain("You're booked!");
     expect(publicPage).not.toContain('"Book appointment"');
     expect(publicPage).not.toContain("`Book ${selectedType.name}`");
   });
 
   it("removes auto-confirm from settings and explains the staff handoff", () => {
-    expect(settingsTab).toContain("Online appointment requests");
-    expect(settingsTab).toContain(
-      "Requests are never confirmed automatically.",
-    );
-    expect(settingsTab).toContain("assigns a doctor and room as needed");
+    expect(settingsTab).toContain('t("booking.settings.title")');
+    expect(settingsTab).toContain('t("booking.settings.reviewWarning")');
+    expect(translate("en", "booking.settings.reviewWarning")).toContain("assigns a doctor and room");
+    expect(translate("es", "booking.settings.reviewWarning")).toContain("veterinario y sala");
     expect(settingsTab).not.toContain("Confirm bookings automatically");
     expect(settingsTab).not.toContain("config.autoConfirm");
   });
@@ -46,7 +48,7 @@ describe("request-only booking UI", () => {
     expect(publicPage).toContain(
       "{ enabled: !!slug && !!date && !!typeId && !!locationId }",
     );
-    expect(publicPage).toContain("Choose a visit type");
+    expect(publicPage).toContain('t("booking.public.selectType")');
     expect(publicPage).not.toContain("General visit");
 
     expect(portalPage).toContain("hasValidAppointmentType");
@@ -91,9 +93,9 @@ describe("request-only booking UI", () => {
   });
 
   it("shows an explicit unconfirmed request receipt", () => {
-    expect(publicPage).toContain("Requested — not yet confirmed");
+    expect(publicPage).toContain('t("booking.public.success.pending")');
     expect(portalPage).toContain("Requested — not yet confirmed");
-    expect(publicPage).toContain("Preferred time");
+    expect(publicPage).toContain('t("booking.public.success.preferredTime")');
     expect(portalPage).toContain("Preferred time");
   });
 
@@ -112,29 +114,21 @@ describe("request-only booking UI", () => {
 
   it("blocks misleading publication and explains how to resolve it", () => {
     expect(settingsTab).toContain("nextPublished && bookableSet.size === 0");
-    expect(settingsTab).toContain(
-      "Select at least one active visit type before publishing",
-    );
+    expect(settingsTab).toContain('t("booking.settings.selectTypeBeforePublish")');
     expect(settingsTab).toContain('role="alert"');
   });
 
   it("fails closed until saved booking settings are available", () => {
     expect(settingsTab).toContain("pageSettingsUnavailable");
-    expect(settingsTab).toContain(
-      "Appointment request settings could not be loaded",
-    );
-    expect(settingsTab).toContain(
-      "Nothing can be changed until the saved settings are available.",
-    );
+    expect(settingsTab).toContain('t("booking.settings.loadPageError")');
+    expect(settingsTab).toContain('t("booking.settings.loadPageDescription")');
     expect(settingsTab).toContain("onClick={() => void myPage.refetch()}");
-    expect(settingsTab).toContain("Retry loading settings");
+    expect(settingsTab).toContain('t("booking.settings.retrySettings")');
     expect(settingsTab).toContain("appointmentTypesUnavailable");
-    expect(settingsTab).toContain("Active visit types could not be loaded");
-    expect(settingsTab).toContain(
-      "Publishing and editing are unavailable so saved selections are",
-    );
+    expect(settingsTab).toContain('t("booking.settings.loadTypesError")');
+    expect(settingsTab).toContain('t("booking.settings.loadTypesDescription")');
     expect(settingsTab).toContain("onClick={() => void types.refetch()}");
-    expect(settingsTab).toContain("Retry loading visit types");
+    expect(settingsTab).toContain('t("booking.settings.retryTypes")');
   });
 
   it("calls guided setup complete without claiming the clinic is ready to switch", () => {

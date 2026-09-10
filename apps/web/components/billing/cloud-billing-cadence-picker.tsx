@@ -14,6 +14,7 @@ import {
   type BillingCadence,
 } from "@/lib/billing/catalog";
 import { cn } from "@/lib/utils";
+import { useLanguage, useTranslations } from "@/lib/i18n/client";
 
 interface CloudBillingCadencePickerProps {
   value: BillingCadence;
@@ -23,8 +24,8 @@ interface CloudBillingCadencePickerProps {
   disabled?: boolean;
 }
 
-function dollars(value: number) {
-  return `$${value.toLocaleString("en-US")}`;
+function dollars(value: number, locale: string) {
+  return `$${value.toLocaleString(locale)}`;
 }
 
 export function CloudBillingCadencePicker({
@@ -34,16 +35,18 @@ export function CloudBillingCadencePicker({
   availableCadences = ["month", "year"],
   disabled = false,
 }: CloudBillingCadencePickerProps) {
+  const t = useTranslations();
+  const language = useLanguage();
+  const numberLocale = language === "es" ? "es-CR" : "en-US";
   const normalizedLocationCount = Math.max(1, locationCount);
 
   return (
     <fieldset disabled={disabled} className="min-w-0 w-full max-w-full">
       <legend className="font-heading text-base font-semibold">
-        Choose a billing schedule
+        {t("settings.billing.cadence.choose")}
       </legend>
       <p className="mt-1 text-sm text-muted-foreground">
-        One Cloud plan with unlimited staff. Annual billing includes two months
-        free.
+        {t("settings.billing.cadence.description")}
       </p>
 
       <div className="mt-4 grid min-w-0 w-full max-w-full gap-3 sm:grid-cols-2">
@@ -87,27 +90,35 @@ export function CloudBillingCadencePicker({
                       <Icon className="size-4" aria-hidden="true" />
                     </span>
                     {savings > 0 ? (
-                      <Badge variant="success">Save {dollars(savings)}</Badge>
+                      <Badge variant="success">{t("settings.billing.cadence.save")} {dollars(savings, numberLocale)}</Badge>
                     ) : null}
                   </div>
                   <div>
-                    <CardTitle className="text-base">{option.name}</CardTitle>
+                    <CardTitle className="text-base">
+                      {option.cadence === "year"
+                        ? t("settings.billing.cadence.annual")
+                        : t("settings.billing.cadence.monthly")}
+                    </CardTitle>
                     <CardDescription className="mt-1">
-                      {option.supportingText}
+                      {option.cadence === "year"
+                        ? t("settings.billing.cadence.annualDescription")
+                        : t("settings.billing.cadence.monthlyDescription")}
                     </CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 p-4 pt-0">
                   <div>
                     <span className="font-heading text-2xl font-bold">
-                      {dollars(total)}
+                      {dollars(total, numberLocale)}
                     </span>
                     <span className="ml-1 text-sm text-muted-foreground">
-                      {option.shortIntervalLabel}
+                      {option.cadence === "year"
+                        ? t("settings.billing.cadence.perYear")
+                        : t("settings.billing.cadence.perMonth")}
                     </span>
                     {normalizedLocationCount > 1 ? (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {dollars(option.priceUsd)} per active location
+                        {dollars(option.priceUsd, numberLocale)} {t("settings.billing.cadence.perActiveLocation")}
                       </p>
                     ) : null}
                   </div>
@@ -118,20 +129,20 @@ export function CloudBillingCadencePicker({
                         className="size-3.5 text-primary"
                         aria-hidden="true"
                       />
-                      Unlimited staff included
+                      {t("settings.billing.unlimitedStaff")}
                     </span>
                     <span className="flex items-center gap-2">
                       <Check
                         className="size-3.5 text-primary"
                         aria-hidden="true"
                       />
-                      Secure checkout powered by Stripe
+                      {t("settings.billing.cadence.secureCheckout")}
                     </span>
                   </div>
 
                   {!available ? (
                     <p className="text-xs font-medium text-destructive">
-                      Temporarily unavailable
+                      {t("settings.billing.cadence.unavailable")}
                     </p>
                   ) : null}
                 </CardContent>
